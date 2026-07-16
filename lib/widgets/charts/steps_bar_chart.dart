@@ -19,8 +19,9 @@ class StepsBarChart extends StatelessWidget {
   final double height;
   final ValueChanged<int>? onBarTap;
 
-  // DateTime.weekday is 1 (Monday) .. 7 (Sunday).
-  static const _weekdayLetters = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+  // DateTime.weekday is 1 (Monday) .. 7 (Sunday). Two letters avoid the
+  // Tue/Thu and Sat/Sun collisions a single initial would have.
+  static const _weekdayLetters = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
 
   @override
   Widget build(BuildContext context) {
@@ -54,6 +55,9 @@ class StepsBarChart extends StatelessWidget {
     final maxSteps =
         stats.map((s) => s.steps).reduce((a, b) => a > b ? a : b).toDouble();
     final maxY = (maxSteps / 2000).ceil() * 2000.0 + 2000;
+    final now = DateTime.now();
+    bool isToday(DateTime d) =>
+        d.year == now.year && d.month == now.month && d.day == now.day;
 
     return SizedBox(
       height: height,
@@ -86,15 +90,16 @@ class StepsBarChart extends StatelessWidget {
                 getTitlesWidget: (value, meta) {
                   final i = value.toInt();
                   if (i < 0 || i >= stats.length) return const SizedBox();
-                  final isLast = i == stats.length - 1;
+                  final highlight = isToday(stats[i].date);
                   return Padding(
                     padding: const EdgeInsets.only(top: 8),
                     child: Text(
                       _weekdayLetters[stats[i].date.weekday - 1],
                       style: TextStyle(
                         fontSize: 11,
-                        fontWeight: isLast ? FontWeight.w800 : FontWeight.w500,
-                        color: isLast
+                        fontWeight:
+                            highlight ? FontWeight.w800 : FontWeight.w500,
+                        color: highlight
                             ? AppColors.primaryBright
                             : AppColors.textMuted,
                       ),
@@ -129,7 +134,7 @@ class StepsBarChart extends StatelessWidget {
             },
           ),
           barGroups: List.generate(stats.length, (i) {
-            final isLast = i == stats.length - 1;
+            final highlight = isToday(stats[i].date);
             return BarChartGroupData(
               x: i,
               barRods: [
@@ -140,7 +145,7 @@ class StepsBarChart extends StatelessWidget {
                   gradient: LinearGradient(
                     begin: Alignment.bottomCenter,
                     end: Alignment.topCenter,
-                    colors: isLast
+                    colors: highlight
                         ? AppColors.primaryGradient
                         : [
                             AppColors.primarySoft,

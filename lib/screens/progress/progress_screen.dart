@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../models/models.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
@@ -28,7 +29,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
     final delta = last.kg - first.kg;
     final stats = state.dailyStats;
     final windowed = _rangeIndex == 0
-        ? stats.sublist(stats.length - 7)
+        ? _calendarWeek(stats)
         : stats; // Month/Year reuse the full mock window.
     final todayStats = stats.last;
 
@@ -157,6 +158,42 @@ class _ProgressScreenState extends State<ProgressScreen> {
         ],
       ),
     );
+  }
+
+  /// Reorders the trailing mock history into calendar order (Mon..Sun) for
+  /// the week containing "today" (the last entry in [stats]), instead of a
+  /// rolling 7-day window that can start on any weekday. Days later in the
+  /// week than today (no data yet) get a zero-value placeholder so the bar
+  /// chart still shows all 7 days in order.
+  List<DailyStats> _calendarWeek(List<DailyStats> stats) {
+    final today = stats.last;
+    final monday =
+        today.date.subtract(Duration(days: today.date.weekday - 1));
+
+    return List.generate(7, (i) {
+      final day = monday.add(Duration(days: i));
+      return stats.firstWhere(
+        (s) =>
+            s.date.year == day.year &&
+            s.date.month == day.month &&
+            s.date.day == day.day,
+        orElse: () => DailyStats(
+          date: day,
+          steps: 0,
+          stepGoal: today.stepGoal,
+          calories: 0,
+          calorieGoal: today.calorieGoal,
+          sleepMinutes: 0,
+          sleepGoalMinutes: today.sleepGoalMinutes,
+          waterMl: 0,
+          waterGoalMl: today.waterGoalMl,
+          lightSleepMinutes: 0,
+          deepSleepMinutes: 0,
+          remSleepMinutes: 0,
+          awakeMinutes: 0,
+        ),
+      );
+    });
   }
 }
 
