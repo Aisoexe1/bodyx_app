@@ -85,7 +85,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                         ],
                       ),
                       const SizedBox(height: 4),
-                      Text('${last.kg} kg',
+                      Text('${last.kg.round()} kg',
                           style: const TextStyle(
                               color: AppColors.textPrimary,
                               fontWeight: FontWeight.w800,
@@ -105,7 +105,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                     Expanded(
                       child: _RingStatCard(
                         label: 'Body fat',
-                        value: '${last.bodyFatPct}%',
+                        value: '${last.bodyFatPct.toStringAsFixed(1)}%',
                         progress: (last.bodyFatPct / 30).clamp(0, 1),
                         color: AppColors.warning,
                       ),

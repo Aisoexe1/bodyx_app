@@ -29,6 +29,7 @@ class AppState extends ChangeNotifier {
     bodyMeasurements = MockData.generateBodyMeasurements(Gender.male);
     alerts = MockData.alerts;
     planTasks = MockData.todayPlan;
+    todayWorkout = MockData.todayWorkout;
     meals = [];
   }
 
@@ -90,6 +91,14 @@ class AppState extends ChangeNotifier {
     final savedMeals = await _persistence.loadTodayMeals();
     if (savedMeals != null) {
       meals = savedMeals;
+    }
+
+    final savedWorkoutDone = await _persistence.loadTodayWorkoutSetsDone();
+    if (savedWorkoutDone != null &&
+        savedWorkoutDone.length == todayWorkout.sets.length) {
+      for (var i = 0; i < savedWorkoutDone.length; i++) {
+        todayWorkout.sets[i].done = savedWorkoutDone[i];
+      }
     }
   }
 
@@ -210,11 +219,21 @@ class AppState extends ChangeNotifier {
   late List<WeightEntry> weightHistory;
   late List<PlanTask> planTasks;
   late List<MealEntry> meals;
+  late Workout todayWorkout;
   List<WaterLogEntry> todayWaterLog = [];
 
   void togglePlanTask(int index) {
     planTasks[index].done = !planTasks[index].done;
     _persistPlanTasks();
+    notifyListeners();
+  }
+
+  void toggleWorkoutSet(int index) {
+    final set = todayWorkout.sets[index];
+    set.done = !set.done;
+    if (set.done) HapticFeedback.mediumImpact();
+    unawaited(_persistence.saveTodayWorkoutSetsDone(
+        todayWorkout.sets.map((s) => s.done).toList()));
     notifyListeners();
   }
 
@@ -233,6 +252,16 @@ class AppState extends ChangeNotifier {
   /// see [HealthInsights.weightVerdict] for why neither number alone is
   /// enough to tell "gaining muscle" from "gaining fat".
   StatusResult get weightVerdict => HealthInsights.weightVerdict(weightHistory);
+
+  /// True once a weight entry has actually been logged today — drives the
+  /// "Log body weight" checklist item off real data instead of a togglable
+  /// checkbox that could be ticked without doing anything.
+  bool get loggedWeightToday {
+    if (weightHistory.isEmpty) return false;
+    final last = weightHistory.last.date;
+    final now = DateTime.now();
+    return last.year == now.year && last.month == now.month && last.day == now.day;
+  }
 
   // ---- Calories / protein --------------------------------------------------
 
@@ -300,8 +329,7 @@ class AppState extends ChangeNotifier {
 
   /// True if today's plan includes a workout — bumps the water target per
   /// [HealthInsights.waterGoalMl].
-  bool get isWorkoutDayToday =>
-      planTasks.any((t) => t.icon == Icons.fitness_center_rounded);
+  bool get isWorkoutDayToday => todayWorkout.sets.isNotEmpty;
 
   int get individualizedWaterGoalMl => HealthInsights.waterGoalMl(
         weightKg: user?.weightKg ?? 75,

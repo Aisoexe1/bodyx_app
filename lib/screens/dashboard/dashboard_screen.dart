@@ -10,7 +10,9 @@ import '../../widgets/common/glow_card.dart';
 import '../../widgets/common/progress_ring.dart';
 import '../../widgets/common/scale_tap.dart';
 import '../body_metrics/body_metrics_screen.dart';
+import '../body_metrics/log_metrics_sheet.dart';
 import '../plan/daily_plan_screen.dart';
+import '../plan/workout_checklist_sheet.dart';
 import 'log_meal_sheet.dart';
 import 'water_log_sheet.dart';
 
@@ -97,59 +99,185 @@ class DashboardScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                ...List.generate(state.planTasks.length, (i) {
-                  final task = state.planTasks[i];
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: ScaleTap(
-                      onTap: () => context.read<AppState>().togglePlanTask(i),
-                      child: GlowCard(
-                        child: Row(
-                          children: [
-                            GlowIconBadge(
-                              icon: task.icon,
-                              color: task.done
-                                  ? AppColors.success
-                                  : AppColors.primary,
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(task.title,
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w700,
-                                        color: AppColors.textPrimary,
-                                        decoration: task.done
-                                            ? TextDecoration.lineThrough
-                                            : TextDecoration.none,
-                                        decorationColor: AppColors.textMuted,
-                                      )),
-                                  const SizedBox(height: 2),
-                                  Text(task.subtitle,
-                                      style: const TextStyle(
-                                          color: AppColors.textMuted,
-                                          fontSize: 12.5)),
-                                ],
-                              ),
-                            ),
-                            Icon(
-                              task.done
-                                  ? Icons.check_circle_rounded
-                                  : Icons.radio_button_unchecked_rounded,
-                              color: task.done
-                                  ? AppColors.success
-                                  : AppColors.textMuted,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                }),
+                _TodayChecklistCard(state: state),
               ]),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// One cohesive checklist card instead of separate floating cards per
+/// item — groups today's real workout progress with the quick self-report
+/// tasks under a single header showing overall completion, so items with
+/// different interaction models (progress vs. checkbox) still read as one
+/// coherent list rather than an unrelated pile of cards.
+class _TodayChecklistCard extends StatelessWidget {
+  const _TodayChecklistCard({required this.state});
+  final AppState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final workout = state.todayWorkout;
+    final workoutDone = workout.completedCount == workout.sets.length;
+    final weightDone = state.loggedWeightToday;
+    final simpleTasks = state.planTasks;
+    final doneCount = (workoutDone ? 1 : 0) +
+        (weightDone ? 1 : 0) +
+        simpleTasks.where((t) => t.done).length;
+    final totalCount = 2 + simpleTasks.length;
+
+    return GlowCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Expanded(
+                child: Text("Today's checklist",
+                    style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 15)),
+              ),
+              StatChip(
+                label: '$doneCount / $totalCount done',
+                color: doneCount == totalCount
+                    ? AppColors.success
+                    : AppColors.primary,
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _ChecklistRow(
+            icon: workout.icon,
+            title: workout.name,
+            subtitle:
+                '${workout.completedCount} / ${workout.sets.length} sets · ${workout.subtitle}',
+            done: workoutDone,
+            progress: workout.progress,
+            onTap: () => showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
+              builder: (_) => const WorkoutChecklistSheet(),
+            ),
+          ),
+          const _ChecklistDivider(),
+          _ChecklistRow(
+            icon: Icons.monitor_weight_rounded,
+            title: 'Log body weight',
+            subtitle: weightDone ? 'Logged today' : 'Morning check-in',
+            done: weightDone,
+            onTap: () => showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
+              builder: (_) => const LogMetricsSheet(),
+            ),
+          ),
+          for (var i = 0; i < simpleTasks.length; i++) ...[
+            const _ChecklistDivider(),
+            _ChecklistRow(
+              icon: simpleTasks[i].icon,
+              title: simpleTasks[i].title,
+              subtitle: simpleTasks[i].subtitle,
+              done: simpleTasks[i].done,
+              onTap: () => context.read<AppState>().togglePlanTask(i),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _ChecklistDivider extends StatelessWidget {
+  const _ChecklistDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      child: Container(height: 1, color: AppColors.cardBorder),
+    );
+  }
+}
+
+class _ChecklistRow extends StatelessWidget {
+  const _ChecklistRow({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.done,
+    required this.onTap,
+    this.progress,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final bool done;
+  final double? progress;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return ScaleTap(
+      onTap: onTap,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          GlowIconBadge(
+            icon: icon,
+            color: done ? AppColors.success : AppColors.primary,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                      decoration:
+                          done ? TextDecoration.lineThrough : TextDecoration.none,
+                      decorationColor: AppColors.textMuted,
+                    )),
+                const SizedBox(height: 2),
+                Text(subtitle,
+                    style: const TextStyle(
+                        color: AppColors.textMuted, fontSize: 12.5)),
+                if (progress != null) ...[
+                  const SizedBox(height: 8),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
+                    child: TweenAnimationBuilder<double>(
+                      tween: Tween(begin: 0, end: progress!.clamp(0, 1)),
+                      duration: const Duration(milliseconds: 600),
+                      curve: Curves.easeOutCubic,
+                      builder: (context, t, _) => LinearProgressIndicator(
+                        value: t,
+                        minHeight: 6,
+                        backgroundColor: AppColors.surfaceElevated,
+                        valueColor: AlwaysStoppedAnimation(
+                            done ? AppColors.success : AppColors.primary),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Icon(
+            done
+                ? Icons.check_circle_rounded
+                : Icons.radio_button_unchecked_rounded,
+            color: done ? AppColors.success : AppColors.textMuted,
           ),
         ],
       ),
@@ -405,7 +533,8 @@ class _LastBodyScanCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('${latest.kg} kg  •  ${latest.bodyFatPct}% BF',
+                  Text(
+                      '${latest.kg.round()} kg  •  ${latest.bodyFatPct.toStringAsFixed(1)}% BF',
                       style: const TextStyle(
                           color: AppColors.textPrimary,
                           fontWeight: FontWeight.w800,

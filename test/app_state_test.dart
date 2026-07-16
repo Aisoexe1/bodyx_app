@@ -6,6 +6,8 @@ import 'package:bodyx_app/models/models.dart';
 import 'package:bodyx_app/state/app_state.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   setUp(() {
     SharedPreferences.setMockInitialValues({});
   });
@@ -234,6 +236,31 @@ void main() {
       state.removeMeal(0);
       expect(state.meals.length, 1);
       expect(state.meals.first.name, 'Shake');
+    });
+  });
+
+  group('workout tracking', () {
+    test('toggleWorkoutSet flips a set and persists across restart',
+        () async {
+      final state = AppState();
+      await state.hydrate();
+      state.signIn('workout@bodyx.app', 'pw');
+
+      expect(state.todayWorkout.completedCount, 0);
+
+      state.toggleWorkoutSet(0);
+      state.toggleWorkoutSet(1);
+      expect(state.todayWorkout.completedCount, 2);
+      expect(state.todayWorkout.sets[0].done, true);
+
+      state.toggleWorkoutSet(0);
+      expect(state.todayWorkout.completedCount, 1);
+      expect(state.todayWorkout.sets[0].done, false);
+
+      final restarted = AppState();
+      await restarted.hydrate();
+      expect(restarted.todayWorkout.completedCount, 1);
+      expect(restarted.todayWorkout.sets[1].done, true);
     });
   });
 

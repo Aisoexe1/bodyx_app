@@ -9,6 +9,7 @@ import '../../theme/app_theme.dart';
 import '../../widgets/common/glow_card.dart';
 import '../../widgets/common/inputs_buttons.dart';
 import '../../widgets/common/scale_tap.dart';
+import 'contact_support_screen.dart';
 
 /// Shared chrome for every settings sub-screen: back button + title,
 /// scrollable body.
@@ -641,10 +642,46 @@ class HelpSupportScreen extends StatelessWidget {
   const HelpSupportScreen({super.key});
 
   static const _faqs = [
-    'How is my body scan calculated?',
-    'How do I sync a wearable device?',
-    'Can I export my progress data?',
-    'How do I change my daily goals?',
+    (
+      q: 'How is my body scan calculated?',
+      a: 'Log your weight and body-fat % from "Log body weight" on the '
+          'dashboard checklist. We combine the weight trend with the '
+          "body-fat trend so we can tell muscle gain from fat gain, "
+          "instead of just watching the scale number move.",
+    ),
+    (
+      q: 'How do I sync a wearable device?',
+      a: 'Go to Settings → toggle "Sync with Health". Once enabled, BodyX '
+          'pulls steps, active calories burned, sleep and heart rate from '
+          'Apple Health or Health Connect automatically. No wearable? '
+          'Everything still works with data you log by hand.',
+    ),
+    (
+      q: 'Where do my calorie and protein targets come from?',
+      a: 'Your calorie target (TDEE) is calculated from your age, weight, '
+          'height, gender and activity level using the Mifflin-St Jeor '
+          'formula. Protein target is 1.8g per kg of body weight. Both '
+          'update automatically if you edit your profile.',
+    ),
+    (
+      q: 'How do I track a workout?',
+      a: "Open the Plan tab and tap the workout card — it opens a "
+          "set-by-set checklist. Tap each set as you finish it; progress "
+          "saves automatically, even if you close the app mid-workout.",
+    ),
+    (
+      q: 'Can I export my progress data?',
+      a: "Not yet — that's on the roadmap. Everything you log (weight, "
+          "meals, workouts) is stored locally on this device only; "
+          "nothing is uploaded to a server.",
+    ),
+    (
+      q: 'How do I change my daily goals?',
+      a: 'Step and calorie goals are derived from your profile in Profile '
+          '→ Edit profile. Update your weight, height, age or activity '
+          "level and your targets recalculate automatically — there's no "
+          'manual override yet.',
+    ),
   ];
 
   @override
@@ -653,20 +690,36 @@ class HelpSupportScreen extends StatelessWidget {
       title: 'Help & support',
       child: Column(
         children: [
-          const GlowCard(
-            child: Row(
-              children: [
-                Icon(Icons.chat_bubble_outline_rounded,
-                    color: AppColors.primaryBright),
-                SizedBox(width: 12),
-                Expanded(
-                  child: Text('Contact support',
-                      style: TextStyle(
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w700)),
-                ),
-                Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
-              ],
+          ScaleTap(
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ContactSupportScreen()),
+            ),
+            child: const GlowCard(
+              child: Row(
+                children: [
+                  Icon(Icons.chat_bubble_outline_rounded,
+                      color: AppColors.primaryBright),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Contact support',
+                            style: TextStyle(
+                                color: AppColors.textPrimary,
+                                fontWeight: FontWeight.w700)),
+                        SizedBox(height: 2),
+                        Text('Chat with the BodyX assistant',
+                            style: TextStyle(
+                                color: AppColors.textMuted, fontSize: 12)),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.chevron_right_rounded,
+                      color: AppColors.textMuted),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 20),
@@ -680,22 +733,72 @@ class HelpSupportScreen extends StatelessWidget {
                     letterSpacing: 1)),
           ),
           const SizedBox(height: 10),
-          ..._faqs.map((q) => Padding(
+          ..._faqs.map((faq) => Padding(
                 padding: const EdgeInsets.only(bottom: 10),
-                child: GlowCard(
-                  child: Row(
-                    children: [
-                      Expanded(
-                          child: Text(q,
-                              style: const TextStyle(
-                                  color: AppColors.textPrimary, fontSize: 13.5))),
-                      const Icon(Icons.expand_more_rounded,
-                          color: AppColors.textMuted),
-                    ],
-                  ),
-                ),
+                child: _FaqTile(question: faq.q, answer: faq.a),
               )),
         ],
+      ),
+    );
+  }
+}
+
+class _FaqTile extends StatefulWidget {
+  const _FaqTile({required this.question, required this.answer});
+  final String question;
+  final String answer;
+
+  @override
+  State<_FaqTile> createState() => _FaqTileState();
+}
+
+class _FaqTileState extends State<_FaqTile> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return ScaleTap(
+      onTap: () {
+        HapticFeedback.selectionClick();
+        setState(() => _expanded = !_expanded);
+      },
+      child: GlowCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                    child: Text(widget.question,
+                        style: const TextStyle(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13.5))),
+                AnimatedRotation(
+                  turns: _expanded ? 0.5 : 0,
+                  duration: const Duration(milliseconds: 200),
+                  child: const Icon(Icons.expand_more_rounded,
+                      color: AppColors.textMuted),
+                ),
+              ],
+            ),
+            AnimatedSize(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOutCubic,
+              alignment: Alignment.topCenter,
+              child: !_expanded
+                  ? const SizedBox(width: double.infinity)
+                  : Padding(
+                      padding: const EdgeInsets.only(top: 10),
+                      child: Text(widget.answer,
+                          style: const TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 12.5,
+                              height: 1.5)),
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }

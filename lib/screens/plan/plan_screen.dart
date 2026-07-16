@@ -9,6 +9,7 @@ import '../../widgets/common/glow_card.dart';
 import '../../widgets/common/scale_tap.dart';
 import '../body_metrics/log_metrics_sheet.dart';
 import 'daily_plan_screen.dart';
+import 'workout_checklist_sheet.dart';
 
 class PlanScreen extends StatelessWidget {
   const PlanScreen({super.key});
@@ -69,31 +70,49 @@ class PlanScreen extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 20),
-                const GlowCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          GlowIconBadge(
-                              icon: Icons.fitness_center_rounded),
-                          SizedBox(width: 12),
-                          Expanded(
-                            child: Text('Lower Body Strength',
-                                style: TextStyle(
-                                    color: AppColors.textPrimary,
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: 15)),
-                          ),
-                          StatChip(label: 'Today'),
-                        ],
-                      ),
-                      SizedBox(height: 14),
-                      _ProgressLine(
+                ScaleTap(
+                  onTap: () => showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: Colors.transparent,
+                    builder: (_) => const WorkoutChecklistSheet(),
+                  ),
+                  child: GlowCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            GlowIconBadge(icon: state.todayWorkout.icon),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(state.todayWorkout.name,
+                                  style: const TextStyle(
+                                      color: AppColors.textPrimary,
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 15)),
+                            ),
+                            StatChip(
+                              label: state.todayWorkout.completedCount ==
+                                      state.todayWorkout.sets.length
+                                  ? 'Done'
+                                  : 'Today',
+                              color: state.todayWorkout.completedCount ==
+                                      state.todayWorkout.sets.length
+                                  ? AppColors.success
+                                  : AppColors.primary,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 14),
+                        _ProgressLine(
                           label: 'Workout completion',
-                          value: 0.4,
-                          trailing: '2 / 5 sets'),
-                    ],
+                          value: state.todayWorkout.progress,
+                          trailing:
+                              '${state.todayWorkout.completedCount} / ${state.todayWorkout.sets.length} sets',
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),

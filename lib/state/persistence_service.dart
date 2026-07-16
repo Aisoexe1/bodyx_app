@@ -22,6 +22,8 @@ class PersistenceService {
   static const _kWaterLogDate = 'bodyx.water_log_date';
   static const _kMeals = 'bodyx.meals';
   static const _kMealsDate = 'bodyx.meals_date';
+  static const _kWorkoutSetsDone = 'bodyx.workout_sets_done';
+  static const _kWorkoutSetsDate = 'bodyx.workout_sets_date';
 
   Future<SharedPreferences> get _prefs => SharedPreferences.getInstance();
 
@@ -151,6 +153,23 @@ class PersistenceService {
     await prefs.setString(_kMealsDate, _todayKey);
     await prefs.setString(
         _kMeals, jsonEncode(meals.map((e) => e.toJson()).toList()));
+  }
+
+  /// Same day-scoped pattern again — which sets of today's workout are
+  /// checked off, keyed only by index (the workout template itself is
+  /// regenerated fresh each session, like [MockData.todayPlan]).
+  Future<List<bool>?> loadTodayWorkoutSetsDone() async {
+    final prefs = await _prefs;
+    if (prefs.getString(_kWorkoutSetsDate) != _todayKey) return null;
+    final raw = prefs.getString(_kWorkoutSetsDone);
+    if (raw == null) return null;
+    return (jsonDecode(raw) as List).cast<bool>();
+  }
+
+  Future<void> saveTodayWorkoutSetsDone(List<bool> done) async {
+    final prefs = await _prefs;
+    await prefs.setString(_kWorkoutSetsDate, _todayKey);
+    await prefs.setString(_kWorkoutSetsDone, jsonEncode(done));
   }
 
   /// Signs the session out without discarding the user's logged history —

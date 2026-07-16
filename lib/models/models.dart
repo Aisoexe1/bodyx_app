@@ -288,6 +288,40 @@ class MealEntry {
       );
 }
 
+/// One working set of one exercise — the checkable unit of a [Workout].
+class WorkoutSet {
+  WorkoutSet({
+    required this.exercise,
+    required this.setNumber,
+    required this.targetReps,
+    this.done = false,
+  });
+
+  final String exercise;
+  final int setNumber;
+  final int targetReps;
+  bool done;
+}
+
+/// Today's workout as a real checklist — each set is individually
+/// trackable instead of a single static "X / Y sets" label.
+class Workout {
+  Workout({
+    required this.name,
+    required this.subtitle,
+    required this.icon,
+    required this.sets,
+  });
+
+  final String name;
+  final String subtitle;
+  final IconData icon;
+  final List<WorkoutSet> sets;
+
+  int get completedCount => sets.where((s) => s.done).length;
+  double get progress => sets.isEmpty ? 0 : completedCount / sets.length;
+}
+
 enum AlertSeverity { info, warning, success }
 
 class AlertItem {
