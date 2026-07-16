@@ -124,6 +124,37 @@ void main() {
       expect(restarted.authStage, AuthStage.signIn,
           reason: 'a signed-out session must not silently come back');
     });
+
+    test('signIn falls back to a local-only profile when the backend is unreachable',
+        () async {
+      final state = newTestAppState(authRepository: UnreachableAuthRepository());
+      await state.hydrate();
+
+      // Must not throw, and must still land on a usable, signed-in state
+      // even though every call to the fake backend throws a connectivity
+      // error — this is what keeps the app usable before/without a live
+      // server, matching every other network feature's offline fallback.
+      await state.signIn('offline@bodyx.app', 'pw');
+
+      expect(state.authStage, AuthStage.done);
+      expect(state.user, isNotNull);
+      expect(state.user!.email, 'offline@bodyx.app');
+      expect(state.user!.username, 'offline');
+    });
+
+    test('submitUsername falls back to a local-only profile when unreachable',
+        () async {
+      final state = newTestAppState(authRepository: UnreachableAuthRepository());
+      await state.hydrate();
+
+      state.submitSignUp('newoffline@bodyx.app', 'pw');
+      await state.submitUsername('offlinelifter');
+
+      expect(state.authStage, AuthStage.bodyData);
+      expect(state.user, isNotNull);
+      expect(state.user!.username, 'offlinelifter');
+      expect(state.user!.email, 'newoffline@bodyx.app');
+    });
   });
 
   group('persistence round-trip (simulated app restart)', () {

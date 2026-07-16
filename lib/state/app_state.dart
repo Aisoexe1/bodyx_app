@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../data/mock_data.dart';
 import '../logic/health_insights.dart';
 import '../models/models.dart';
+import '../network/api_client.dart';
 import '../network/auth_repository.dart';
 import '../network/measurement_repository.dart';
 import '../network/profile_repository.dart';
@@ -278,13 +279,28 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Logs in against the real backend. Throws [ApiException] (bad
-  /// credentials, banned account) or a network error on failure — the
-  /// sign-in screen catches this and shows a message; there's no
-  /// meaningful offline fallback for authenticating an identity.
+  /// Logs in against the real backend. If the *server itself* rejects the
+  /// attempt ([ApiException] — bad credentials, banned account), that's
+  /// re-thrown so the sign-in screen can show the real reason. If the
+  /// server is simply unreachable (no backend deployed yet, offline,
+  /// timeout), falls back to a local-only profile instead of blocking the
+  /// app — the same "local always works" behavior every other network
+  /// feature here already has (health sync, profile/weight/measurement
+  /// sync all swallow connectivity failures rather than erroring out).
   Future<void> signIn(String email, String password) async {
     final resolvedEmail = email.trim().isEmpty ? 'alex@bodyx.app' : email.trim();
-    user = await _authRepository.login(email: resolvedEmail, password: password);
+    try {
+      user = await _authRepository.login(email: resolvedEmail, password: password);
+    } on ApiException {
+      rethrow;
+    } catch (_) {
+      user = UserProfile(
+        email: resolvedEmail,
+        username: resolvedEmail.split('@').first.isEmpty
+            ? 'alex'
+            : resolvedEmail.split('@').first,
+      );
+    }
     authStage = AuthStage.done;
     _hasSession = true;
     _persistUser();
@@ -292,17 +308,28 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Creates the account against the real backend — this is the single
-  /// point in the sign-up flow where the account actually gets created.
-  /// Throws on failure (duplicate email/username, network error); the
-  /// username screen catches this and shows a message, staying put.
+  /// Creates the account against the real backend when one is reachable.
+  /// A real rejection from the server ([ApiException] — duplicate email/
+  /// username) is re-thrown so the username screen can show it. An
+  /// unreachable server falls back to a local-only profile, same as
+  /// [signIn].
   Future<void> submitUsername(String username) async {
     final resolvedUsername = username.trim().isEmpty ? 'newuser' : username.trim();
-    user = await _authRepository.register(
-      email: _pendingEmail ?? 'you@bodyx.app',
-      username: resolvedUsername,
-      password: _pendingPassword ?? '',
-    );
+    try {
+      user = await _authRepository.register(
+        email: _pendingEmail ?? 'you@bodyx.app',
+        username: resolvedUsername,
+        password: _pendingPassword ?? '',
+      );
+    } on ApiException {
+      rethrow;
+    } catch (_) {
+      user = UserProfile(
+        email: _pendingEmail ?? 'you@bodyx.app',
+        username: resolvedUsername,
+        name: resolvedUsername.isEmpty ? 'Athlete' : resolvedUsername,
+      );
+    }
     authStage = AuthStage.bodyData;
     notifyListeners();
   }

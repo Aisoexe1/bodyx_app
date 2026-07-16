@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:bodyx_app/models/models.dart';
 import 'package:bodyx_app/network/auth_repository.dart';
 import 'package:bodyx_app/network/measurement_repository.dart';
@@ -41,6 +43,30 @@ class FakeAuthRepository implements AuthRepository {
   Future<void> signOut() async {}
 }
 
+/// Simulates a completely unreachable backend (no server deployed, offline,
+/// timeout) — every call throws a plain connectivity-style error, as
+/// opposed to [ApiException] which represents a server that *did* respond,
+/// just with a rejection.
+class UnreachableAuthRepository implements AuthRepository {
+  @override
+  Future<UserProfile> register({
+    required String email,
+    required String username,
+    required String password,
+  }) =>
+      throw const SocketException('Network is unreachable');
+
+  @override
+  Future<UserProfile> login({required String email, required String password}) =>
+      throw const SocketException('Network is unreachable');
+
+  @override
+  Future<UserProfile?> restoreSession() async => null;
+
+  @override
+  Future<void> signOut() async {}
+}
+
 class FakeProfileRepository implements ProfileRepository {
   @override
   Future<void> updateMe(Map<String, dynamic> updates) async {}
@@ -74,9 +100,13 @@ class FakeMeasurementRepository implements MeasurementRepository {
 /// or the keychain. [persistence] is left real (backed by the
 /// `shared_preferences` mock set up in `setUp`) since that's what these
 /// tests are actually verifying round-trips against.
-AppState newTestAppState({PersistenceService? persistence}) => AppState(
+AppState newTestAppState({
+  PersistenceService? persistence,
+  AuthRepository? authRepository,
+}) =>
+    AppState(
       persistence: persistence,
-      authRepository: FakeAuthRepository(),
+      authRepository: authRepository ?? FakeAuthRepository(),
       profileRepository: FakeProfileRepository(),
       weightRepository: FakeWeightRepository(),
       measurementRepository: FakeMeasurementRepository(),
