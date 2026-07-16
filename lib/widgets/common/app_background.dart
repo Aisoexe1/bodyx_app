@@ -23,7 +23,7 @@ class AppBackground extends StatelessWidget {
                 center: Alignment(-0.3, -0.9),
                 radius: 1.3,
                 colors: [
-                  Color(0x149D4EDD), // AppColors.primary at ~8% alpha
+                  Color(0x140E9BD1), // AppColors.primary at ~8% alpha
                   Colors.transparent,
                 ],
               ),
