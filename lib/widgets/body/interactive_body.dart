@@ -30,22 +30,33 @@ class InteractiveBody extends StatefulWidget {
 }
 
 class _InteractiveBodyState extends State<InteractiveBody>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late final AnimationController _pulseController = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 1400),
   )..repeat(reverse: true);
 
+  late final AnimationController _rippleController = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 550),
+  );
+  MuscleZone? _rippleZone;
+
   @override
   void dispose() {
     _pulseController.dispose();
+    _rippleController.dispose();
     super.dispose();
   }
 
   void _handleTap(TapUpDetails details, Size size, BodyPainter painter) {
     final zone = painter.zoneAt(details.localPosition, size);
     if (zone != null) {
-      if (zone != widget.selectedZone) HapticFeedback.lightImpact();
+      if (zone != widget.selectedZone) {
+        HapticFeedback.lightImpact();
+        _rippleZone = zone;
+        _rippleController.forward(from: 0);
+      }
       widget.onZoneTap(zone);
     }
   }
@@ -58,13 +69,15 @@ class _InteractiveBodyState extends State<InteractiveBody>
     return SizedBox(
       height: widget.height,
       child: AnimatedBuilder(
-        animation: _pulseController,
+        animation: Listenable.merge([_pulseController, _rippleController]),
         builder: (context, _) {
           final painter = BodyPainter(
             silhouette: silhouette,
             selectedZone: widget.selectedZone,
             highlightedZones: widget.highlightedZones,
             pulse: _pulseController.value,
+            rippleZone: _rippleZone,
+            rippleProgress: _rippleController.value,
           );
           return LayoutBuilder(
             builder: (context, constraints) {

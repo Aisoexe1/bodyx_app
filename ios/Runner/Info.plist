@@ -26,6 +26,10 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSHealthShareUsageDescription</key>
+	<string>BodyX reads your steps, calories, sleep, water, weight and heart rate from Health to keep your dashboard accurate.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>BodyX does not write any data back to Health.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

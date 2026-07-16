@@ -1,11 +1,14 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../data/mock_data.dart';
+import '../logic/health_insights.dart';
 import '../models/models.dart';
 import '../network/auth_repository.dart';
 import '../network/measurement_repository.dart';
 import '../network/profile_repository.dart';
 import '../network/weight_repository.dart';
+import 'health_service.dart';
 import 'notification_service.dart';
 import 'persistence_service.dart';
 
@@ -91,6 +94,15 @@ class AppState extends ChangeNotifier {
         await _persistence.loadNotificationsEnabled() ?? notificationsEnabled;
     workoutRemindersEnabled = await _persistence.loadWorkoutRemindersEnabled() ??
         workoutRemindersEnabled;
+
+    healthSyncEnabled =
+        await _persistence.loadHealthSyncEnabled() ?? healthSyncEnabled;
+
+    final savedWaterLog = await _persistence.loadTodayWaterLog();
+    if (savedWaterLog != null && savedWaterLog.isNotEmpty) {
+      todayWaterLog = savedWaterLog;
+      _applyTodayWaterTotal();
+    }
 
     await _restoreServerSession();
   }
@@ -320,6 +332,7 @@ class AppState extends ChangeNotifier {
   late List<WeightEntry> weightHistory;
   late List<PlanTask> planTasks;
   late List<MealEntry> meals;
+  List<WaterLogEntry> todayWaterLog = [];
 
   void togglePlanTask(int index) {
     planTasks[index].done = !planTasks[index].done;
@@ -337,6 +350,119 @@ class AppState extends ChangeNotifier {
     _persistUser();
     _syncWeightToServer(kg, bodyFatPct);
     notifyListeners();
+  }
+
+  /// Combines the weight trend with the body-fat% trend into one verdict —
+  /// see [HealthInsights.weightVerdict] for why neither number alone is
+  /// enough to tell "gaining muscle" from "gaining fat".
+  StatusResult get weightVerdict => HealthInsights.weightVerdict(weightHistory);
+
+  // ---- Calories / protein --------------------------------------------------
+
+  double get tdee => user == null
+      ? 2200
+      : HealthInsights.tdee(
+          gender: user!.gender,
+          weightKg: user!.weightKg,
+          heightCm: user!.heightCm,
+          age: user!.age,
+          activityLevel: user!.activityLevel,
+        );
+
+  int get calorieSurplus => selectedStats.calories - tdee.round();
+
+  StatusResult get calorieSurplusStatus =>
+      HealthInsights.calorieSurplusStatus(calorieSurplus);
+
+  double get proteinTargetG =>
+      HealthInsights.proteinTargetG(user?.weightKg ?? 75);
+
+  double get todayProteinG =>
+      meals.fold<double>(0, (sum, m) => sum + m.proteinG);
+
+  StatusResult get proteinStatus =>
+      HealthInsights.proteinStatus(todayProteinG, proteinTargetG);
+
+  // ---- Heart rate -----------------------------------------------------------
+
+  ({String label, StatusLevel level}) get hrZone => HealthInsights.hrZoneFor(
+        bpm: selectedStats.heartRateBpm,
+        age: user?.age ?? 25,
+      );
+
+  double get hrZoneFraction => HealthInsights.hrZoneFraction(
+        bpm: selectedStats.heartRateBpm,
+        age: user?.age ?? 25,
+      );
+
+  /// Trend vs. the last 7 days *excluding* today — a rising number here is
+  /// often the earliest sign of under-recovery, before it shows up anywhere
+  /// else.
+  StatusResult get restingHrTrend {
+    final priorDays = dailyStats.length > 1
+        ? dailyStats
+            .sublist(0, dailyStats.length - 1)
+            .reversed
+            .take(7)
+            .map((s) => s.heartRateBpm)
+            .toList()
+        : <int>[];
+    return HealthInsights.restingHrTrend(
+      todayBpm: dailyStats.last.heartRateBpm,
+      priorDaysBpm: priorDays,
+    );
+  }
+
+  // ---- Water --------------------------------------------------------------
+
+  /// True if today's plan includes a workout — bumps the water target per
+  /// [HealthInsights.waterGoalMl].
+  bool get isWorkoutDayToday =>
+      planTasks.any((t) => t.icon == Icons.fitness_center_rounded);
+
+  int get individualizedWaterGoalMl => HealthInsights.waterGoalMl(
+        weightKg: user?.weightKg ?? 75,
+        isWorkoutDay: isWorkoutDayToday,
+      );
+
+  /// Pace-aware status for *today* only — a rolling window like this can't
+  /// be meaningfully computed for a past date, so callers should only show
+  /// it when [selectedDateIndex] is -1 (today).
+  StatusResult get todayWaterStatus => HealthInsights.waterStatus(
+        consumedMl: dailyStats.last.waterMl,
+        goalMl: individualizedWaterGoalMl,
+        now: DateTime.now(),
+      );
+
+  void logWater(int ml) {
+    HapticFeedback.lightImpact();
+    todayWaterLog = [...todayWaterLog, WaterLogEntry(DateTime.now(), ml)];
+    _applyTodayWaterTotal();
+    unawaited(_persistence.saveTodayWaterLog(todayWaterLog));
+    notifyListeners();
+  }
+
+  void _applyTodayWaterTotal() {
+    final total = todayWaterLog.fold<int>(0, (sum, e) => sum + e.ml);
+    final today = dailyStats.last;
+    final updated = List<DailyStats>.from(dailyStats);
+    updated[updated.length - 1] = DailyStats(
+      date: today.date,
+      steps: today.steps,
+      stepGoal: today.stepGoal,
+      calories: today.calories,
+      calorieGoal: today.calorieGoal,
+      sleepMinutes: today.sleepMinutes,
+      sleepGoalMinutes: today.sleepGoalMinutes,
+      waterMl: total,
+      waterGoalMl: individualizedWaterGoalMl,
+      lightSleepMinutes: today.lightSleepMinutes,
+      deepSleepMinutes: today.deepSleepMinutes,
+      remSleepMinutes: today.remSleepMinutes,
+      awakeMinutes: today.awakeMinutes,
+      heartRateBpm: today.heartRateBpm,
+    );
+    dailyStats = updated;
   }
 
   // ---- Body metrics ---------------------------------------------------------
@@ -391,6 +517,7 @@ class AppState extends ChangeNotifier {
   bool notificationsEnabled = true;
   bool darkModeLocked = true; // this app is dark-only, shown as a toggle
   bool workoutRemindersEnabled = true;
+  bool healthSyncEnabled = false;
 
   void updateProfile({
     String? name,
@@ -487,5 +614,77 @@ class AppState extends ChangeNotifier {
   Future<void> syncNotificationSchedules() async {
     await _syncHydrationReminder();
     await _syncWorkoutReminder();
+  }
+
+  // ---- Health sync (Apple Health / Google Health Connect) ----------------
+
+  /// Flips the toggle. Turning it on requests OS permission first — the
+  /// toggle only actually turns on if the user grants access, so the
+  /// returned bool tells the caller whether to show a "not granted" message.
+  Future<bool> toggleHealthSync(bool value) async {
+    if (!value) {
+      healthSyncEnabled = false;
+      unawaited(_persistence.saveHealthSyncEnabled(false));
+      notifyListeners();
+      return true;
+    }
+
+    final granted = await HealthService.instance.requestPermissions();
+    healthSyncEnabled = granted;
+    unawaited(_persistence.saveHealthSyncEnabled(granted));
+    notifyListeners();
+    if (granted) unawaited(syncHealthData());
+    return granted;
+  }
+
+  /// Overlays real Health data onto the current mock-generated history —
+  /// per field, per day, so days/metrics with no real reading keep showing
+  /// their mock value rather than a hole. A no-op unless sync is enabled.
+  Future<void> syncHealthData() async {
+    if (!healthSyncEnabled) return;
+    try {
+      final updated = <DailyStats>[];
+      for (final day in dailyStats) {
+        final snapshot = await HealthService.instance.fetchDailySnapshot(day.date);
+        updated.add(_mergeHealthSnapshot(day, snapshot));
+      }
+      dailyStats = updated;
+
+      final weightSamples = await HealthService.instance.fetchWeightHistory();
+      if (weightSamples.isNotEmpty) {
+        final carriedBodyFat =
+            weightHistory.isNotEmpty ? weightHistory.last.bodyFatPct : 0.0;
+        weightHistory = weightSamples
+            .map((s) => WeightEntry(s.date, s.kg, s.bodyFatPct ?? carriedBodyFat))
+            .toList();
+        if (user != null) user!.weightKg = weightHistory.last.kg;
+        _persistUser();
+        _persistWeight();
+      }
+
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Health sync failed: $e');
+    }
+  }
+
+  DailyStats _mergeHealthSnapshot(DailyStats base, HealthDailySnapshot? snapshot) {
+    if (snapshot == null) return base;
+    return DailyStats(
+      date: base.date,
+      steps: snapshot.steps ?? base.steps,
+      stepGoal: base.stepGoal,
+      calories: snapshot.activeCalories ?? base.calories,
+      calorieGoal: base.calorieGoal,
+      sleepMinutes: snapshot.totalSleepMinutes ?? base.sleepMinutes,
+      sleepGoalMinutes: base.sleepGoalMinutes,
+      waterMl: snapshot.waterMl ?? base.waterMl,
+      waterGoalMl: base.waterGoalMl,
+      lightSleepMinutes: snapshot.sleepLightMinutes ?? base.lightSleepMinutes,
+      deepSleepMinutes: snapshot.sleepDeepMinutes ?? base.deepSleepMinutes,
+      remSleepMinutes: snapshot.sleepRemMinutes ?? base.remSleepMinutes,
+      awakeMinutes: snapshot.sleepAwakeMinutes ?? base.awakeMinutes,
+      heartRateBpm: snapshot.heartRateBpm ?? base.heartRateBpm,
+    );
   }
 }

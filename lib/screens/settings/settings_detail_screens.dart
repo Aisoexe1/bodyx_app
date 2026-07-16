@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -455,6 +456,84 @@ class NotificationsScreen extends StatelessWidget {
             onChanged: (v) =>
                 context.read<AppState>().toggleWorkoutReminders(v),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class HealthSyncScreen extends StatefulWidget {
+  const HealthSyncScreen({super.key});
+  @override
+  State<HealthSyncScreen> createState() => _HealthSyncScreenState();
+}
+
+class _HealthSyncScreenState extends State<HealthSyncScreen> {
+  bool _syncing = false;
+
+  String get _platformLabel {
+    switch (defaultTargetPlatform) {
+      case TargetPlatform.iOS:
+        return 'Apple Health';
+      case TargetPlatform.android:
+        return 'Health Connect';
+      default:
+        return 'Health app';
+    }
+  }
+
+  Future<void> _handleToggle(bool value) async {
+    final granted = await context.read<AppState>().toggleHealthSync(value);
+    if (!mounted) return;
+    if (value && !granted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$_platformLabel access was not granted.')),
+      );
+    }
+  }
+
+  Future<void> _syncNow() async {
+    setState(() => _syncing = true);
+    HapticFeedback.mediumImpact();
+    await context.read<AppState>().syncHealthData();
+    if (!mounted) return;
+    setState(() => _syncing = false);
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text('Synced with $_platformLabel.')));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = context.watch<AppState>();
+    return _SettingsScaffold(
+      title: 'Health sync',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _ToggleRow(
+            icon: Icons.favorite_border_rounded,
+            label: 'Sync with $_platformLabel',
+            value: state.healthSyncEnabled,
+            onChanged: (v) => _handleToggle(v),
+          ),
+          const SizedBox(height: 14),
+          const Text(
+            'Reads steps, calories, sleep, water, weight and heart rate to '
+            'keep your dashboard accurate. BodyX never writes data back.',
+            style: TextStyle(
+              color: AppColors.textMuted,
+              fontSize: 12.5,
+              height: 1.4,
+            ),
+          ),
+          if (state.healthSyncEnabled) ...[
+            const SizedBox(height: 20),
+            PrimaryButton(
+              label: 'Sync now',
+              loading: _syncing,
+              onPressed: _syncing ? null : _syncNow,
+            ),
+          ],
         ],
       ),
     );

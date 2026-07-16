@@ -116,6 +116,7 @@ class DailyStats {
     required this.deepSleepMinutes,
     required this.remSleepMinutes,
     required this.awakeMinutes,
+    this.heartRateBpm = 68,
   });
 
   final DateTime date;
@@ -131,6 +132,7 @@ class DailyStats {
   final int deepSleepMinutes;
   final int remSleepMinutes;
   final int awakeMinutes;
+  final int heartRateBpm;
 
   double get stepProgress => (steps / stepGoal).clamp(0, 1);
   double get calorieProgress => (calories / calorieGoal).clamp(0, 1);
@@ -190,6 +192,24 @@ class WeightEntry {
         DateTime.parse(json['date'] as String),
         (json['kg'] as num).toDouble(),
         (json['bodyFatPct'] as num).toDouble(),
+      );
+}
+
+/// A single logged glass/bottle of water, timestamped so the day can be
+/// shown as "when you drank", not just a running total.
+class WaterLogEntry {
+  const WaterLogEntry(this.time, this.ml);
+  final DateTime time;
+  final int ml;
+
+  Map<String, dynamic> toJson() => {
+        'time': time.toIso8601String(),
+        'ml': ml,
+      };
+
+  factory WaterLogEntry.fromJson(Map<String, dynamic> json) => WaterLogEntry(
+        DateTime.parse(json['time'] as String),
+        json['ml'] as int,
       );
 }
 

@@ -13,12 +13,20 @@ class BodyPainter extends CustomPainter {
     required this.selectedZone,
     required this.highlightedZones,
     required this.pulse,
+    this.rippleZone,
+    this.rippleProgress = 0,
   });
 
   final BodySilhouette silhouette;
   final MuscleZone selectedZone;
   final Set<MuscleZone> highlightedZones;
   final double pulse; // 0..1 looping
+
+  /// One-shot selection ripple: the zone it's centered on, and how far
+  /// through its ~550ms burst it currently is (0..1, inactive once it
+  /// reaches 1).
+  final MuscleZone? rippleZone;
+  final double rippleProgress;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -147,6 +155,21 @@ class BodyPainter extends CustomPainter {
         ..style = PaintingStyle.stroke
         ..strokeWidth = isSelected ? 2.0 : 1.2;
       canvas.drawOval(rect, borderPaint);
+
+      if (z.zone == rippleZone && rippleProgress > 0 && rippleProgress < 1) {
+        final eased = Curves.easeOut.transform(rippleProgress);
+        final fade = 1 - eased;
+        final rippleRect = Rect.fromCenter(
+          center: center,
+          width: rx * 2 * (1.0 + eased * 0.9),
+          height: ry * 2 * (1.0 + eased * 0.9),
+        );
+        final ripplePaint = Paint()
+          ..color = AppColors.zoneSelected.withValues(alpha: 0.6 * fade)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2.2;
+        canvas.drawOval(rippleRect, ripplePaint);
+      }
     }
   }
 
@@ -156,7 +179,9 @@ class BodyPainter extends CustomPainter {
         oldDelegate.silhouette.view != silhouette.view ||
         oldDelegate.selectedZone != selectedZone ||
         oldDelegate.highlightedZones != highlightedZones ||
-        oldDelegate.pulse != pulse;
+        oldDelegate.pulse != pulse ||
+        oldDelegate.rippleZone != rippleZone ||
+        oldDelegate.rippleProgress != rippleProgress;
   }
 
   /// Fractional hit-test: returns the zone under [localPosition], if any,
