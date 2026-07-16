@@ -135,10 +135,11 @@ class MockData {
         ),
       ];
 
-  /// Self-reported checklist items only. The workout has its own dedicated,
-  /// progress-tracked card (see [todayWorkout]), and "log body weight" is
-  /// driven off real weight-history data (see `AppState.loggedWeightToday`)
-  /// rather than a togglable checkbox — neither is duplicated here.
+  /// Self-reported checklist items only. "Log body weight" is driven off
+  /// real weight-history data (see `AppState.loggedWeightToday`) rather
+  /// than a togglable checkbox, and today's workout is entirely
+  /// user-built (see `AppState.todayWorkoutSets`) with no mock template —
+  /// neither is duplicated here.
   static List<PlanTask> get todayPlan => [
         PlanTask(
           title: 'Mobility & stretch',
@@ -146,19 +147,4 @@ class MockData {
           icon: Icons.self_improvement_rounded,
         ),
       ];
-
-  /// Fresh (all-unchecked) template — [AppState] overlays today's saved
-  /// completion state on top of this, the same pattern as [todayPlan].
-  static Workout get todayWorkout => Workout(
-        name: 'Lower Body Strength',
-        subtitle: '2 exercises · Gym',
-        icon: Icons.fitness_center_rounded,
-        sets: [
-          WorkoutSet(exercise: 'Squats', setNumber: 1, targetReps: 10),
-          WorkoutSet(exercise: 'Squats', setNumber: 2, targetReps: 10),
-          WorkoutSet(exercise: 'Squats', setNumber: 3, targetReps: 10),
-          WorkoutSet(exercise: 'Leg Press', setNumber: 1, targetReps: 12),
-          WorkoutSet(exercise: 'Leg Press', setNumber: 2, targetReps: 12),
-        ],
-      );
 }

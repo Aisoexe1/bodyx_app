@@ -23,8 +23,11 @@ class PersistenceService {
   static const _kWaterLogDate = 'bodyx.water_log_date';
   static const _kMeals = 'bodyx.meals';
   static const _kMealsDate = 'bodyx.meals_date';
-  static const _kWorkoutSetsDone = 'bodyx.workout_sets_done';
+  static const _kWorkoutSets = 'bodyx.workout_sets';
   static const _kWorkoutSetsDate = 'bodyx.workout_sets_date';
+  static const _kWorkoutTimerSeconds = 'bodyx.workout_timer_seconds';
+  static const _kWorkoutTimerStartedAt = 'bodyx.workout_timer_started_at';
+  static const _kWorkoutTimerDate = 'bodyx.workout_timer_date';
 
   Future<SharedPreferences> get _prefs => SharedPreferences.getInstance();
 
@@ -176,18 +179,53 @@ class PersistenceService {
   /// Same day-scoped pattern again — which sets of today's workout are
   /// checked off, keyed only by index (the workout template itself is
   /// regenerated fresh each session, like [MockData.todayPlan]).
-  Future<List<bool>?> loadTodayWorkoutSetsDone() async {
+  /// The user's own exercise list for today (no fixed template — see
+  /// [AppState.todayWorkoutSets]), day-scoped like water/meals so it
+  /// starts empty again on a new day rather than carrying over.
+  Future<List<WorkoutSet>?> loadTodayWorkoutSets() async {
     final prefs = await _prefs;
     if (prefs.getString(_kWorkoutSetsDate) != _todayKey) return null;
-    final raw = prefs.getString(_kWorkoutSetsDone);
+    final raw = prefs.getString(_kWorkoutSets);
     if (raw == null) return null;
-    return (jsonDecode(raw) as List).cast<bool>();
+    return (jsonDecode(raw) as List)
+        .map((e) => WorkoutSet.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
-  Future<void> saveTodayWorkoutSetsDone(List<bool> done) async {
+  Future<void> saveTodayWorkoutSets(List<WorkoutSet> sets) async {
     final prefs = await _prefs;
     await prefs.setString(_kWorkoutSetsDate, _todayKey);
-    await prefs.setString(_kWorkoutSetsDone, jsonEncode(done));
+    await prefs.setString(
+        _kWorkoutSets, jsonEncode(sets.map((s) => s.toJson()).toList()));
+  }
+
+  /// [accumulatedSeconds] is the total from all stop presses today;
+  /// [startedAt] is non-null only while the timer is actively running, so
+  /// a relaunch mid-workout can resume counting from where it left off
+  /// (including time spent with the app closed) instead of losing it.
+  Future<(int accumulatedSeconds, DateTime? startedAt)?>
+      loadTodayWorkoutTimer() async {
+    final prefs = await _prefs;
+    if (prefs.getString(_kWorkoutTimerDate) != _todayKey) return null;
+    final seconds = prefs.getInt(_kWorkoutTimerSeconds);
+    if (seconds == null) return null;
+    final startedAtRaw = prefs.getString(_kWorkoutTimerStartedAt);
+    final startedAt =
+        startedAtRaw == null ? null : DateTime.parse(startedAtRaw);
+    return (seconds, startedAt);
+  }
+
+  Future<void> saveTodayWorkoutTimer(
+      int accumulatedSeconds, DateTime? startedAt) async {
+    final prefs = await _prefs;
+    await prefs.setString(_kWorkoutTimerDate, _todayKey);
+    await prefs.setInt(_kWorkoutTimerSeconds, accumulatedSeconds);
+    if (startedAt == null) {
+      await prefs.remove(_kWorkoutTimerStartedAt);
+    } else {
+      await prefs.setString(
+          _kWorkoutTimerStartedAt, startedAt.toIso8601String());
+    }
   }
 
   /// Signs the session out without discarding the user's logged history —

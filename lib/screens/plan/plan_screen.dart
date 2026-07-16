@@ -83,34 +83,42 @@ class PlanScreen extends StatelessWidget {
                       children: [
                         Row(
                           children: [
-                            GlowIconBadge(icon: state.todayWorkout.icon),
+                            const GlowIconBadge(
+                                icon: Icons.fitness_center_rounded),
                             const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(state.todayWorkout.name,
-                                  style: const TextStyle(
+                            const Expanded(
+                              child: Text('Today\'s Workout',
+                                  style: TextStyle(
                                       color: AppColors.textPrimary,
                                       fontWeight: FontWeight.w800,
                                       fontSize: 15)),
                             ),
-                            StatChip(
-                              label: state.todayWorkout.completedCount ==
-                                      state.todayWorkout.sets.length
-                                  ? 'Done'
-                                  : 'Today',
-                              color: state.todayWorkout.completedCount ==
-                                      state.todayWorkout.sets.length
-                                  ? AppColors.success
-                                  : AppColors.primary,
-                            ),
+                            if (state.todayWorkoutSets.isNotEmpty)
+                              StatChip(
+                                label: state.todayWorkoutCompletedSets ==
+                                        state.todayWorkoutSets.length
+                                    ? 'Done'
+                                    : 'In progress',
+                                color: state.todayWorkoutCompletedSets ==
+                                        state.todayWorkoutSets.length
+                                    ? AppColors.success
+                                    : AppColors.primary,
+                              ),
                           ],
                         ),
                         const SizedBox(height: 14),
-                        _ProgressLine(
-                          label: 'Workout completion',
-                          value: state.todayWorkout.progress,
-                          trailing:
-                              '${state.todayWorkout.completedCount} / ${state.todayWorkout.sets.length} sets',
-                        ),
+                        if (state.todayWorkoutSets.isEmpty)
+                          const Text(
+                              'No exercises added yet — tap to build today\'s workout.',
+                              style: TextStyle(
+                                  color: AppColors.textMuted, fontSize: 12.5))
+                        else
+                          _ProgressLine(
+                            label: 'Workout completion',
+                            value: state.todayWorkoutProgress,
+                            trailing:
+                                '${state.todayWorkoutCompletedSets} / ${state.todayWorkoutSets.length} sets',
+                          ),
                       ],
                     ),
                   ),

@@ -316,6 +316,12 @@ class MealEntry {
 }
 
 /// One working set of one exercise — the checkable unit of a [Workout].
+/// One set of one exercise the user added to today's workout — each set is
+/// individually trackable instead of a single static "X / Y sets" label.
+/// There's no fixed "Workout" template anymore (see [AppState.
+/// todayWorkoutSets]); the user builds the day's exercise list themselves,
+/// so this is plain user data, not mock content, and needs full JSON
+/// round-tripping rather than just a completion-flag list.
 class WorkoutSet {
   WorkoutSet({
     required this.exercise,
@@ -328,25 +334,20 @@ class WorkoutSet {
   final int setNumber;
   final int targetReps;
   bool done;
-}
 
-/// Today's workout as a real checklist — each set is individually
-/// trackable instead of a single static "X / Y sets" label.
-class Workout {
-  Workout({
-    required this.name,
-    required this.subtitle,
-    required this.icon,
-    required this.sets,
-  });
+  Map<String, dynamic> toJson() => {
+        'exercise': exercise,
+        'setNumber': setNumber,
+        'targetReps': targetReps,
+        'done': done,
+      };
 
-  final String name;
-  final String subtitle;
-  final IconData icon;
-  final List<WorkoutSet> sets;
-
-  int get completedCount => sets.where((s) => s.done).length;
-  double get progress => sets.isEmpty ? 0 : completedCount / sets.length;
+  factory WorkoutSet.fromJson(Map<String, dynamic> json) => WorkoutSet(
+        exercise: json['exercise'] as String,
+        setNumber: json['setNumber'] as int,
+        targetReps: json['targetReps'] as int,
+        done: json['done'] as bool,
+      );
 }
 
 enum AlertSeverity { info, warning, success }

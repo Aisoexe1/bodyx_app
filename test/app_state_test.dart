@@ -262,27 +262,88 @@ void main() {
   });
 
   group('workout tracking', () {
-    test('toggleWorkoutSet flips a set and persists across restart',
+    test('starts empty — no mock template', () async {
+      final state = AppState();
+      await state.hydrate();
+      expect(state.todayWorkoutSets, isEmpty);
+    });
+
+    test('addExercise appends the right number of sets with shared reps',
         () async {
       final state = AppState();
       await state.hydrate();
       state.signIn('workout@bodyx.app', 'pw');
 
-      expect(state.todayWorkout.completedCount, 0);
+      state.addExercise('Bench Press', 4, 8);
+      expect(state.todayWorkoutSets.length, 4);
+      expect(state.todayWorkoutSets.every((s) => s.exercise == 'Bench Press'),
+          true);
+      expect(state.todayWorkoutSets.every((s) => s.targetReps == 8), true);
+      expect(state.todayWorkoutSets.map((s) => s.setNumber).toList(),
+          [1, 2, 3, 4]);
+
+      state.addExercise('Squats', 3, 10);
+      expect(state.todayWorkoutSets.length, 7);
+    });
+
+    test('removeExercise drops only that exercise\'s sets', () async {
+      final state = AppState();
+      await state.hydrate();
+      state.signIn('workout2@bodyx.app', 'pw');
+
+      state.addExercise('Bench Press', 2, 8);
+      state.addExercise('Squats', 3, 10);
+      expect(state.todayWorkoutSets.length, 5);
+
+      state.removeExercise('Bench Press');
+      expect(state.todayWorkoutSets.length, 3);
+      expect(state.todayWorkoutSets.every((s) => s.exercise == 'Squats'),
+          true);
+    });
+
+    test('toggleWorkoutSet flips a set and persists across restart',
+        () async {
+      final state = AppState();
+      await state.hydrate();
+      state.signIn('workout3@bodyx.app', 'pw');
+      state.addExercise('Squats', 3, 10);
+
+      expect(state.todayWorkoutCompletedSets, 0);
 
       state.toggleWorkoutSet(0);
       state.toggleWorkoutSet(1);
-      expect(state.todayWorkout.completedCount, 2);
-      expect(state.todayWorkout.sets[0].done, true);
+      expect(state.todayWorkoutCompletedSets, 2);
+      expect(state.todayWorkoutSets[0].done, true);
 
       state.toggleWorkoutSet(0);
-      expect(state.todayWorkout.completedCount, 1);
-      expect(state.todayWorkout.sets[0].done, false);
+      expect(state.todayWorkoutCompletedSets, 1);
+      expect(state.todayWorkoutSets[0].done, false);
 
       final restarted = AppState();
       await restarted.hydrate();
-      expect(restarted.todayWorkout.completedCount, 1);
-      expect(restarted.todayWorkout.sets[1].done, true);
+      expect(restarted.todayWorkoutCompletedSets, 1);
+      expect(restarted.todayWorkoutSets[1].done, true);
+    });
+
+    test('toggleWorkoutTimer starts and stops, banking elapsed seconds',
+        () async {
+      final state = AppState();
+      await state.hydrate();
+      state.signIn('workout4@bodyx.app', 'pw');
+
+      expect(state.isWorkoutTimerRunning, false);
+      expect(state.todayWorkoutElapsed, Duration.zero);
+
+      state.toggleWorkoutTimer();
+      expect(state.isWorkoutTimerRunning, true);
+
+      state.toggleWorkoutTimer();
+      expect(state.isWorkoutTimerRunning, false);
+      // Real elapsed time is timing-dependent (sub-second in a fast test),
+      // so just assert it didn't go negative and stopped advancing.
+      expect(state.todayWorkoutElapsed.isNegative, false);
+      final bankedAfterStop = state.todayWorkoutElapsed;
+      expect(state.todayWorkoutElapsed, bankedAfterStop);
     });
   });
 

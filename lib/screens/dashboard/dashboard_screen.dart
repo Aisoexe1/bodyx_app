@@ -120,8 +120,9 @@ class _TodayChecklistCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final workout = state.todayWorkout;
-    final workoutDone = workout.completedCount == workout.sets.length;
+    final workoutSets = state.todayWorkoutSets;
+    final workoutDone = workoutSets.isNotEmpty &&
+        state.todayWorkoutCompletedSets == workoutSets.length;
     final weightDone = state.loggedWeightToday;
     final simpleTasks = state.planTasks;
     final doneCount = (workoutDone ? 1 : 0) +
@@ -152,12 +153,13 @@ class _TodayChecklistCard extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           _ChecklistRow(
-            icon: workout.icon,
-            title: workout.name,
-            subtitle:
-                '${workout.completedCount} / ${workout.sets.length} sets · ${workout.subtitle}',
+            icon: Icons.fitness_center_rounded,
+            title: "Today's Workout",
+            subtitle: workoutSets.isEmpty
+                ? 'No exercises yet — tap to add'
+                : '${state.todayWorkoutCompletedSets} / ${workoutSets.length} sets',
             done: workoutDone,
-            progress: workout.progress,
+            progress: workoutSets.isEmpty ? null : state.todayWorkoutProgress,
             onTap: () => showModalBottomSheet(
               context: context,
               isScrollControlled: true,

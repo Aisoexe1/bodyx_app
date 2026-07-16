@@ -30,7 +30,7 @@ class AppState extends ChangeNotifier {
     bodyMeasurements = MockData.generateBodyMeasurements(Gender.male);
     alerts = MockData.alerts;
     planTasks = MockData.todayPlan;
-    todayWorkout = MockData.todayWorkout;
+    todayWorkoutSets = [];
     meals = [];
     progressPhotos = [];
   }
@@ -100,12 +100,16 @@ class AppState extends ChangeNotifier {
       meals = savedMeals;
     }
 
-    final savedWorkoutDone = await _persistence.loadTodayWorkoutSetsDone();
-    if (savedWorkoutDone != null &&
-        savedWorkoutDone.length == todayWorkout.sets.length) {
-      for (var i = 0; i < savedWorkoutDone.length; i++) {
-        todayWorkout.sets[i].done = savedWorkoutDone[i];
-      }
+    final savedWorkoutSets = await _persistence.loadTodayWorkoutSets();
+    if (savedWorkoutSets != null) {
+      todayWorkoutSets = savedWorkoutSets;
+    }
+
+    final savedTimer = await _persistence.loadTodayWorkoutTimer();
+    if (savedTimer != null) {
+      final (seconds, startedAt) = savedTimer;
+      _workoutAccumulatedSeconds = seconds;
+      _workoutTimerStartedAt = startedAt;
     }
   }
 
@@ -226,9 +230,24 @@ class AppState extends ChangeNotifier {
   late List<WeightEntry> weightHistory;
   late List<PlanTask> planTasks;
   late List<MealEntry> meals;
-  late Workout todayWorkout;
   late List<ProgressPhoto> progressPhotos;
   List<WaterLogEntry> todayWaterLog = [];
+
+  // ---- Workout (fully user-defined — no fixed template) --------------------
+  //
+  // The user builds today's exercise list themselves (see [addExercise]);
+  // there's no mock "Lower Body Strength" starter data, so this starts
+  // empty every day until they add something.
+  late List<WorkoutSet> todayWorkoutSets;
+  int _workoutAccumulatedSeconds = 0;
+  DateTime? _workoutTimerStartedAt;
+
+  int get todayWorkoutCompletedSets =>
+      todayWorkoutSets.where((s) => s.done).length;
+
+  double get todayWorkoutProgress => todayWorkoutSets.isEmpty
+      ? 0
+      : todayWorkoutCompletedSets / todayWorkoutSets.length;
 
   void togglePlanTask(int index) {
     planTasks[index].done = !planTasks[index].done;
@@ -237,11 +256,64 @@ class AppState extends ChangeNotifier {
   }
 
   void toggleWorkoutSet(int index) {
-    final set = todayWorkout.sets[index];
+    final set = todayWorkoutSets[index];
     set.done = !set.done;
     if (set.done) HapticFeedback.mediumImpact();
-    unawaited(_persistence.saveTodayWorkoutSetsDone(
-        todayWorkout.sets.map((s) => s.done).toList()));
+    _persistWorkoutSets();
+    notifyListeners();
+  }
+
+  /// Appends [setCount] fresh (unchecked) sets of [exercise] to today's
+  /// workout, e.g. addExercise('Bench Press', 4, 8) adds 4 sets of 8 reps.
+  void addExercise(String exercise, int setCount, int targetReps) {
+    HapticFeedback.mediumImpact();
+    todayWorkoutSets = [
+      ...todayWorkoutSets,
+      for (var i = 1; i <= setCount; i++)
+        WorkoutSet(exercise: exercise, setNumber: i, targetReps: targetReps),
+    ];
+    _persistWorkoutSets();
+    notifyListeners();
+  }
+
+  /// Removes every set belonging to [exercise] — the unit a user thinks in
+  /// terms of ("delete Bench Press"), not individual sets.
+  void removeExercise(String exercise) {
+    todayWorkoutSets =
+        todayWorkoutSets.where((s) => s.exercise != exercise).toList();
+    _persistWorkoutSets();
+    notifyListeners();
+  }
+
+  void _persistWorkoutSets() =>
+      unawaited(_persistence.saveTodayWorkoutSets(todayWorkoutSets));
+
+  bool get isWorkoutTimerRunning => _workoutTimerStartedAt != null;
+
+  /// Total time spent on today's workout — sums every past start/stop
+  /// segment plus whatever's elapsed in the currently-running one, if any.
+  Duration get todayWorkoutElapsed {
+    final startedAt = _workoutTimerStartedAt;
+    final liveSeconds =
+        startedAt == null ? 0 : DateTime.now().difference(startedAt).inSeconds;
+    return Duration(seconds: _workoutAccumulatedSeconds + liveSeconds);
+  }
+
+  /// One button, two behaviors: starts the timer if it's stopped, stops
+  /// (and banks the elapsed time) if it's running — mirroring "press at
+  /// the start of the workout, press again at the end."
+  void toggleWorkoutTimer() {
+    HapticFeedback.mediumImpact();
+    final startedAt = _workoutTimerStartedAt;
+    if (startedAt == null) {
+      _workoutTimerStartedAt = DateTime.now();
+    } else {
+      _workoutAccumulatedSeconds +=
+          DateTime.now().difference(startedAt).inSeconds;
+      _workoutTimerStartedAt = null;
+    }
+    unawaited(_persistence.saveTodayWorkoutTimer(
+        _workoutAccumulatedSeconds, _workoutTimerStartedAt));
     notifyListeners();
   }
 
@@ -357,7 +429,7 @@ class AppState extends ChangeNotifier {
 
   /// True if today's plan includes a workout — bumps the water target per
   /// [HealthInsights.waterGoalMl].
-  bool get isWorkoutDayToday => todayWorkout.sets.isNotEmpty;
+  bool get isWorkoutDayToday => todayWorkoutSets.isNotEmpty;
 
   int get individualizedWaterGoalMl => HealthInsights.waterGoalMl(
         weightKg: user?.weightKg ?? 75,
