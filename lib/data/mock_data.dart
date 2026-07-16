@@ -23,6 +23,7 @@ class MockData {
       final awake = 5 + _rng.nextInt(20);
       final light = sleep - deep - rem;
       final heartRate = 58 + _rng.nextInt(20);
+      final isToday = i == days - 1;
       return DailyStats(
         date: date,
         steps: steps,
@@ -31,7 +32,12 @@ class MockData {
         calorieGoal: 2200,
         sleepMinutes: sleep,
         sleepGoalMinutes: 480,
-        waterMl: 900 + _rng.nextInt(1800),
+        // Today's water is tracked live via AppState.todayWaterLog, which
+        // genuinely starts empty — seeding a random value here would show
+        // the user water they never logged until their first real entry
+        // overwrites it. Past days keep the random seed so history/charts
+        // still look populated.
+        waterMl: isToday ? 0 : 900 + _rng.nextInt(1800),
         waterGoalMl: 2500,
         lightSleepMinutes: light,
         deepSleepMinutes: deep,

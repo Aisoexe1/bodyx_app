@@ -12,6 +12,28 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
+  group('water defaults', () {
+    test('today starts at 0ml on a fresh app open, not a mock-seeded value',
+        () async {
+      final state = AppState();
+      await state.hydrate();
+
+      expect(state.dailyStats.last.waterMl, 0);
+      expect(state.todayWaterLog, isEmpty);
+    });
+
+    test('logging water is what first raises today above 0', () async {
+      final state = AppState();
+      await state.hydrate();
+      state.signIn('water@bodyx.app', 'pw');
+
+      expect(state.dailyStats.last.waterMl, 0);
+
+      state.logWater(250);
+      expect(state.dailyStats.last.waterMl, 250);
+    });
+  });
+
   group('auth flow', () {
     test('starts on splash and has no session', () async {
       final state = AppState();
@@ -261,6 +283,38 @@ void main() {
       await restarted.hydrate();
       expect(restarted.todayWorkout.completedCount, 1);
       expect(restarted.todayWorkout.sets[1].done, true);
+    });
+  });
+
+  group('progress photos', () {
+    test('addProgressPhoto prepends, keeps newest-first order, and persists',
+        () async {
+      final state = AppState();
+      await state.hydrate();
+      state.signIn('photos@bodyx.app', 'pw');
+
+      expect(state.progressPhotos, isEmpty);
+
+      state.addProgressPhoto(ProgressPhoto(
+        id: '1',
+        date: DateTime(2026, 1, 1),
+        fileName: 'progress_1.jpg',
+      ));
+      state.addProgressPhoto(ProgressPhoto(
+        id: '2',
+        date: DateTime(2026, 2, 1),
+        fileName: 'progress_2.jpg',
+      ));
+
+      expect(state.progressPhotos.length, 2);
+      // Newest date first, regardless of insertion order.
+      expect(state.progressPhotos.first.id, '2');
+      expect(state.progressPhotos.last.id, '1');
+
+      final restarted = AppState();
+      await restarted.hydrate();
+      expect(restarted.progressPhotos.length, 2);
+      expect(restarted.progressPhotos.first.id, '2');
     });
   });
 

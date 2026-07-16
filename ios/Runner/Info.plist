@@ -30,6 +30,10 @@
 	<string>BodyX reads your steps, calories, sleep, water, weight and heart rate from Health to keep your dashboard accurate.</string>
 	<key>NSHealthUpdateUsageDescription</key>
 	<string>BodyX does not write any data back to Health.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>BodyX uses your camera to take progress photos so you can visually compare your body over time.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>BodyX lets you pick an existing photo from your library to add as a progress photo.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

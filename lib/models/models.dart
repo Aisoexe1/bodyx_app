@@ -195,6 +195,33 @@ class WeightEntry {
       );
 }
 
+/// A progress photo the user captured, for visually comparing any two
+/// points in time. Stores a filename only (not an absolute path) — the
+/// app's documents directory path can change between installs/updates on
+/// iOS, so the real path is always resolved at read time.
+class ProgressPhoto {
+  const ProgressPhoto({
+    required this.id,
+    required this.date,
+    required this.fileName,
+  });
+  final String id;
+  final DateTime date;
+  final String fileName;
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'date': date.toIso8601String(),
+        'fileName': fileName,
+      };
+
+  factory ProgressPhoto.fromJson(Map<String, dynamic> json) => ProgressPhoto(
+        id: json['id'] as String,
+        date: DateTime.parse(json['date'] as String),
+        fileName: json['fileName'] as String,
+      );
+}
+
 /// A single logged glass/bottle of water, timestamped so the day can be
 /// shown as "when you drank", not just a running total.
 class WaterLogEntry {

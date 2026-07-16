@@ -7,6 +7,7 @@ import '../models/models.dart';
 import 'health_service.dart';
 import 'notification_service.dart';
 import 'persistence_service.dart';
+import 'progress_photo_storage.dart';
 
 enum AuthStage { splash, signIn, signUp, chooseUsername, bodyData, done }
 
@@ -31,6 +32,7 @@ class AppState extends ChangeNotifier {
     planTasks = MockData.todayPlan;
     todayWorkout = MockData.todayWorkout;
     meals = [];
+    progressPhotos = [];
   }
 
   final PersistenceService _persistence;
@@ -59,6 +61,11 @@ class AppState extends ChangeNotifier {
     final savedMeasurements = await _persistence.loadBodyMeasurements();
     if (savedMeasurements != null && savedMeasurements.isNotEmpty) {
       bodyMeasurements = savedMeasurements;
+    }
+
+    final savedPhotos = await _persistence.loadProgressPhotos();
+    if (savedPhotos != null) {
+      progressPhotos = savedPhotos;
     }
 
     final savedTasksDone = await _persistence.loadPlanTaskDone();
@@ -220,6 +227,7 @@ class AppState extends ChangeNotifier {
   late List<PlanTask> planTasks;
   late List<MealEntry> meals;
   late Workout todayWorkout;
+  late List<ProgressPhoto> progressPhotos;
   List<WaterLogEntry> todayWaterLog = [];
 
   void togglePlanTask(int index) {
@@ -261,6 +269,26 @@ class AppState extends ChangeNotifier {
     final last = weightHistory.last.date;
     final now = DateTime.now();
     return last.year == now.year && last.month == now.month && last.day == now.day;
+  }
+
+  // Unlike most other persisted fields in this class, the photo metadata
+  // save is awaited (not fire-and-forget) before these methods return —
+  // photos are irreplaceable, and the goal of this feature is a reliable
+  // long-term record, so it's worth shrinking (not eliminating) the crash
+  // window between a file landing on disk and its metadata being saved.
+  Future<void> addProgressPhoto(ProgressPhoto photo) async {
+    HapticFeedback.mediumImpact();
+    progressPhotos = [photo, ...progressPhotos]
+      ..sort((a, b) => b.date.compareTo(a.date));
+    notifyListeners();
+    await _persistence.saveProgressPhotos(progressPhotos);
+  }
+
+  Future<void> deleteProgressPhoto(ProgressPhoto photo) async {
+    await ProgressPhotoStorage.instance.delete(photo.fileName);
+    progressPhotos = progressPhotos.where((p) => p.id != photo.id).toList();
+    notifyListeners();
+    await _persistence.saveProgressPhotos(progressPhotos);
   }
 
   // ---- Calories / protein --------------------------------------------------

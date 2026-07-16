@@ -13,6 +13,7 @@ class PersistenceService {
   static const _kUserProfile = 'bodyx.user_profile';
   static const _kWeightHistory = 'bodyx.weight_history';
   static const _kBodyMeasurements = 'bodyx.body_measurements';
+  static const _kProgressPhotos = 'bodyx.progress_photos';
   static const _kPlanTaskDone = 'bodyx.plan_task_done';
   static const _kAlertRead = 'bodyx.alert_read';
   static const _kNotificationsEnabled = 'bodyx.notifications_enabled';
@@ -59,6 +60,23 @@ class PersistenceService {
   Future<void> saveWeightHistory(List<WeightEntry> entries) async {
     final encoded = jsonEncode(entries.map((e) => e.toJson()).toList());
     await (await _prefs).setString(_kWeightHistory, encoded);
+  }
+
+  /// Unlike weight history, an empty saved list is meaningful here (the
+  /// user deleted every photo) — callers should only treat `null` as
+  /// "never saved", not as "empty".
+  Future<List<ProgressPhoto>?> loadProgressPhotos() async {
+    final raw = (await _prefs).getString(_kProgressPhotos);
+    if (raw == null) return null;
+    final list = jsonDecode(raw) as List;
+    return list
+        .map((e) => ProgressPhoto.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<void> saveProgressPhotos(List<ProgressPhoto> photos) async {
+    final encoded = jsonEncode(photos.map((e) => e.toJson()).toList());
+    await (await _prefs).setString(_kProgressPhotos, encoded);
   }
 
   Future<Map<MuscleZone, BodyMeasurement>?> loadBodyMeasurements() async {
