@@ -239,7 +239,13 @@ class AppState extends ChangeNotifier {
           activityLevel: user!.activityLevel,
         );
 
-  int get calorieSurplus => selectedStats.calories - tdee.round();
+  /// Calories actually eaten today — from logged meals, not [DailyStats
+  /// .calories] (that field holds *active calories burned*, the same one
+  /// Health sync overwrites from HealthKit's ACTIVE_ENERGY_BURNED, so it
+  /// isn't comparable to TDEE the way a surplus needs).
+  int get todayCaloriesEaten => meals.fold<int>(0, (sum, m) => sum + m.kcal);
+
+  int get calorieSurplus => todayCaloriesEaten - tdee.round();
 
   StatusResult get calorieSurplusStatus =>
       HealthInsights.calorieSurplusStatus(calorieSurplus);

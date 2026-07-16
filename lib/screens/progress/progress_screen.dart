@@ -262,7 +262,6 @@ class _CaloriesCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final stats = state.selectedStats;
     final surplus = state.calorieSurplus;
     final status = state.calorieSurplusStatus;
     final color = statusColor(status.level);
@@ -278,7 +277,7 @@ class _CaloriesCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('${stats.calories} kcal',
+              Text('${state.todayCaloriesEaten} kcal',
                   style: const TextStyle(
                       color: AppColors.textPrimary,
                       fontWeight: FontWeight.w800,
