@@ -15,10 +15,12 @@ enum AuthStage { splash, signIn, signUp, chooseUsername, bodyData, done }
 /// here so every screen updates reactively when mock data changes.
 ///
 /// Anything the user actively logs or configures (profile, weight/
-/// measurement history, plan/alert read-state, settings) is persisted via
-/// [PersistenceService] and restored on the next launch through [hydrate].
-/// Generated demo history (daily steps/calories/sleep, today's meals) is
-/// deliberately re-rolled each session so the dashboard always feels alive.
+/// measurement history, plan/alert read-state, settings, today's water/
+/// meals) is persisted via [PersistenceService] and restored on the next
+/// launch through [hydrate]. Generated demo history (daily steps/calories/
+/// sleep) is deliberately re-rolled each session so the dashboard always
+/// feels alive — meals start empty each day since there's no realistic way
+/// to fake "what you ate" the way a step count can be simulated.
 class AppState extends ChangeNotifier {
   AppState({PersistenceService? persistence})
       : _persistence = persistence ?? PersistenceService() {
@@ -27,7 +29,7 @@ class AppState extends ChangeNotifier {
     bodyMeasurements = MockData.generateBodyMeasurements(Gender.male);
     alerts = MockData.alerts;
     planTasks = MockData.todayPlan;
-    meals = MockData.todayMeals;
+    meals = [];
   }
 
   final PersistenceService _persistence;
@@ -83,6 +85,11 @@ class AppState extends ChangeNotifier {
     if (savedWaterLog != null && savedWaterLog.isNotEmpty) {
       todayWaterLog = savedWaterLog;
       _applyTodayWaterTotal();
+    }
+
+    final savedMeals = await _persistence.loadTodayMeals();
+    if (savedMeals != null) {
+      meals = savedMeals;
     }
   }
 
@@ -339,6 +346,21 @@ class AppState extends ChangeNotifier {
       heartRateBpm: today.heartRateBpm,
     );
     dailyStats = updated;
+  }
+
+  // ---- Meals --------------------------------------------------------------
+
+  void logMeal(MealEntry meal) {
+    meals = [...meals, meal];
+    unawaited(_persistence.saveTodayMeals(meals));
+    notifyListeners();
+  }
+
+  void removeMeal(int index) {
+    final updated = List<MealEntry>.from(meals)..removeAt(index);
+    meals = updated;
+    unawaited(_persistence.saveTodayMeals(meals));
+    notifyListeners();
   }
 
   // ---- Body metrics ---------------------------------------------------------

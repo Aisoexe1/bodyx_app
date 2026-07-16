@@ -4,8 +4,8 @@ import '../models/models.dart';
 
 /// Thin wrapper around [SharedPreferences] — everything the user actively
 /// logs or configures (profile, weight/measurement history, plan/alert
-/// read-state, settings) survives an app restart. Generated demo history
-/// (daily steps/calories/sleep, today's meals) is deliberately NOT
+/// read-state, settings, today's water/meals) survives an app restart.
+/// Generated demo history (daily steps/calories/sleep) is deliberately NOT
 /// persisted here; it's regenerated each session so the dashboard always
 /// has a lively, populated feel.
 class PersistenceService {
@@ -20,8 +20,15 @@ class PersistenceService {
   static const _kHealthSyncEnabled = 'bodyx.health_sync_enabled';
   static const _kWaterLog = 'bodyx.water_log';
   static const _kWaterLogDate = 'bodyx.water_log_date';
+  static const _kMeals = 'bodyx.meals';
+  static const _kMealsDate = 'bodyx.meals_date';
 
   Future<SharedPreferences> get _prefs => SharedPreferences.getInstance();
+
+  String get _todayKey {
+    final today = DateTime.now();
+    return '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+  }
 
   Future<bool> get onboardingDone async =>
       (await _prefs).getBool(_kOnboardingDone) ?? false;
@@ -110,11 +117,7 @@ class PersistenceService {
   /// double-count).
   Future<List<WaterLogEntry>?> loadTodayWaterLog() async {
     final prefs = await _prefs;
-    final savedDate = prefs.getString(_kWaterLogDate);
-    final today = DateTime.now();
-    final todayKey =
-        '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
-    if (savedDate != todayKey) return null;
+    if (prefs.getString(_kWaterLogDate) != _todayKey) return null;
 
     final raw = prefs.getString(_kWaterLog);
     if (raw == null) return null;
@@ -125,12 +128,29 @@ class PersistenceService {
 
   Future<void> saveTodayWaterLog(List<WaterLogEntry> entries) async {
     final prefs = await _prefs;
-    final today = DateTime.now();
-    final todayKey =
-        '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
-    await prefs.setString(_kWaterLogDate, todayKey);
+    await prefs.setString(_kWaterLogDate, _todayKey);
     await prefs.setString(
         _kWaterLog, jsonEncode(entries.map((e) => e.toJson()).toList()));
+  }
+
+  /// Same day-scoped pattern as the water log — meals are real user-logged
+  /// data now (see [MealEntry]), not part of the regenerated mock history.
+  Future<List<MealEntry>?> loadTodayMeals() async {
+    final prefs = await _prefs;
+    if (prefs.getString(_kMealsDate) != _todayKey) return null;
+
+    final raw = prefs.getString(_kMeals);
+    if (raw == null) return null;
+    return (jsonDecode(raw) as List)
+        .map((e) => MealEntry.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<void> saveTodayMeals(List<MealEntry> meals) async {
+    final prefs = await _prefs;
+    await prefs.setString(_kMealsDate, _todayKey);
+    await prefs.setString(
+        _kMeals, jsonEncode(meals.map((e) => e.toJson()).toList()));
   }
 
   /// Signs the session out without discarding the user's logged history —

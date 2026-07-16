@@ -213,6 +213,40 @@ class WaterLogEntry {
       );
 }
 
+/// A closed, named set of icons meals can use. Persisting an [IconData] by
+/// name (rather than reconstructing `IconData(codePoint, ...)` from stored
+/// numbers) keeps every glyph a literal `Icons.xxx` reference somewhere in
+/// source, which is what Flutter's icon tree-shaker needs to avoid silently
+/// dropping a glyph that's only ever built dynamically.
+class MealIcons {
+  MealIcons._();
+
+  static const Map<String, IconData> byName = {
+    'restaurant': Icons.restaurant_rounded,
+    'egg': Icons.egg_rounded,
+    'set_meal': Icons.set_meal_rounded,
+    'icecream': Icons.icecream_rounded,
+    'kebab_dining': Icons.kebab_dining_rounded,
+    'local_cafe': Icons.local_cafe_rounded,
+    'rice_bowl': Icons.rice_bowl_rounded,
+    'breakfast_dining': Icons.breakfast_dining_rounded,
+    'lunch_dining': Icons.lunch_dining_rounded,
+    'bakery_dining': Icons.bakery_dining_rounded,
+    'ramen_dining': Icons.ramen_dining_rounded,
+    'eco': Icons.eco_rounded,
+    'local_drink': Icons.local_drink_rounded,
+    'grass': Icons.grass_rounded,
+    'opacity': Icons.opacity_rounded,
+  };
+
+  static String nameOf(IconData icon) {
+    for (final entry in byName.entries) {
+      if (entry.value == icon) return entry.key;
+    }
+    return 'restaurant';
+  }
+}
+
 class MealEntry {
   const MealEntry({
     required this.name,
@@ -231,6 +265,27 @@ class MealEntry {
   final int carbsG;
   final int fatG;
   final IconData icon;
+
+  Map<String, dynamic> toJson() => {
+        'name': name,
+        'time': time,
+        'kcal': kcal,
+        'proteinG': proteinG,
+        'carbsG': carbsG,
+        'fatG': fatG,
+        'icon': MealIcons.nameOf(icon),
+      };
+
+  factory MealEntry.fromJson(Map<String, dynamic> json) => MealEntry(
+        name: json['name'] as String,
+        time: json['time'] as String,
+        kcal: json['kcal'] as int,
+        proteinG: json['proteinG'] as int,
+        carbsG: json['carbsG'] as int,
+        fatG: json['fatG'] as int,
+        icon: MealIcons.byName[json['icon'] as String] ??
+            Icons.restaurant_rounded,
+      );
 }
 
 enum AlertSeverity { info, warning, success }

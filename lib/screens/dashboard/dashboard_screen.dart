@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../logic/health_insights.dart';
 import '../../models/models.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_colors.dart';
@@ -12,6 +11,7 @@ import '../../widgets/common/progress_ring.dart';
 import '../../widgets/common/scale_tap.dart';
 import '../body_metrics/body_metrics_screen.dart';
 import '../plan/daily_plan_screen.dart';
+import 'log_meal_sheet.dart';
 import 'water_log_sheet.dart';
 
 class DashboardScreen extends StatelessWidget {
@@ -62,16 +62,22 @@ class DashboardScreen extends StatelessWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: _MiniStatCard(
-                        icon: Icons.favorite_rounded,
-                        color: AppColors.pink,
-                        label: HealthInsights.hrZoneFor(
-                          bpm: stats.heartRateBpm,
-                          age: user?.age ?? 25,
-                        ).label,
+                        icon: Icons.local_fire_department_rounded,
+                        color: AppColors.warning,
+                        label: 'Calories',
                         value: CountUpText(
-                          value: stats.heartRateBpm,
-                          formatter: (v) => '$v bpm',
+                          value: state.todayCaloriesEaten,
+                          formatter: (v) => '$v kcal',
                           style: _MiniStatCard.valueStyle,
+                        ),
+                        statusDot: state.selectedDateIndex == -1
+                            ? statusColor(state.calorieSurplusStatus.level)
+                            : null,
+                        onTap: () => showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (_) => const LogMealSheet(),
                         ),
                       ),
                     ),

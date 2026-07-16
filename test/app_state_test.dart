@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -176,6 +177,63 @@ void main() {
 
       expect(restarted.notificationsEnabled, isFalse);
       expect(restarted.workoutRemindersEnabled, isFalse);
+    });
+
+    test('logged meals survive a restart and feed calorie/protein totals',
+        () async {
+      final state = AppState();
+      await state.hydrate();
+      state.signIn('meals@bodyx.app', 'pw');
+
+      expect(state.meals, isEmpty);
+      state.logMeal(const MealEntry(
+        name: 'Chicken bowl',
+        time: '12:30',
+        kcal: 600,
+        proteinG: 45,
+        carbsG: 50,
+        fatG: 15,
+        icon: Icons.lunch_dining_rounded,
+      ));
+      expect(state.todayCaloriesEaten, 600);
+      expect(state.todayProteinG, 45);
+
+      final restarted = AppState();
+      await restarted.hydrate();
+
+      expect(restarted.meals.length, 1);
+      expect(restarted.meals.first.name, 'Chicken bowl');
+      expect(restarted.todayCaloriesEaten, 600);
+    });
+
+    test('removeMeal drops just that entry', () async {
+      final state = AppState();
+      await state.hydrate();
+      state.signIn('removemeal@bodyx.app', 'pw');
+
+      state.logMeal(const MealEntry(
+        name: 'Oats',
+        time: '08:00',
+        kcal: 300,
+        proteinG: 10,
+        carbsG: 50,
+        fatG: 5,
+        icon: Icons.breakfast_dining_rounded,
+      ));
+      state.logMeal(const MealEntry(
+        name: 'Shake',
+        time: '16:00',
+        kcal: 200,
+        proteinG: 30,
+        carbsG: 10,
+        fatG: 3,
+        icon: Icons.local_cafe_rounded,
+      ));
+      expect(state.meals.length, 2);
+
+      state.removeMeal(0);
+      expect(state.meals.length, 1);
+      expect(state.meals.first.name, 'Shake');
     });
   });
 

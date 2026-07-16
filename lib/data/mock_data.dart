@@ -89,45 +89,6 @@ class MockData {
     return result;
   }
 
-  static List<MealEntry> get todayMeals => const [
-        MealEntry(
-          name: 'Oats & Berries',
-          time: '07:40',
-          kcal: 380,
-          proteinG: 18,
-          carbsG: 54,
-          fatG: 9,
-          icon: Icons.free_breakfast_rounded,
-        ),
-        MealEntry(
-          name: 'Grilled Chicken Bowl',
-          time: '12:30',
-          kcal: 610,
-          proteinG: 48,
-          carbsG: 55,
-          fatG: 16,
-          icon: Icons.lunch_dining_rounded,
-        ),
-        MealEntry(
-          name: 'Protein Shake',
-          time: '16:15',
-          kcal: 220,
-          proteinG: 32,
-          carbsG: 14,
-          fatG: 4,
-          icon: Icons.local_cafe_rounded,
-        ),
-        MealEntry(
-          name: 'Salmon & Greens',
-          time: '19:45',
-          kcal: 520,
-          proteinG: 40,
-          carbsG: 22,
-          fatG: 24,
-          icon: Icons.dinner_dining_rounded,
-        ),
-      ];
-
   static List<AlertItem> get alerts => [
         AlertItem(
           title: 'Low water intake',
