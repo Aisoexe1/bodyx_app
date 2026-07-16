@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../logic/health_insights.dart';
 import '../../models/models.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
+import '../../theme/status_colors.dart';
 import '../../widgets/common/count_up_text.dart';
 import '../../widgets/common/glow_card.dart';
 import '../../widgets/common/progress_ring.dart';
 import '../../widgets/common/scale_tap.dart';
 import '../body_metrics/body_metrics_screen.dart';
 import '../plan/daily_plan_screen.dart';
+import 'water_log_sheet.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -45,6 +48,15 @@ class DashboardScreen extends StatelessWidget {
                           formatter: (v) => '${(v / 1000).toStringAsFixed(1)}L',
                           style: _MiniStatCard.valueStyle,
                         ),
+                        statusDot: state.selectedDateIndex == -1
+                            ? statusColor(state.todayWaterStatus.level)
+                            : null,
+                        onTap: () => showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (_) => const WaterLogSheet(),
+                        ),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -52,7 +64,10 @@ class DashboardScreen extends StatelessWidget {
                       child: _MiniStatCard(
                         icon: Icons.favorite_rounded,
                         color: AppColors.pink,
-                        label: 'Heart rate',
+                        label: HealthInsights.hrZoneFor(
+                          bpm: stats.heartRateBpm,
+                          age: user?.age ?? 25,
+                        ).label,
                         value: CountUpText(
                           value: stats.heartRateBpm,
                           formatter: (v) => '$v bpm',
@@ -299,6 +314,8 @@ class _MiniStatCard extends StatelessWidget {
     required this.color,
     required this.label,
     required this.value,
+    this.statusDot,
+    this.onTap,
   });
 
   static const valueStyle = TextStyle(
@@ -308,10 +325,12 @@ class _MiniStatCard extends StatelessWidget {
   final Color color;
   final String label;
   final Widget value;
+  final Color? statusDot;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return GlowCard(
+    final card = GlowCard(
       child: Row(
         children: [
           GlowIconBadge(icon: icon, color: color, size: 36),
@@ -321,15 +340,32 @@ class _MiniStatCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 value,
-                Text(label,
-                    style: const TextStyle(
-                        color: AppColors.textMuted, fontSize: 11.5)),
+                Row(
+                  children: [
+                    if (statusDot != null) ...[
+                      Container(
+                        width: 6,
+                        height: 6,
+                        margin: const EdgeInsets.only(right: 5),
+                        decoration: BoxDecoration(
+                            color: statusDot, shape: BoxShape.circle),
+                      ),
+                    ],
+                    Flexible(
+                      child: Text(label,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                              color: AppColors.textMuted, fontSize: 11.5)),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
         ],
       ),
     );
+    return onTap == null ? card : ScaleTap(onTap: onTap!, child: card);
   }
 }
 

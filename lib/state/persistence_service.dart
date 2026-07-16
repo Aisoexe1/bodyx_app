@@ -18,6 +18,8 @@ class PersistenceService {
   static const _kNotificationsEnabled = 'bodyx.notifications_enabled';
   static const _kWorkoutRemindersEnabled = 'bodyx.workout_reminders_enabled';
   static const _kHealthSyncEnabled = 'bodyx.health_sync_enabled';
+  static const _kWaterLog = 'bodyx.water_log';
+  static const _kWaterLogDate = 'bodyx.water_log_date';
 
   Future<SharedPreferences> get _prefs => SharedPreferences.getInstance();
 
@@ -102,6 +104,34 @@ class PersistenceService {
 
   Future<void> saveHealthSyncEnabled(bool value) async =>
       (await _prefs).setBool(_kHealthSyncEnabled, value);
+
+  /// Returns null if there's no saved log, or if it's from a previous day
+  /// (a fresh mock day has already been generated, so a stale log would
+  /// double-count).
+  Future<List<WaterLogEntry>?> loadTodayWaterLog() async {
+    final prefs = await _prefs;
+    final savedDate = prefs.getString(_kWaterLogDate);
+    final today = DateTime.now();
+    final todayKey =
+        '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+    if (savedDate != todayKey) return null;
+
+    final raw = prefs.getString(_kWaterLog);
+    if (raw == null) return null;
+    return (jsonDecode(raw) as List)
+        .map((e) => WaterLogEntry.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<void> saveTodayWaterLog(List<WaterLogEntry> entries) async {
+    final prefs = await _prefs;
+    final today = DateTime.now();
+    final todayKey =
+        '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+    await prefs.setString(_kWaterLogDate, todayKey);
+    await prefs.setString(
+        _kWaterLog, jsonEncode(entries.map((e) => e.toJson()).toList()));
+  }
 
   /// Signs the session out without discarding the user's logged history —
   /// there's only ever one local "account" in this prototype, so their

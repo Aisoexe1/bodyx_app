@@ -195,6 +195,24 @@ class WeightEntry {
       );
 }
 
+/// A single logged glass/bottle of water, timestamped so the day can be
+/// shown as "when you drank", not just a running total.
+class WaterLogEntry {
+  const WaterLogEntry(this.time, this.ml);
+  final DateTime time;
+  final int ml;
+
+  Map<String, dynamic> toJson() => {
+        'time': time.toIso8601String(),
+        'ml': ml,
+      };
+
+  factory WaterLogEntry.fromJson(Map<String, dynamic> json) => WaterLogEntry(
+        DateTime.parse(json['time'] as String),
+        json['ml'] as int,
+      );
+}
+
 class MealEntry {
   const MealEntry({
     required this.name,

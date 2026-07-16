@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../logic/health_insights.dart';
 import '../../models/models.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
+import '../../theme/status_colors.dart';
+import '../../widgets/charts/hr_zone_bar.dart';
+import '../../widgets/charts/macro_bars.dart';
 import '../../widgets/charts/sleep_donut_chart.dart';
 import '../../widgets/charts/steps_bar_chart.dart';
 import '../../widgets/charts/weight_line_chart.dart';
@@ -91,6 +95,10 @@ class _ProgressScreenState extends State<ProgressScreen> {
                     ],
                   ),
                 ),
+                if (state.user?.goal == 'Build muscle') ...[
+                  const SizedBox(height: 12),
+                  _WeightVerdictCard(verdict: state.weightVerdict),
+                ],
                 const SizedBox(height: 16),
                 Row(
                   children: [
@@ -141,6 +149,11 @@ class _ProgressScreenState extends State<ProgressScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
+                const SectionHeader(
+                    title: 'Calories', subtitle: 'Surplus for muscle gain'),
+                const SizedBox(height: 12),
+                _CaloriesCard(state: state),
+                const SizedBox(height: 24),
                 const SectionHeader(title: 'Sleep', subtitle: "Today's breakdown"),
                 const SizedBox(height: 12),
                 GlowCard(
@@ -152,6 +165,11 @@ class _ProgressScreenState extends State<ProgressScreen> {
                     ringSize: 140,
                   ),
                 ),
+                const SizedBox(height: 24),
+                const SectionHeader(
+                    title: 'Heart rate', subtitle: 'Zone and recovery trend'),
+                const SizedBox(height: 12),
+                _HeartRateCard(state: state),
               ]),
             ),
           ),
@@ -194,6 +212,144 @@ class _ProgressScreenState extends State<ProgressScreen> {
         ),
       );
     });
+  }
+}
+
+/// Reads the weight trend and body-fat% trend together as one verdict —
+/// see [HealthInsights.weightVerdict]. Shown only for the "Build muscle"
+/// goal, where a rising number on the scale is supposed to be good news
+/// and a raw BMI reading can't say whether it actually is.
+class _WeightVerdictCard extends StatelessWidget {
+  const _WeightVerdictCard({required this.verdict});
+  final StatusResult verdict;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = statusColor(verdict.level);
+    return GlowCard(
+      borderColor: color.withValues(alpha: 0.4),
+      child: Row(
+        children: [
+          Icon(
+            switch (verdict.level) {
+              StatusLevel.good => Icons.check_circle_rounded,
+              StatusLevel.warn => Icons.info_rounded,
+              StatusLevel.bad => Icons.error_rounded,
+            },
+            color: color,
+            size: 22,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(verdict.label,
+                style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13.5)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Shows the surplus as a difference (eaten - TDEE), never a raw calorie
+/// count on its own — plus a protein target, since a surplus without
+/// enough protein mostly builds fat, not muscle.
+class _CaloriesCard extends StatelessWidget {
+  const _CaloriesCard({required this.state});
+  final AppState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final stats = state.selectedStats;
+    final surplus = state.calorieSurplus;
+    final status = state.calorieSurplusStatus;
+    final color = statusColor(status.level);
+    final totalProtein =
+        state.meals.fold<int>(0, (sum, m) => sum + m.proteinG);
+    final totalCarbs = state.meals.fold<int>(0, (sum, m) => sum + m.carbsG);
+    final totalFat = state.meals.fold<int>(0, (sum, m) => sum + m.fatG);
+
+    return GlowCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('${stats.calories} kcal',
+                  style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 24)),
+              const Spacer(),
+              StatChip(label: status.label, color: color),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Норма ~${state.tdee.round()} ккал · Профицит ${surplus >= 0 ? '+' : ''}$surplus',
+            style: const TextStyle(color: AppColors.textMuted, fontSize: 12.5),
+          ),
+          const SizedBox(height: 20),
+          MacroBars(
+            proteinG: totalProtein,
+            carbsG: totalCarbs,
+            fatG: totalFat,
+            proteinGoal: state.proteinTargetG.round(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Zones are named by what they mean for the goal ("Стимул для роста
+/// мышц"), not "Zone 2/3" — and the resting-HR trend surfaces
+/// under-recovery before it shows up anywhere else in the app.
+class _HeartRateCard extends StatelessWidget {
+  const _HeartRateCard({required this.state});
+  final AppState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final trend = state.restingHrTrend;
+    final trendColor = statusColor(trend.level);
+
+    return GlowCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text('${state.selectedStats.heartRateBpm} bpm',
+                  style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 22)),
+              const Spacer(),
+            ],
+          ),
+          const SizedBox(height: 14),
+          HrZoneBar(
+            fraction: state.hrZoneFraction,
+            zoneLabel: state.hrZone.label,
+          ),
+          const Divider(height: 28, color: AppColors.divider),
+          Row(
+            children: [
+              Icon(Icons.monitor_heart_rounded, size: 16, color: trendColor),
+              const SizedBox(width: 8),
+              const Text('Пульс покоя, 7 дней',
+                  style: TextStyle(color: AppColors.textMuted, fontSize: 12.5)),
+              const Spacer(),
+              StatChip(label: trend.label, color: trendColor),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }
 

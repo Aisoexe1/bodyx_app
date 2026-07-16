@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../data/mock_data.dart';
+import '../logic/health_insights.dart';
 import '../models/models.dart';
 import 'health_service.dart';
 import 'notification_service.dart';
@@ -76,6 +78,12 @@ class AppState extends ChangeNotifier {
         workoutRemindersEnabled;
     healthSyncEnabled =
         await _persistence.loadHealthSyncEnabled() ?? healthSyncEnabled;
+
+    final savedWaterLog = await _persistence.loadTodayWaterLog();
+    if (savedWaterLog != null && savedWaterLog.isNotEmpty) {
+      todayWaterLog = savedWaterLog;
+      _applyTodayWaterTotal();
+    }
   }
 
   void _persistUser() {
@@ -195,6 +203,7 @@ class AppState extends ChangeNotifier {
   late List<WeightEntry> weightHistory;
   late List<PlanTask> planTasks;
   late List<MealEntry> meals;
+  List<WaterLogEntry> todayWaterLog = [];
 
   void togglePlanTask(int index) {
     planTasks[index].done = !planTasks[index].done;
@@ -211,6 +220,119 @@ class AppState extends ChangeNotifier {
     _persistWeight();
     _persistUser();
     notifyListeners();
+  }
+
+  /// Combines the weight trend with the body-fat% trend into one verdict —
+  /// see [HealthInsights.weightVerdict] for why neither number alone is
+  /// enough to tell "gaining muscle" from "gaining fat".
+  StatusResult get weightVerdict => HealthInsights.weightVerdict(weightHistory);
+
+  // ---- Calories / protein --------------------------------------------------
+
+  double get tdee => user == null
+      ? 2200
+      : HealthInsights.tdee(
+          gender: user!.gender,
+          weightKg: user!.weightKg,
+          heightCm: user!.heightCm,
+          age: user!.age,
+          activityLevel: user!.activityLevel,
+        );
+
+  int get calorieSurplus => selectedStats.calories - tdee.round();
+
+  StatusResult get calorieSurplusStatus =>
+      HealthInsights.calorieSurplusStatus(calorieSurplus);
+
+  double get proteinTargetG =>
+      HealthInsights.proteinTargetG(user?.weightKg ?? 75);
+
+  double get todayProteinG =>
+      meals.fold<double>(0, (sum, m) => sum + m.proteinG);
+
+  StatusResult get proteinStatus =>
+      HealthInsights.proteinStatus(todayProteinG, proteinTargetG);
+
+  // ---- Heart rate -----------------------------------------------------------
+
+  ({String label, StatusLevel level}) get hrZone => HealthInsights.hrZoneFor(
+        bpm: selectedStats.heartRateBpm,
+        age: user?.age ?? 25,
+      );
+
+  double get hrZoneFraction => HealthInsights.hrZoneFraction(
+        bpm: selectedStats.heartRateBpm,
+        age: user?.age ?? 25,
+      );
+
+  /// Trend vs. the last 7 days *excluding* today — a rising number here is
+  /// often the earliest sign of under-recovery, before it shows up anywhere
+  /// else.
+  StatusResult get restingHrTrend {
+    final priorDays = dailyStats.length > 1
+        ? dailyStats
+            .sublist(0, dailyStats.length - 1)
+            .reversed
+            .take(7)
+            .map((s) => s.heartRateBpm)
+            .toList()
+        : <int>[];
+    return HealthInsights.restingHrTrend(
+      todayBpm: dailyStats.last.heartRateBpm,
+      priorDaysBpm: priorDays,
+    );
+  }
+
+  // ---- Water --------------------------------------------------------------
+
+  /// True if today's plan includes a workout — bumps the water target per
+  /// [HealthInsights.waterGoalMl].
+  bool get isWorkoutDayToday =>
+      planTasks.any((t) => t.icon == Icons.fitness_center_rounded);
+
+  int get individualizedWaterGoalMl => HealthInsights.waterGoalMl(
+        weightKg: user?.weightKg ?? 75,
+        isWorkoutDay: isWorkoutDayToday,
+      );
+
+  /// Pace-aware status for *today* only — a rolling window like this can't
+  /// be meaningfully computed for a past date, so callers should only show
+  /// it when [selectedDateIndex] is -1 (today).
+  StatusResult get todayWaterStatus => HealthInsights.waterStatus(
+        consumedMl: dailyStats.last.waterMl,
+        goalMl: individualizedWaterGoalMl,
+        now: DateTime.now(),
+      );
+
+  void logWater(int ml) {
+    HapticFeedback.lightImpact();
+    todayWaterLog = [...todayWaterLog, WaterLogEntry(DateTime.now(), ml)];
+    _applyTodayWaterTotal();
+    unawaited(_persistence.saveTodayWaterLog(todayWaterLog));
+    notifyListeners();
+  }
+
+  void _applyTodayWaterTotal() {
+    final total = todayWaterLog.fold<int>(0, (sum, e) => sum + e.ml);
+    final today = dailyStats.last;
+    final updated = List<DailyStats>.from(dailyStats);
+    updated[updated.length - 1] = DailyStats(
+      date: today.date,
+      steps: today.steps,
+      stepGoal: today.stepGoal,
+      calories: today.calories,
+      calorieGoal: today.calorieGoal,
+      sleepMinutes: today.sleepMinutes,
+      sleepGoalMinutes: today.sleepGoalMinutes,
+      waterMl: total,
+      waterGoalMl: individualizedWaterGoalMl,
+      lightSleepMinutes: today.lightSleepMinutes,
+      deepSleepMinutes: today.deepSleepMinutes,
+      remSleepMinutes: today.remSleepMinutes,
+      awakeMinutes: today.awakeMinutes,
+      heartRateBpm: today.heartRateBpm,
+    );
+    dailyStats = updated;
   }
 
   // ---- Body metrics ---------------------------------------------------------
