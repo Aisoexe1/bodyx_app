@@ -135,16 +135,11 @@ class MockData {
         ),
       ];
 
-  /// Self-reported checklist items only. "Log body weight" is driven off
-  /// real weight-history data (see `AppState.loggedWeightToday`) rather
-  /// than a togglable checkbox, and today's workout is entirely
-  /// user-built (see `AppState.todayWorkoutSets`) with no mock template —
-  /// neither is duplicated here.
-  static List<PlanTask> get todayPlan => [
-        PlanTask(
-          title: 'Mobility & stretch',
-          subtitle: '15 min · Recovery',
-          icon: Icons.self_improvement_rounded,
-        ),
-      ];
+  /// Self-reported checklist items only — currently none. "Log body
+  /// weight" is driven off real weight-history data (see `AppState.
+  /// loggedWeightToday`), today's workout is user-built (see `AppState.
+  /// todayWorkoutSets`), and mobility/stretch is user-built too (see
+  /// `AppState.todayMobilityActivities`) — none of them are duplicated
+  /// here as a fake togglable checkbox with no fixed template behind it.
+  static List<PlanTask> get todayPlan => [];
 }

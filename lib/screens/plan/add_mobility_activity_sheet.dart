@@ -6,27 +6,23 @@ import '../../theme/app_theme.dart';
 import '../../widgets/common/count_stepper.dart';
 import '../../widgets/common/inputs_buttons.dart';
 
-/// Lets the user add their own exercise to today's workout — name, how
-/// many sets, and the target reps per set. There's no exercise database
-/// or fixed template to pick from; whatever they type is what gets
-/// tracked.
-class AddExerciseSheet extends StatefulWidget {
-  const AddExerciseSheet({super.key});
+/// Lets the user add their own mobility/stretch activity to today's plan
+/// — name and minutes, no fixed routine to pick from.
+class AddMobilityActivitySheet extends StatefulWidget {
+  const AddMobilityActivitySheet({super.key});
 
   @override
-  State<AddExerciseSheet> createState() => _AddExerciseSheetState();
+  State<AddMobilityActivitySheet> createState() =>
+      _AddMobilityActivitySheetState();
 }
 
-class _AddExerciseSheetState extends State<AddExerciseSheet> {
+class _AddMobilityActivitySheetState extends State<AddMobilityActivitySheet> {
   final _nameController = TextEditingController();
-  int _sets = 3;
-  int _reps = 10;
+  int _minutes = 10;
 
   @override
   void initState() {
     super.initState();
-    // Re-render on every keystroke so the Add button enables the moment
-    // the name field stops being empty.
     _nameController.addListener(() => setState(() {}));
   }
 
@@ -39,7 +35,7 @@ class _AddExerciseSheetState extends State<AddExerciseSheet> {
   void _submit() {
     final name = _nameController.text.trim();
     if (name.isEmpty) return;
-    context.read<AppState>().addExercise(name, _sets, _reps);
+    context.read<AppState>().addMobilityActivity(name, _minutes);
     Navigator.pop(context);
   }
 
@@ -47,8 +43,8 @@ class _AddExerciseSheetState extends State<AddExerciseSheet> {
   Widget build(BuildContext context) {
     final name = _nameController.text.trim();
     return Padding(
-      padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom),
+      padding:
+          EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: Container(
         decoration: const BoxDecoration(
           color: AppColors.surface,
@@ -72,43 +68,30 @@ class _AddExerciseSheetState extends State<AddExerciseSheet> {
                 ),
               ),
             ),
-            const Text('Add Exercise',
+            const Text('Add Mobility Activity',
                 style: TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.w800,
                     color: AppColors.textPrimary)),
+            const SizedBox(height: 4),
+            const Text('E.g. hip flexor stretch, foam rolling, yoga flow.',
+                style: TextStyle(color: AppColors.textMuted, fontSize: 12.5)),
             const SizedBox(height: 16),
             PrimaryTextField(
-              label: 'Exercise name (e.g. Bench Press)',
+              label: 'Activity name (e.g. Hip flexor stretch)',
               controller: _nameController,
             ),
             const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: CountStepper(
-                    label: 'Sets',
-                    value: _sets,
-                    min: 1,
-                    max: 10,
-                    onChanged: (v) => setState(() => _sets = v),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: CountStepper(
-                    label: 'Reps',
-                    value: _reps,
-                    min: 1,
-                    max: 50,
-                    onChanged: (v) => setState(() => _reps = v),
-                  ),
-                ),
-              ],
+            CountStepper(
+              label: 'Minutes',
+              value: _minutes,
+              min: 1,
+              max: 60,
+              onChanged: (v) => setState(() => _minutes = v),
             ),
             const SizedBox(height: 20),
             PrimaryButton(
-              label: 'Add $_sets × $_reps to today\'s workout',
+              label: 'Add $_minutes min to today\'s plan',
               onPressed: name.isEmpty ? null : _submit,
             ),
           ],

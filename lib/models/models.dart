@@ -315,7 +315,6 @@ class MealEntry {
       );
 }
 
-/// One working set of one exercise — the checkable unit of a [Workout].
 /// One set of one exercise the user added to today's workout — each set is
 /// individually trackable instead of a single static "X / Y sets" label.
 /// There's no fixed "Workout" template anymore (see [AppState.
@@ -346,6 +345,34 @@ class WorkoutSet {
         exercise: json['exercise'] as String,
         setNumber: json['setNumber'] as int,
         targetReps: json['targetReps'] as int,
+        done: json['done'] as bool,
+      );
+}
+
+/// One mobility/stretch activity the user added to today's plan (e.g. "Hip
+/// flexor stretch, 5 min") — mirrors [WorkoutSet]'s "no fixed template,
+/// user builds it" shape, just measured in minutes instead of reps.
+class MobilityActivity {
+  MobilityActivity({
+    required this.name,
+    required this.minutes,
+    this.done = false,
+  });
+
+  final String name;
+  final int minutes;
+  bool done;
+
+  Map<String, dynamic> toJson() => {
+        'name': name,
+        'minutes': minutes,
+        'done': done,
+      };
+
+  factory MobilityActivity.fromJson(Map<String, dynamic> json) =>
+      MobilityActivity(
+        name: json['name'] as String,
+        minutes: json['minutes'] as int,
         done: json['done'] as bool,
       );
 }

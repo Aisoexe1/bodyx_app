@@ -31,6 +31,7 @@ class AppState extends ChangeNotifier {
     alerts = MockData.alerts;
     planTasks = MockData.todayPlan;
     todayWorkoutSets = [];
+    todayMobilityActivities = [];
     meals = [];
     progressPhotos = [];
   }
@@ -110,6 +111,11 @@ class AppState extends ChangeNotifier {
       final (seconds, startedAt) = savedTimer;
       _workoutAccumulatedSeconds = seconds;
       _workoutTimerStartedAt = startedAt;
+    }
+
+    final savedMobility = await _persistence.loadTodayMobilityActivities();
+    if (savedMobility != null) {
+      todayMobilityActivities = savedMobility;
     }
   }
 
@@ -316,6 +322,47 @@ class AppState extends ChangeNotifier {
         _workoutAccumulatedSeconds, _workoutTimerStartedAt));
     notifyListeners();
   }
+
+  // ---- Mobility / stretch (also fully user-defined) ------------------------
+  //
+  // Same "no fixed template" shape as the workout — starts empty every
+  // day, the user adds their own activities.
+  late List<MobilityActivity> todayMobilityActivities;
+
+  int get todayMobilityCompletedCount =>
+      todayMobilityActivities.where((a) => a.done).length;
+
+  double get todayMobilityProgress => todayMobilityActivities.isEmpty
+      ? 0
+      : todayMobilityCompletedCount / todayMobilityActivities.length;
+
+  void addMobilityActivity(String name, int minutes) {
+    HapticFeedback.mediumImpact();
+    todayMobilityActivities = [
+      ...todayMobilityActivities,
+      MobilityActivity(name: name, minutes: minutes),
+    ];
+    _persistMobilityActivities();
+    notifyListeners();
+  }
+
+  void removeMobilityActivity(String name) {
+    todayMobilityActivities =
+        todayMobilityActivities.where((a) => a.name != name).toList();
+    _persistMobilityActivities();
+    notifyListeners();
+  }
+
+  void toggleMobilityActivity(int index) {
+    final activity = todayMobilityActivities[index];
+    activity.done = !activity.done;
+    if (activity.done) HapticFeedback.mediumImpact();
+    _persistMobilityActivities();
+    notifyListeners();
+  }
+
+  void _persistMobilityActivities() => unawaited(
+      _persistence.saveTodayMobilityActivities(todayMobilityActivities));
 
   void logWeight(double kg, double bodyFatPct) {
     weightHistory = [

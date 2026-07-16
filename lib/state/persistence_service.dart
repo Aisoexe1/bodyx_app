@@ -28,6 +28,8 @@ class PersistenceService {
   static const _kWorkoutTimerSeconds = 'bodyx.workout_timer_seconds';
   static const _kWorkoutTimerStartedAt = 'bodyx.workout_timer_started_at';
   static const _kWorkoutTimerDate = 'bodyx.workout_timer_date';
+  static const _kMobilityActivities = 'bodyx.mobility_activities';
+  static const _kMobilityActivitiesDate = 'bodyx.mobility_activities_date';
 
   Future<SharedPreferences> get _prefs => SharedPreferences.getInstance();
 
@@ -226,6 +228,26 @@ class PersistenceService {
       await prefs.setString(
           _kWorkoutTimerStartedAt, startedAt.toIso8601String());
     }
+  }
+
+  /// Same day-scoped, user-built pattern as [loadTodayWorkoutSets] — no
+  /// fixed mobility template, so this starts empty every day too.
+  Future<List<MobilityActivity>?> loadTodayMobilityActivities() async {
+    final prefs = await _prefs;
+    if (prefs.getString(_kMobilityActivitiesDate) != _todayKey) return null;
+    final raw = prefs.getString(_kMobilityActivities);
+    if (raw == null) return null;
+    return (jsonDecode(raw) as List)
+        .map((e) => MobilityActivity.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<void> saveTodayMobilityActivities(
+      List<MobilityActivity> activities) async {
+    final prefs = await _prefs;
+    await prefs.setString(_kMobilityActivitiesDate, _todayKey);
+    await prefs.setString(_kMobilityActivities,
+        jsonEncode(activities.map((a) => a.toJson()).toList()));
   }
 
   /// Signs the session out without discarding the user's logged history —

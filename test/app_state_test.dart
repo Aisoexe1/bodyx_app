@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:bodyx_app/models/models.dart';
 import 'package:bodyx_app/state/app_state.dart';
+import 'package:bodyx_app/state/persistence_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -156,19 +157,15 @@ void main() {
       expect(restored.history.last, 106.5);
     });
 
-    test('plan task completion survives a restart', () async {
-      final state = AppState();
-      await state.hydrate();
-      state.signIn('plan@bodyx.app', 'pw');
-
-      expect(state.planTasks, isNotEmpty);
-      state.togglePlanTask(0);
-      final toggledValue = state.planTasks[0].done;
-
-      final restarted = AppState();
-      await restarted.hydrate();
-
-      expect(restarted.planTasks[0].done, toggledValue);
+    test('plan-task completion round-trips through persistence', () async {
+      // todayPlan is currently empty (mobility/workout moved to their own
+      // fully-user-built trackers), so there's no mock task to toggle
+      // through a real AppState restart — verify the underlying
+      // save/load round-trip PersistenceService.savePlanTaskDone relies
+      // on instead.
+      final persistence = PersistenceService();
+      await persistence.savePlanTaskDone([true, false]);
+      expect(await persistence.loadPlanTaskDone(), [true, false]);
     });
 
     test('alert read-state survives a restart', () async {
@@ -347,6 +344,39 @@ void main() {
     });
   });
 
+  group('mobility tracking', () {
+    test('starts empty — no fixed template', () async {
+      final state = AppState();
+      await state.hydrate();
+      expect(state.todayMobilityActivities, isEmpty);
+      expect(state.planTasks, isEmpty);
+    });
+
+    test('addMobilityActivity, toggle, and removeMobilityActivity', () async {
+      final state = AppState();
+      await state.hydrate();
+      state.signIn('mobility@bodyx.app', 'pw');
+
+      state.addMobilityActivity('Hip flexor stretch', 5);
+      state.addMobilityActivity('Foam rolling', 10);
+      expect(state.todayMobilityActivities.length, 2);
+      expect(state.todayMobilityCompletedCount, 0);
+
+      state.toggleMobilityActivity(0);
+      expect(state.todayMobilityCompletedCount, 1);
+      expect(state.todayMobilityActivities[0].done, true);
+
+      state.removeMobilityActivity('Foam rolling');
+      expect(state.todayMobilityActivities.length, 1);
+      expect(state.todayMobilityActivities.first.name, 'Hip flexor stretch');
+
+      final restarted = AppState();
+      await restarted.hydrate();
+      expect(restarted.todayMobilityActivities.length, 1);
+      expect(restarted.todayMobilityActivities.first.done, true);
+    });
+  });
+
   group('progress photos', () {
     test('addProgressPhoto prepends, keeps newest-first order, and persists',
         () async {
@@ -444,6 +474,16 @@ void main() {
     test('togglePlanTask flips completion back and forth', () async {
       final state = AppState();
       await state.hydrate();
+      // todayPlan is currently empty (see mobility/workout tracking
+      // groups), so seed a task directly to exercise the toggle
+      // mechanism itself.
+      state.planTasks = [
+        PlanTask(
+          title: 'Test task',
+          subtitle: 'Test',
+          icon: Icons.check_rounded,
+        ),
+      ];
 
       final initial = state.planTasks[0].done;
       state.togglePlanTask(0);

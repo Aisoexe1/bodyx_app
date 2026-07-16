@@ -12,6 +12,7 @@ import '../../widgets/common/scale_tap.dart';
 import '../body_metrics/body_metrics_screen.dart';
 import '../body_metrics/log_metrics_sheet.dart';
 import '../plan/daily_plan_screen.dart';
+import '../plan/mobility_checklist_sheet.dart';
 import '../plan/workout_checklist_sheet.dart';
 import 'log_meal_sheet.dart';
 import 'water_log_sheet.dart';
@@ -123,12 +124,16 @@ class _TodayChecklistCard extends StatelessWidget {
     final workoutSets = state.todayWorkoutSets;
     final workoutDone = workoutSets.isNotEmpty &&
         state.todayWorkoutCompletedSets == workoutSets.length;
+    final mobilityActivities = state.todayMobilityActivities;
+    final mobilityDone = mobilityActivities.isNotEmpty &&
+        state.todayMobilityCompletedCount == mobilityActivities.length;
     final weightDone = state.loggedWeightToday;
     final simpleTasks = state.planTasks;
     final doneCount = (workoutDone ? 1 : 0) +
+        (mobilityDone ? 1 : 0) +
         (weightDone ? 1 : 0) +
         simpleTasks.where((t) => t.done).length;
-    final totalCount = 2 + simpleTasks.length;
+    final totalCount = 3 + simpleTasks.length;
 
     return GlowCard(
       child: Column(
@@ -165,6 +170,23 @@ class _TodayChecklistCard extends StatelessWidget {
               isScrollControlled: true,
               backgroundColor: Colors.transparent,
               builder: (_) => const WorkoutChecklistSheet(),
+            ),
+          ),
+          const _ChecklistDivider(),
+          _ChecklistRow(
+            icon: Icons.self_improvement_rounded,
+            title: 'Mobility & Stretch',
+            subtitle: mobilityActivities.isEmpty
+                ? 'No activities yet — tap to add'
+                : '${state.todayMobilityCompletedCount} / ${mobilityActivities.length} done',
+            done: mobilityDone,
+            progress:
+                mobilityActivities.isEmpty ? null : state.todayMobilityProgress,
+            onTap: () => showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
+              builder: (_) => const MobilityChecklistSheet(),
             ),
           ),
           const _ChecklistDivider(),

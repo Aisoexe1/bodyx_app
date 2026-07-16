@@ -9,6 +9,7 @@ import '../../widgets/common/glow_card.dart';
 import '../../widgets/common/scale_tap.dart';
 import '../body_metrics/log_metrics_sheet.dart';
 import 'daily_plan_screen.dart';
+import 'mobility_checklist_sheet.dart';
 import 'workout_checklist_sheet.dart';
 
 class PlanScreen extends StatelessWidget {
@@ -118,6 +119,60 @@ class PlanScreen extends StatelessWidget {
                             value: state.todayWorkoutProgress,
                             trailing:
                                 '${state.todayWorkoutCompletedSets} / ${state.todayWorkoutSets.length} sets',
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ScaleTap(
+                  onTap: () => showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: Colors.transparent,
+                    builder: (_) => const MobilityChecklistSheet(),
+                  ),
+                  child: GlowCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const GlowIconBadge(
+                                icon: Icons.self_improvement_rounded),
+                            const SizedBox(width: 12),
+                            const Expanded(
+                              child: Text('Mobility & Stretch',
+                                  style: TextStyle(
+                                      color: AppColors.textPrimary,
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 15)),
+                            ),
+                            if (state.todayMobilityActivities.isNotEmpty)
+                              StatChip(
+                                label: state.todayMobilityCompletedCount ==
+                                        state.todayMobilityActivities.length
+                                    ? 'Done'
+                                    : 'In progress',
+                                color: state.todayMobilityCompletedCount ==
+                                        state.todayMobilityActivities.length
+                                    ? AppColors.success
+                                    : AppColors.primary,
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 14),
+                        if (state.todayMobilityActivities.isEmpty)
+                          const Text(
+                              'No activities added yet — tap to plan today\'s mobility work.',
+                              style: TextStyle(
+                                  color: AppColors.textMuted, fontSize: 12.5))
+                        else
+                          _ProgressLine(
+                            label: 'Mobility completion',
+                            value: state.todayMobilityProgress,
+                            trailing:
+                                '${state.todayMobilityCompletedCount} / ${state.todayMobilityActivities.length} done',
                           ),
                       ],
                     ),
