@@ -35,11 +35,20 @@ class ProgressRing extends StatefulWidget {
 
 class _ProgressRingState extends State<ProgressRing>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _burstController = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 750),
-  );
+  late final AnimationController _burstController;
   late bool _completed = widget.progress >= 1.0;
+
+  @override
+  void initState() {
+    super.initState();
+    // Created eagerly (not lazily on first access) so dispose() never ends
+    // up constructing — and ticker-vsync-looking-up — a controller that was
+    // never actually used, which fails once the element is deactivated.
+    _burstController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 750),
+    );
+  }
 
   @override
   void didUpdateWidget(covariant ProgressRing oldWidget) {
