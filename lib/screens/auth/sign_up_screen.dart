@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../network/api_client.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
@@ -23,6 +24,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
     _email.dispose();
     _password.dispose();
     super.dispose();
+  }
+
+  void _socialSignIn(String email, String provider) {
+    context.read<AppState>().signIn(email, provider).catchError((Object e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(describeApiError(e))));
+      }
+    });
   }
 
   @override
@@ -101,18 +111,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 label: 'Continue with Google',
                 icon: Icons.g_mobiledata_rounded,
                 light: true,
-                onTap: () => context
-                    .read<AppState>()
-                    .signIn('alex@gmail.com', 'google-oauth'),
+                onTap: () => _socialSignIn('alex@gmail.com', 'google-oauth'),
               ),
               const SizedBox(height: 12),
               SocialAuthButton(
                 label: 'Continue with Apple',
                 icon: Icons.apple_rounded,
                 light: true,
-                onTap: () => context
-                    .read<AppState>()
-                    .signIn('alex@icloud.com', 'apple-oauth'),
+                onTap: () => _socialSignIn('alex@icloud.com', 'apple-oauth'),
               ),
               const SizedBox(height: 24),
               Center(

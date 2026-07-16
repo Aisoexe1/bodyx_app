@@ -14,7 +14,7 @@ class StatusResult {
 
 /// Pure calculation functions — no widgets, no state, fully unit-testable.
 /// Each one answers "what does this raw number actually mean" for one of
-/// the four data modules (water, body composition, calories, heart rate).
+/// the three data modules (water, body composition, calories).
 class HealthInsights {
   HealthInsights._();
 

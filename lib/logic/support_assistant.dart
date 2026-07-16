@@ -74,9 +74,9 @@ class SupportAssistant {
       'device'
     ])) {
       return 'Go to Settings → toggle "Sync with Health". Once enabled, '
-          'BodyX pulls steps, active calories burned, sleep and heart '
-          "rate from Apple Health or Health Connect automatically. No "
-          "wearable? Everything still works with data you log by hand.";
+          'BodyX pulls steps, active calories burned, and sleep from '
+          "Apple Health or Health Connect automatically. No wearable? "
+          "Everything still works with data you log by hand.";
     }
     if (has(['export', 'download', 'backup', 'data', 'privacy'])) {
       return "There's no export yet — it's on the roadmap. Everything you "

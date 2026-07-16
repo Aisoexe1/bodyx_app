@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 /// A number that animates from its previous displayed value up (or down) to
 /// [value] whenever it changes, instead of snapping in instantly — used for
-/// the dashboard's steps/calories/water/heart-rate figures.
+/// the dashboard's steps/calories/water figures.
 class CountUpText extends StatelessWidget {
   const CountUpText({
     super.key,

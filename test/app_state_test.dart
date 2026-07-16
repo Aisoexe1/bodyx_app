@@ -6,6 +6,8 @@ import 'package:bodyx_app/models/models.dart';
 import 'package:bodyx_app/state/app_state.dart';
 import 'package:bodyx_app/state/persistence_service.dart';
 
+import 'fake_repositories.dart';
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -16,7 +18,7 @@ void main() {
   group('water defaults', () {
     test('today starts at 0ml on a fresh app open, not a mock-seeded value',
         () async {
-      final state = AppState();
+      final state = newTestAppState();
       await state.hydrate();
 
       expect(state.dailyStats.last.waterMl, 0);
@@ -24,9 +26,9 @@ void main() {
     });
 
     test('logging water is what first raises today above 0', () async {
-      final state = AppState();
+      final state = newTestAppState();
       await state.hydrate();
-      state.signIn('water@bodyx.app', 'pw');
+      await state.signIn('water@bodyx.app', 'pw');
 
       expect(state.dailyStats.last.waterMl, 0);
 
@@ -36,9 +38,9 @@ void main() {
 
     test('removeWaterEntry undoes a single logged entry (misclick fix)',
         () async {
-      final state = AppState();
+      final state = newTestAppState();
       await state.hydrate();
-      state.signIn('water2@bodyx.app', 'pw');
+      await state.signIn('water2@bodyx.app', 'pw');
 
       state.logWater(200);
       state.logWater(500);
@@ -56,7 +58,7 @@ void main() {
 
   group('auth flow', () {
     test('starts on splash and has no session', () async {
-      final state = AppState();
+      final state = newTestAppState();
       await state.hydrate();
       expect(state.authStage, AuthStage.splash);
 
@@ -65,10 +67,10 @@ void main() {
     });
 
     test('signIn goes straight to done with a derived username', () async {
-      final state = AppState();
+      final state = newTestAppState();
       await state.hydrate();
 
-      state.signIn('taylor@bodyx.app', 'whatever');
+      await state.signIn('taylor@bodyx.app', 'whatever');
 
       expect(state.authStage, AuthStage.done);
       expect(state.user, isNotNull);
@@ -78,13 +80,13 @@ void main() {
 
     test('sign-up flow walks through username and body-data steps',
         () async {
-      final state = AppState();
+      final state = newTestAppState();
       await state.hydrate();
 
       state.submitSignUp('new@bodyx.app', 'pw');
       expect(state.authStage, AuthStage.chooseUsername);
 
-      state.submitUsername('newlifter');
+      await state.submitUsername('newlifter');
       expect(state.authStage, AuthStage.bodyData);
       expect(state.user!.username, 'newlifter');
       expect(state.user!.email, 'new@bodyx.app');
@@ -107,16 +109,16 @@ void main() {
 
     test('signOut clears the session and does not auto-restore it',
         () async {
-      final state = AppState();
+      final state = newTestAppState();
       await state.hydrate();
-      state.signIn('taylor@bodyx.app', 'whatever');
+      await state.signIn('taylor@bodyx.app', 'whatever');
 
       state.signOut();
       expect(state.user, isNull);
       expect(state.authStage, AuthStage.signIn);
       expect(state.navIndex, 0);
 
-      final restarted = AppState();
+      final restarted = newTestAppState();
       await restarted.hydrate();
       restarted.finishSplash();
       expect(restarted.authStage, AuthStage.signIn,
@@ -126,11 +128,11 @@ void main() {
 
   group('persistence round-trip (simulated app restart)', () {
     test('user profile and onboarding survive a restart', () async {
-      final state = AppState();
+      final state = newTestAppState();
       await state.hydrate();
-      state.signIn('persist@bodyx.app', 'pw');
+      await state.signIn('persist@bodyx.app', 'pw');
 
-      final restarted = AppState();
+      final restarted = newTestAppState();
       await restarted.hydrate();
       restarted.finishSplash();
 
@@ -140,9 +142,9 @@ void main() {
     });
 
     test('logged weight entries survive a restart', () async {
-      final state = AppState();
+      final state = newTestAppState();
       await state.hydrate();
-      state.signIn('weight@bodyx.app', 'pw');
+      await state.signIn('weight@bodyx.app', 'pw');
       final before = state.weightHistory.length;
 
       state.logWeight(81.4, 19.5);
@@ -150,7 +152,7 @@ void main() {
       expect(state.weightHistory.last.kg, 81.4);
       expect(state.user!.weightKg, 81.4);
 
-      final restarted = AppState();
+      final restarted = newTestAppState();
       await restarted.hydrate();
 
       expect(restarted.weightHistory.length, before + 1);
@@ -159,15 +161,15 @@ void main() {
     });
 
     test('logged body measurements survive a restart', () async {
-      final state = AppState();
+      final state = newTestAppState();
       await state.hydrate();
-      state.signIn('measure@bodyx.app', 'pw');
+      await state.signIn('measure@bodyx.app', 'pw');
 
       state.logMeasurement(MuscleZone.chest, 106.5);
       final expectedHistoryLength =
           state.bodyMeasurements[MuscleZone.chest]!.history.length;
 
-      final restarted = AppState();
+      final restarted = newTestAppState();
       await restarted.hydrate();
 
       final restored = restarted.bodyMeasurements[MuscleZone.chest]!;
@@ -188,9 +190,9 @@ void main() {
     });
 
     test('alert read-state survives a restart', () async {
-      final state = AppState();
+      final state = newTestAppState();
       await state.hydrate();
-      state.signIn('alerts@bodyx.app', 'pw');
+      await state.signIn('alerts@bodyx.app', 'pw');
 
       final unreadBefore = state.unreadAlertCount;
       expect(unreadBefore, greaterThan(0));
@@ -198,21 +200,21 @@ void main() {
       state.markAllAlertsRead();
       expect(state.unreadAlertCount, 0);
 
-      final restarted = AppState();
+      final restarted = newTestAppState();
       await restarted.hydrate();
 
       expect(restarted.unreadAlertCount, 0);
     });
 
     test('notification settings survive a restart', () async {
-      final state = AppState();
+      final state = newTestAppState();
       await state.hydrate();
-      state.signIn('settings@bodyx.app', 'pw');
+      await state.signIn('settings@bodyx.app', 'pw');
 
       state.toggleNotifications(false);
       state.toggleWorkoutReminders(false);
 
-      final restarted = AppState();
+      final restarted = newTestAppState();
       await restarted.hydrate();
 
       expect(restarted.notificationsEnabled, isFalse);
@@ -221,9 +223,9 @@ void main() {
 
     test('logged meals survive a restart and feed calorie/protein totals',
         () async {
-      final state = AppState();
+      final state = newTestAppState();
       await state.hydrate();
-      state.signIn('meals@bodyx.app', 'pw');
+      await state.signIn('meals@bodyx.app', 'pw');
 
       expect(state.meals, isEmpty);
       state.logMeal(const MealEntry(
@@ -238,7 +240,7 @@ void main() {
       expect(state.todayCaloriesEaten, 600);
       expect(state.todayProteinG, 45);
 
-      final restarted = AppState();
+      final restarted = newTestAppState();
       await restarted.hydrate();
 
       expect(restarted.meals.length, 1);
@@ -247,9 +249,9 @@ void main() {
     });
 
     test('removeMeal drops just that entry', () async {
-      final state = AppState();
+      final state = newTestAppState();
       await state.hydrate();
-      state.signIn('removemeal@bodyx.app', 'pw');
+      await state.signIn('removemeal@bodyx.app', 'pw');
 
       state.logMeal(const MealEntry(
         name: 'Oats',
@@ -279,16 +281,16 @@ void main() {
 
   group('workout tracking', () {
     test('starts empty — no mock template', () async {
-      final state = AppState();
+      final state = newTestAppState();
       await state.hydrate();
       expect(state.todayWorkoutSets, isEmpty);
     });
 
     test('addExercise appends the right number of sets with shared reps',
         () async {
-      final state = AppState();
+      final state = newTestAppState();
       await state.hydrate();
-      state.signIn('workout@bodyx.app', 'pw');
+      await state.signIn('workout@bodyx.app', 'pw');
 
       state.addExercise('Bench Press', 4, 8);
       expect(state.todayWorkoutSets.length, 4);
@@ -303,9 +305,9 @@ void main() {
     });
 
     test('removeExercise drops only that exercise\'s sets', () async {
-      final state = AppState();
+      final state = newTestAppState();
       await state.hydrate();
-      state.signIn('workout2@bodyx.app', 'pw');
+      await state.signIn('workout2@bodyx.app', 'pw');
 
       state.addExercise('Bench Press', 2, 8);
       state.addExercise('Squats', 3, 10);
@@ -319,9 +321,9 @@ void main() {
 
     test('toggleWorkoutSet flips a set and persists across restart',
         () async {
-      final state = AppState();
+      final state = newTestAppState();
       await state.hydrate();
-      state.signIn('workout3@bodyx.app', 'pw');
+      await state.signIn('workout3@bodyx.app', 'pw');
       state.addExercise('Squats', 3, 10);
 
       expect(state.todayWorkoutCompletedSets, 0);
@@ -335,7 +337,7 @@ void main() {
       expect(state.todayWorkoutCompletedSets, 1);
       expect(state.todayWorkoutSets[0].done, false);
 
-      final restarted = AppState();
+      final restarted = newTestAppState();
       await restarted.hydrate();
       expect(restarted.todayWorkoutCompletedSets, 1);
       expect(restarted.todayWorkoutSets[1].done, true);
@@ -343,9 +345,9 @@ void main() {
 
     test('toggleWorkoutTimer starts and stops, banking elapsed seconds',
         () async {
-      final state = AppState();
+      final state = newTestAppState();
       await state.hydrate();
-      state.signIn('workout4@bodyx.app', 'pw');
+      await state.signIn('workout4@bodyx.app', 'pw');
 
       expect(state.isWorkoutTimerRunning, false);
       expect(state.todayWorkoutElapsed, Duration.zero);
@@ -364,9 +366,9 @@ void main() {
 
     test('resetWorkoutTimer zeroes elapsed time whether running or stopped',
         () async {
-      final state = AppState();
+      final state = newTestAppState();
       await state.hydrate();
-      state.signIn('workout5@bodyx.app', 'pw');
+      await state.signIn('workout5@bodyx.app', 'pw');
 
       state.toggleWorkoutTimer();
       state.toggleWorkoutTimer();
@@ -387,16 +389,16 @@ void main() {
 
   group('mobility tracking', () {
     test('starts empty — no fixed template', () async {
-      final state = AppState();
+      final state = newTestAppState();
       await state.hydrate();
       expect(state.todayMobilityActivities, isEmpty);
       expect(state.planTasks, isEmpty);
     });
 
     test('addMobilityActivity, toggle, and removeMobilityActivity', () async {
-      final state = AppState();
+      final state = newTestAppState();
       await state.hydrate();
-      state.signIn('mobility@bodyx.app', 'pw');
+      await state.signIn('mobility@bodyx.app', 'pw');
 
       state.addMobilityActivity('Hip flexor stretch', 5);
       state.addMobilityActivity('Foam rolling', 10);
@@ -411,7 +413,7 @@ void main() {
       expect(state.todayMobilityActivities.length, 1);
       expect(state.todayMobilityActivities.first.name, 'Hip flexor stretch');
 
-      final restarted = AppState();
+      final restarted = newTestAppState();
       await restarted.hydrate();
       expect(restarted.todayMobilityActivities.length, 1);
       expect(restarted.todayMobilityActivities.first.done, true);
@@ -421,9 +423,9 @@ void main() {
   group('progress photos', () {
     test('addProgressPhoto prepends, keeps newest-first order, and persists',
         () async {
-      final state = AppState();
+      final state = newTestAppState();
       await state.hydrate();
-      state.signIn('photos@bodyx.app', 'pw');
+      await state.signIn('photos@bodyx.app', 'pw');
 
       expect(state.progressPhotos, isEmpty);
 
@@ -443,7 +445,7 @@ void main() {
       expect(state.progressPhotos.first.id, '2');
       expect(state.progressPhotos.last.id, '1');
 
-      final restarted = AppState();
+      final restarted = newTestAppState();
       await restarted.hydrate();
       expect(restarted.progressPhotos.length, 2);
       expect(restarted.progressPhotos.first.id, '2');
@@ -452,9 +454,9 @@ void main() {
 
   group('profile updates', () {
     test('updateProfile only touches provided fields', () async {
-      final state = AppState();
+      final state = newTestAppState();
       await state.hydrate();
-      state.signIn('profile@bodyx.app', 'pw');
+      await state.signIn('profile@bodyx.app', 'pw');
       final originalUsername = state.user!.username;
 
       state.updateProfile(name: 'New Name');
@@ -464,9 +466,9 @@ void main() {
     });
 
     test('updateGender regenerates measurements for every zone', () async {
-      final state = AppState();
+      final state = newTestAppState();
       await state.hydrate();
-      state.signIn('gender@bodyx.app', 'pw');
+      await state.signIn('gender@bodyx.app', 'pw');
 
       state.updateGender(Gender.female);
 
@@ -476,9 +478,9 @@ void main() {
     });
 
     test('updateHeightWeightAge applies only non-null fields', () async {
-      final state = AppState();
+      final state = newTestAppState();
       await state.hydrate();
-      state.signIn('hwage@bodyx.app', 'pw');
+      await state.signIn('hwage@bodyx.app', 'pw');
       final originalHeight = state.user!.heightCm;
 
       state.updateHeightWeightAge(weightKg: 70, age: 30);
@@ -489,9 +491,9 @@ void main() {
     });
 
     test('toggleUnits flips the metric flag', () async {
-      final state = AppState();
+      final state = newTestAppState();
       await state.hydrate();
-      state.signIn('units@bodyx.app', 'pw');
+      await state.signIn('units@bodyx.app', 'pw');
       final before = state.user!.unitsMetric;
 
       state.toggleUnits();
@@ -502,7 +504,7 @@ void main() {
 
   group('alerts and plan tasks', () {
     test('markAlertRead only marks a single alert', () async {
-      final state = AppState();
+      final state = newTestAppState();
       await state.hydrate();
 
       final before = state.unreadAlertCount;
@@ -513,7 +515,7 @@ void main() {
     });
 
     test('togglePlanTask flips completion back and forth', () async {
-      final state = AppState();
+      final state = newTestAppState();
       await state.hydrate();
       // todayPlan is currently empty (see mobility/workout tracking
       // groups), so seed a task directly to exercise the toggle
@@ -538,7 +540,7 @@ void main() {
   group('sleep data honesty', () {
     test('generated demo history is never mislabeled as Health-synced',
         () async {
-      final state = AppState();
+      final state = newTestAppState();
       await state.hydrate();
       expect(state.dailyStats.every((d) => !d.sleepStagesSynced), true);
     });

@@ -519,7 +519,7 @@ class _HealthSyncScreenState extends State<HealthSyncScreen> {
           ),
           const SizedBox(height: 14),
           const Text(
-            'Reads steps, calories, sleep, water, weight and heart rate to '
+            'Reads steps, calories, sleep, water and weight to '
             'keep your dashboard accurate. BodyX never writes data back.',
             style: TextStyle(
               color: AppColors.textMuted,
@@ -652,8 +652,8 @@ class HelpSupportScreen extends StatelessWidget {
     (
       q: 'How do I sync a wearable device?',
       a: 'Go to Settings → toggle "Sync with Health". Once enabled, BodyX '
-          'pulls steps, active calories burned, sleep and heart rate from '
-          'Apple Health or Health Connect automatically. No wearable? '
+          'pulls steps, active calories burned and sleep from Apple '
+          'Health or Health Connect automatically. No wearable? '
           'Everything still works with data you log by hand.',
     ),
     (
