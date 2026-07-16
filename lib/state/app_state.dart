@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../data/mock_data.dart';
 import '../models/models.dart';
+import 'health_service.dart';
 import 'notification_service.dart';
 import 'persistence_service.dart';
 
@@ -73,6 +74,8 @@ class AppState extends ChangeNotifier {
         await _persistence.loadNotificationsEnabled() ?? notificationsEnabled;
     workoutRemindersEnabled = await _persistence.loadWorkoutRemindersEnabled() ??
         workoutRemindersEnabled;
+    healthSyncEnabled =
+        await _persistence.loadHealthSyncEnabled() ?? healthSyncEnabled;
   }
 
   void _persistUser() {
@@ -261,6 +264,7 @@ class AppState extends ChangeNotifier {
   bool notificationsEnabled = true;
   bool darkModeLocked = true; // this app is dark-only, shown as a toggle
   bool workoutRemindersEnabled = true;
+  bool healthSyncEnabled = false;
 
   void updateProfile({
     String? name,
@@ -352,5 +356,77 @@ class AppState extends ChangeNotifier {
   Future<void> syncNotificationSchedules() async {
     await _syncHydrationReminder();
     await _syncWorkoutReminder();
+  }
+
+  // ---- Health sync (Apple Health / Google Health Connect) ----------------
+
+  /// Flips the toggle. Turning it on requests OS permission first — the
+  /// toggle only actually turns on if the user grants access, so the
+  /// returned bool tells the caller whether to show a "not granted" message.
+  Future<bool> toggleHealthSync(bool value) async {
+    if (!value) {
+      healthSyncEnabled = false;
+      unawaited(_persistence.saveHealthSyncEnabled(false));
+      notifyListeners();
+      return true;
+    }
+
+    final granted = await HealthService.instance.requestPermissions();
+    healthSyncEnabled = granted;
+    unawaited(_persistence.saveHealthSyncEnabled(granted));
+    notifyListeners();
+    if (granted) unawaited(syncHealthData());
+    return granted;
+  }
+
+  /// Overlays real Health data onto the current mock-generated history —
+  /// per field, per day, so days/metrics with no real reading keep showing
+  /// their mock value rather than a hole. A no-op unless sync is enabled.
+  Future<void> syncHealthData() async {
+    if (!healthSyncEnabled) return;
+    try {
+      final updated = <DailyStats>[];
+      for (final day in dailyStats) {
+        final snapshot = await HealthService.instance.fetchDailySnapshot(day.date);
+        updated.add(_mergeHealthSnapshot(day, snapshot));
+      }
+      dailyStats = updated;
+
+      final weightSamples = await HealthService.instance.fetchWeightHistory();
+      if (weightSamples.isNotEmpty) {
+        final carriedBodyFat =
+            weightHistory.isNotEmpty ? weightHistory.last.bodyFatPct : 0.0;
+        weightHistory = weightSamples
+            .map((s) => WeightEntry(s.date, s.kg, s.bodyFatPct ?? carriedBodyFat))
+            .toList();
+        if (user != null) user!.weightKg = weightHistory.last.kg;
+        _persistUser();
+        _persistWeight();
+      }
+
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Health sync failed: $e');
+    }
+  }
+
+  DailyStats _mergeHealthSnapshot(DailyStats base, HealthDailySnapshot? snapshot) {
+    if (snapshot == null) return base;
+    return DailyStats(
+      date: base.date,
+      steps: snapshot.steps ?? base.steps,
+      stepGoal: base.stepGoal,
+      calories: snapshot.activeCalories ?? base.calories,
+      calorieGoal: base.calorieGoal,
+      sleepMinutes: snapshot.totalSleepMinutes ?? base.sleepMinutes,
+      sleepGoalMinutes: base.sleepGoalMinutes,
+      waterMl: snapshot.waterMl ?? base.waterMl,
+      waterGoalMl: base.waterGoalMl,
+      lightSleepMinutes: snapshot.sleepLightMinutes ?? base.lightSleepMinutes,
+      deepSleepMinutes: snapshot.sleepDeepMinutes ?? base.deepSleepMinutes,
+      remSleepMinutes: snapshot.sleepRemMinutes ?? base.remSleepMinutes,
+      awakeMinutes: snapshot.sleepAwakeMinutes ?? base.awakeMinutes,
+      heartRateBpm: snapshot.heartRateBpm ?? base.heartRateBpm,
+    );
   }
 }

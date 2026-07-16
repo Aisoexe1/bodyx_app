@@ -4,6 +4,7 @@ import '../../models/models.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/common/count_up_text.dart';
 import '../../widgets/common/glow_card.dart';
 import '../../widgets/common/progress_ring.dart';
 import '../../widgets/common/scale_tap.dart';
@@ -39,18 +40,24 @@ class DashboardScreen extends StatelessWidget {
                         icon: Icons.water_drop_rounded,
                         color: AppColors.info,
                         label: 'Water',
-                        value: '${(stats.waterMl / 1000).toStringAsFixed(1)}L',
-                        progress: stats.waterProgress,
+                        value: CountUpText(
+                          value: stats.waterMl,
+                          formatter: (v) => '${(v / 1000).toStringAsFixed(1)}L',
+                          style: _MiniStatCard.valueStyle,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 12),
-                    const Expanded(
+                    Expanded(
                       child: _MiniStatCard(
                         icon: Icons.favorite_rounded,
                         color: AppColors.pink,
                         label: 'Heart rate',
-                        value: '68 bpm',
-                        progress: 0.55,
+                        value: CountUpText(
+                          value: stats.heartRateBpm,
+                          formatter: (v) => '$v bpm',
+                          style: _MiniStatCard.valueStyle,
+                        ),
                       ),
                     ),
                   ],
@@ -202,16 +209,19 @@ class _DailyOverviewCard extends StatelessWidget {
                 progress: stats.stepProgress,
                 size: 92,
                 strokeWidth: 9,
+                celebrateOnComplete: true,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Icon(Icons.directions_walk_rounded,
                         color: AppColors.primaryBright, size: 16),
-                    Text('${stats.steps}',
-                        style: const TextStyle(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.w800,
-                            fontSize: 14)),
+                    CountUpText(
+                      value: stats.steps,
+                      style: const TextStyle(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 14),
+                    ),
                   ],
                 ),
               ),
@@ -221,19 +231,39 @@ class _DailyOverviewCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _statLine(
-                        Icons.directions_walk_rounded,
-                        'Steps',
-                        '${stats.steps} / ${stats.stepGoal}',
-                        AppColors.primaryBright),
+                      Icons.directions_walk_rounded,
+                      'Steps',
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          CountUpText(value: stats.steps, style: _valueStyle),
+                          Text(' / ${stats.stepGoal}', style: _valueStyle),
+                        ],
+                      ),
+                      AppColors.primaryBright,
+                    ),
                     const SizedBox(height: 10),
                     _statLine(
-                        Icons.local_fire_department_rounded,
-                        'Calories',
-                        '${stats.calories} kcal',
-                        AppColors.warning),
+                      Icons.local_fire_department_rounded,
+                      'Calories',
+                      CountUpText(
+                        value: stats.calories,
+                        formatter: (v) => '$v kcal',
+                        style: _valueStyle,
+                      ),
+                      AppColors.warning,
+                    ),
                     const SizedBox(height: 10),
-                    _statLine(Icons.bedtime_rounded, 'Sleep',
-                        stats.sleepLabel, AppColors.info),
+                    _statLine(
+                      Icons.bedtime_rounded,
+                      'Sleep',
+                      CountUpText(
+                        value: stats.sleepMinutes,
+                        formatter: (v) => '${v ~/ 60}h ${v % 60}m',
+                        style: _valueStyle,
+                      ),
+                      AppColors.info,
+                    ),
                   ],
                 ),
               ),
@@ -244,7 +274,12 @@ class _DailyOverviewCard extends StatelessWidget {
     );
   }
 
-  Widget _statLine(IconData icon, String label, String value, Color color) {
+  static const _valueStyle = TextStyle(
+      color: AppColors.textPrimary,
+      fontWeight: FontWeight.w700,
+      fontSize: 12.5);
+
+  Widget _statLine(IconData icon, String label, Widget value, Color color) {
     return Row(
       children: [
         Icon(icon, size: 15, color: color),
@@ -252,11 +287,7 @@ class _DailyOverviewCard extends StatelessWidget {
         Text(label,
             style: const TextStyle(color: AppColors.textMuted, fontSize: 12.5)),
         const Spacer(),
-        Text(value,
-            style: const TextStyle(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w700,
-                fontSize: 12.5)),
+        value,
       ],
     );
   }
@@ -268,14 +299,15 @@ class _MiniStatCard extends StatelessWidget {
     required this.color,
     required this.label,
     required this.value,
-    required this.progress,
   });
+
+  static const valueStyle = TextStyle(
+      color: AppColors.textPrimary, fontWeight: FontWeight.w800, fontSize: 14);
 
   final IconData icon;
   final Color color;
   final String label;
-  final String value;
-  final double progress;
+  final Widget value;
 
   @override
   Widget build(BuildContext context) {
@@ -288,11 +320,7 @@ class _MiniStatCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(value,
-                    style: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 14)),
+                value,
                 Text(label,
                     style: const TextStyle(
                         color: AppColors.textMuted, fontSize: 11.5)),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../models/models.dart';
 import '../../theme/app_colors.dart';
+import '../common/skeleton.dart';
 
 /// Weekly step-count bar chart. The most recent (today) bar is highlighted
 /// with the full brand gradient while the rest use a muted violet.
@@ -23,11 +24,26 @@ class StepsBarChart extends StatelessWidget {
     if (stats.isEmpty) {
       return SizedBox(
         height: height,
-        child: const Center(
-          child: Text(
-            'No step history yet',
-            style: TextStyle(color: AppColors.textMuted, fontSize: 12.5),
-          ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Expanded(
+              child: ShimmerLoop(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [0.5, 0.8, 0.35, 0.65, 0.9, 0.45, 0.7]
+                      .map((f) => SkeletonBlock(
+                            width: 16,
+                            height: (height - 30) * f,
+                            radius: 6,
+                          ))
+                      .toList(),
+                ),
+              ),
+            ),
+            const SkeletonCaption(text: 'No step history yet'),
+          ],
         ),
       );
     }

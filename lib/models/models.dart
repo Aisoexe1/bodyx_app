@@ -116,6 +116,7 @@ class DailyStats {
     required this.deepSleepMinutes,
     required this.remSleepMinutes,
     required this.awakeMinutes,
+    this.heartRateBpm = 68,
   });
 
   final DateTime date;
@@ -131,6 +132,7 @@ class DailyStats {
   final int deepSleepMinutes;
   final int remSleepMinutes;
   final int awakeMinutes;
+  final int heartRateBpm;
 
   double get stepProgress => (steps / stepGoal).clamp(0, 1);
   double get calorieProgress => (calories / calorieGoal).clamp(0, 1);

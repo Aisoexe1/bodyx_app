@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../state/app_state.dart';
-import '../theme/app_colors.dart';
 import '../widgets/nav/bottom_nav.dart';
 import 'alerts/alerts_screen.dart';
 import 'dashboard/dashboard_screen.dart';
@@ -20,7 +19,7 @@ class MainShell extends StatelessWidget {
     final state = context.watch<AppState>();
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.transparent,
       extendBody: true,
       body: AnimatedSwitcher(
         duration: const Duration(milliseconds: 260),

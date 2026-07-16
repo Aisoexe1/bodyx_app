@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import '../../models/models.dart';
 import '../../theme/app_colors.dart';
+import '../common/skeleton.dart';
 
 /// Weight trend over time with a smooth gradient-filled curve, used on the
 /// Progress screen's "Body composition" section.
@@ -16,11 +17,18 @@ class WeightLineChart extends StatelessWidget {
     if (entries.isEmpty) {
       return SizedBox(
         height: height,
-        child: const Center(
-          child: Text(
-            'Log a check-in to see your trend',
-            style: TextStyle(color: AppColors.textMuted, fontSize: 12.5),
-          ),
+        child: Column(
+          children: [
+            Expanded(
+              child: ShimmerLoop(
+                child: CustomPaint(
+                  size: Size.infinite,
+                  painter: _SkeletonWavePainter(),
+                ),
+              ),
+            ),
+            const SkeletonCaption(text: 'Log a check-in to see your trend'),
+          ],
         ),
       );
     }
@@ -117,4 +125,36 @@ class WeightLineChart extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Gentle wave shape suggesting "a trend line will go here" while there's
+/// no real weight history to plot yet.
+class _SkeletonWavePainter extends CustomPainter {
+  static const _points = [0.62, 0.5, 0.58, 0.4, 0.46, 0.3, 0.36];
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (size.width <= 0 || size.height <= 0) return;
+    final dx = size.width / (_points.length - 1);
+    final path = Path()
+      ..moveTo(0, size.height * _points.first);
+    for (var i = 1; i < _points.length; i++) {
+      final prev = Offset(dx * (i - 1), size.height * _points[i - 1]);
+      final curr = Offset(dx * i, size.height * _points[i]);
+      final mid = Offset((prev.dx + curr.dx) / 2, (prev.dy + curr.dy) / 2);
+      path.quadraticBezierTo(prev.dx, prev.dy, mid.dx, mid.dy);
+    }
+    path.lineTo(size.width, size.height * _points.last);
+
+    final paint = Paint()
+      ..color = AppColors.surfaceElevated
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _SkeletonWavePainter oldDelegate) => false;
 }

@@ -130,6 +130,8 @@ class ProfileScreen extends StatelessWidget {
                 _SettingsGroup(rows: [
                   _RowSpec(Icons.notifications_outlined, 'Notifications', '',
                       (ctx) => const NotificationsScreen()),
+                  _RowSpec(Icons.favorite_border_rounded, 'Health sync', '',
+                      (ctx) => const HealthSyncScreen()),
                   _RowSpec(Icons.language_rounded, 'Units & language', '',
                       (ctx) => const UnitsLanguageScreen()),
                 ]),

@@ -17,6 +17,7 @@ class PersistenceService {
   static const _kAlertRead = 'bodyx.alert_read';
   static const _kNotificationsEnabled = 'bodyx.notifications_enabled';
   static const _kWorkoutRemindersEnabled = 'bodyx.workout_reminders_enabled';
+  static const _kHealthSyncEnabled = 'bodyx.health_sync_enabled';
 
   Future<SharedPreferences> get _prefs => SharedPreferences.getInstance();
 
@@ -95,6 +96,12 @@ class PersistenceService {
 
   Future<void> saveWorkoutRemindersEnabled(bool value) async =>
       (await _prefs).setBool(_kWorkoutRemindersEnabled, value);
+
+  Future<bool?> loadHealthSyncEnabled() async =>
+      (await _prefs).getBool(_kHealthSyncEnabled);
+
+  Future<void> saveHealthSyncEnabled(bool value) async =>
+      (await _prefs).setBool(_kHealthSyncEnabled, value);
 
   /// Signs the session out without discarding the user's logged history —
   /// there's only ever one local "account" in this prototype, so their

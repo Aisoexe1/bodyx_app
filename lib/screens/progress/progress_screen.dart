@@ -119,7 +119,25 @@ class _ProgressScreenState extends State<ProgressScreen> {
                     subtitle: '${windowed.length}-day step history'),
                 const SizedBox(height: 12),
                 GlowCard(
-                  child: StepsBarChart(stats: windowed),
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 350),
+                    switchInCurve: Curves.easeOutCubic,
+                    switchOutCurve: Curves.easeInCubic,
+                    transitionBuilder: (child, animation) => FadeTransition(
+                      opacity: animation,
+                      child: SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(0, 0.04),
+                          end: Offset.zero,
+                        ).animate(animation),
+                        child: child,
+                      ),
+                    ),
+                    child: StepsBarChart(
+                      key: ValueKey(_rangeIndex),
+                      stats: windowed,
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 24),
                 const SectionHeader(title: 'Sleep', subtitle: "Today's breakdown"),

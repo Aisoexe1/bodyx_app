@@ -8,6 +8,7 @@ import 'screens/main_shell.dart';
 import 'screens/splash_screen.dart';
 import 'state/app_state.dart';
 import 'theme/app_theme.dart';
+import 'widgets/common/app_background.dart';
 
 class BodyXApp extends StatelessWidget {
   const BodyXApp({super.key, required this.appState});
@@ -24,6 +25,12 @@ class BodyXApp extends StatelessWidget {
         theme: AppTheme.dark,
         darkTheme: AppTheme.dark,
         themeMode: ThemeMode.dark,
+        builder: (context, child) => Stack(
+          children: [
+            const Positioned.fill(child: AppBackground()),
+            if (child != null) child,
+          ],
+        ),
         home: const _AuthGate(),
       ),
     );

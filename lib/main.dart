@@ -9,9 +9,10 @@ Future<void> main() async {
   await appState.hydrate();
   runApp(BodyXApp(appState: appState));
 
-  // Fire-and-forget: re-arm any reminders the user had enabled last session.
-  // Local notifications aren't available on web, and any platform-channel
-  // failure here must never delay or break app startup — errors are
-  // swallowed inside AppState's sync methods.
+  // Fire-and-forget: re-arm any reminders the user had enabled last session,
+  // and pull fresh Health data if the user opted in. Neither is available on
+  // web, and any platform-channel failure here must never delay or break
+  // app startup — errors are swallowed inside AppState's sync methods.
   unawaited(appState.syncNotificationSchedules());
+  unawaited(appState.syncHealthData());
 }
