@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -7,8 +8,32 @@ import 'package:bodyx_app/state/app_state.dart';
 import 'fake_repositories.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   setUp(() {
     SharedPreferences.setMockInitialValues({});
+  });
+
+  group('water defaults', () {
+    test('today starts at 0ml on a fresh app open, not a mock-seeded value',
+        () async {
+      final state = newTestAppState();
+      await state.hydrate();
+
+      expect(state.dailyStats.last.waterMl, 0);
+      expect(state.todayWaterLog, isEmpty);
+    });
+
+    test('logging water is what first raises today above 0', () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      await state.signIn('water@bodyx.app', 'pw');
+
+      expect(state.dailyStats.last.waterMl, 0);
+
+      state.logWater(250);
+      expect(state.dailyStats.last.waterMl, 250);
+    });
   });
 
   group('auth flow', () {
@@ -178,6 +203,120 @@ void main() {
 
       expect(restarted.notificationsEnabled, isFalse);
       expect(restarted.workoutRemindersEnabled, isFalse);
+    });
+
+    test('logged meals survive a restart and feed calorie/protein totals',
+        () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      await state.signIn('meals@bodyx.app', 'pw');
+
+      expect(state.meals, isEmpty);
+      state.logMeal(const MealEntry(
+        name: 'Chicken bowl',
+        time: '12:30',
+        kcal: 600,
+        proteinG: 45,
+        carbsG: 50,
+        fatG: 15,
+        icon: Icons.lunch_dining_rounded,
+      ));
+      expect(state.todayCaloriesEaten, 600);
+      expect(state.todayProteinG, 45);
+
+      final restarted = newTestAppState();
+      await restarted.hydrate();
+
+      expect(restarted.meals.length, 1);
+      expect(restarted.meals.first.name, 'Chicken bowl');
+      expect(restarted.todayCaloriesEaten, 600);
+    });
+
+    test('removeMeal drops just that entry', () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      await state.signIn('removemeal@bodyx.app', 'pw');
+
+      state.logMeal(const MealEntry(
+        name: 'Oats',
+        time: '08:00',
+        kcal: 300,
+        proteinG: 10,
+        carbsG: 50,
+        fatG: 5,
+        icon: Icons.breakfast_dining_rounded,
+      ));
+      state.logMeal(const MealEntry(
+        name: 'Shake',
+        time: '16:00',
+        kcal: 200,
+        proteinG: 30,
+        carbsG: 10,
+        fatG: 3,
+        icon: Icons.local_cafe_rounded,
+      ));
+      expect(state.meals.length, 2);
+
+      state.removeMeal(0);
+      expect(state.meals.length, 1);
+      expect(state.meals.first.name, 'Shake');
+    });
+  });
+
+  group('workout tracking', () {
+    test('toggleWorkoutSet flips a set and persists across restart',
+        () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      await state.signIn('workout@bodyx.app', 'pw');
+
+      expect(state.todayWorkout.completedCount, 0);
+
+      state.toggleWorkoutSet(0);
+      state.toggleWorkoutSet(1);
+      expect(state.todayWorkout.completedCount, 2);
+      expect(state.todayWorkout.sets[0].done, true);
+
+      state.toggleWorkoutSet(0);
+      expect(state.todayWorkout.completedCount, 1);
+      expect(state.todayWorkout.sets[0].done, false);
+
+      final restarted = newTestAppState();
+      await restarted.hydrate();
+      expect(restarted.todayWorkout.completedCount, 1);
+      expect(restarted.todayWorkout.sets[1].done, true);
+    });
+  });
+
+  group('progress photos', () {
+    test('addProgressPhoto prepends, keeps newest-first order, and persists',
+        () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      await state.signIn('photos@bodyx.app', 'pw');
+
+      expect(state.progressPhotos, isEmpty);
+
+      state.addProgressPhoto(ProgressPhoto(
+        id: '1',
+        date: DateTime(2026, 1, 1),
+        fileName: 'progress_1.jpg',
+      ));
+      state.addProgressPhoto(ProgressPhoto(
+        id: '2',
+        date: DateTime(2026, 2, 1),
+        fileName: 'progress_2.jpg',
+      ));
+
+      expect(state.progressPhotos.length, 2);
+      // Newest date first, regardless of insertion order.
+      expect(state.progressPhotos.first.id, '2');
+      expect(state.progressPhotos.last.id, '1');
+
+      final restarted = newTestAppState();
+      await restarted.hydrate();
+      expect(restarted.progressPhotos.length, 2);
+      expect(restarted.progressPhotos.first.id, '2');
     });
   });
 

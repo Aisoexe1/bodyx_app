@@ -11,6 +11,7 @@ import '../network/weight_repository.dart';
 import 'health_service.dart';
 import 'notification_service.dart';
 import 'persistence_service.dart';
+import 'progress_photo_storage.dart';
 
 enum AuthStage { splash, signIn, signUp, chooseUsername, bodyData, done }
 
@@ -19,10 +20,12 @@ enum AuthStage { splash, signIn, signUp, chooseUsername, bodyData, done }
 /// here so every screen updates reactively when mock data changes.
 ///
 /// Anything the user actively logs or configures (profile, weight/
-/// measurement history, plan/alert read-state, settings) is persisted via
-/// [PersistenceService] and restored on the next launch through [hydrate].
-/// Generated demo history (daily steps/calories/sleep, today's meals) is
-/// deliberately re-rolled each session so the dashboard always feels alive.
+/// measurement history, plan/alert read-state, settings, today's water/
+/// meals) is persisted via [PersistenceService] and restored on the next
+/// launch through [hydrate]. Generated demo history (daily steps/calories/
+/// sleep) is deliberately re-rolled each session so the dashboard always
+/// feels alive — meals start empty each day since there's no realistic way
+/// to fake "what you ate" the way a step count can be simulated.
 class AppState extends ChangeNotifier {
   AppState({
     PersistenceService? persistence,
@@ -41,7 +44,9 @@ class AppState extends ChangeNotifier {
     bodyMeasurements = MockData.generateBodyMeasurements(Gender.male);
     alerts = MockData.alerts;
     planTasks = MockData.todayPlan;
-    meals = MockData.todayMeals;
+    todayWorkout = MockData.todayWorkout;
+    meals = [];
+    progressPhotos = [];
   }
 
   final PersistenceService _persistence;
@@ -76,6 +81,11 @@ class AppState extends ChangeNotifier {
       bodyMeasurements = savedMeasurements;
     }
 
+    final savedPhotos = await _persistence.loadProgressPhotos();
+    if (savedPhotos != null) {
+      progressPhotos = savedPhotos;
+    }
+
     final savedTasksDone = await _persistence.loadPlanTaskDone();
     if (savedTasksDone != null && savedTasksDone.length == planTasks.length) {
       for (var i = 0; i < planTasks.length; i++) {
@@ -102,6 +112,19 @@ class AppState extends ChangeNotifier {
     if (savedWaterLog != null && savedWaterLog.isNotEmpty) {
       todayWaterLog = savedWaterLog;
       _applyTodayWaterTotal();
+    }
+
+    final savedMeals = await _persistence.loadTodayMeals();
+    if (savedMeals != null) {
+      meals = savedMeals;
+    }
+
+    final savedWorkoutDone = await _persistence.loadTodayWorkoutSetsDone();
+    if (savedWorkoutDone != null &&
+        savedWorkoutDone.length == todayWorkout.sets.length) {
+      for (var i = 0; i < savedWorkoutDone.length; i++) {
+        todayWorkout.sets[i].done = savedWorkoutDone[i];
+      }
     }
 
     await _restoreServerSession();
@@ -332,11 +355,22 @@ class AppState extends ChangeNotifier {
   late List<WeightEntry> weightHistory;
   late List<PlanTask> planTasks;
   late List<MealEntry> meals;
+  late Workout todayWorkout;
+  late List<ProgressPhoto> progressPhotos;
   List<WaterLogEntry> todayWaterLog = [];
 
   void togglePlanTask(int index) {
     planTasks[index].done = !planTasks[index].done;
     _persistPlanTasks();
+    notifyListeners();
+  }
+
+  void toggleWorkoutSet(int index) {
+    final set = todayWorkout.sets[index];
+    set.done = !set.done;
+    if (set.done) HapticFeedback.mediumImpact();
+    unawaited(_persistence.saveTodayWorkoutSetsDone(
+        todayWorkout.sets.map((s) => s.done).toList()));
     notifyListeners();
   }
 
@@ -357,6 +391,36 @@ class AppState extends ChangeNotifier {
   /// enough to tell "gaining muscle" from "gaining fat".
   StatusResult get weightVerdict => HealthInsights.weightVerdict(weightHistory);
 
+  /// True once a weight entry has actually been logged today — drives the
+  /// "Log body weight" checklist item off real data instead of a togglable
+  /// checkbox that could be ticked without doing anything.
+  bool get loggedWeightToday {
+    if (weightHistory.isEmpty) return false;
+    final last = weightHistory.last.date;
+    final now = DateTime.now();
+    return last.year == now.year && last.month == now.month && last.day == now.day;
+  }
+
+  // Unlike most other persisted fields in this class, the photo metadata
+  // save is awaited (not fire-and-forget) before these methods return —
+  // photos are irreplaceable, and the goal of this feature is a reliable
+  // long-term record, so it's worth shrinking (not eliminating) the crash
+  // window between a file landing on disk and its metadata being saved.
+  Future<void> addProgressPhoto(ProgressPhoto photo) async {
+    HapticFeedback.mediumImpact();
+    progressPhotos = [photo, ...progressPhotos]
+      ..sort((a, b) => b.date.compareTo(a.date));
+    notifyListeners();
+    await _persistence.saveProgressPhotos(progressPhotos);
+  }
+
+  Future<void> deleteProgressPhoto(ProgressPhoto photo) async {
+    await ProgressPhotoStorage.instance.delete(photo.fileName);
+    progressPhotos = progressPhotos.where((p) => p.id != photo.id).toList();
+    notifyListeners();
+    await _persistence.saveProgressPhotos(progressPhotos);
+  }
+
   // ---- Calories / protein --------------------------------------------------
 
   double get tdee => user == null
@@ -369,7 +433,13 @@ class AppState extends ChangeNotifier {
           activityLevel: user!.activityLevel,
         );
 
-  int get calorieSurplus => selectedStats.calories - tdee.round();
+  /// Calories actually eaten today — from logged meals, not [DailyStats
+  /// .calories] (that field holds *active calories burned*, the same one
+  /// Health sync overwrites from HealthKit's ACTIVE_ENERGY_BURNED, so it
+  /// isn't comparable to TDEE the way a surplus needs).
+  int get todayCaloriesEaten => meals.fold<int>(0, (sum, m) => sum + m.kcal);
+
+  int get calorieSurplus => todayCaloriesEaten - tdee.round();
 
   StatusResult get calorieSurplusStatus =>
       HealthInsights.calorieSurplusStatus(calorieSurplus);
@@ -417,8 +487,7 @@ class AppState extends ChangeNotifier {
 
   /// True if today's plan includes a workout — bumps the water target per
   /// [HealthInsights.waterGoalMl].
-  bool get isWorkoutDayToday =>
-      planTasks.any((t) => t.icon == Icons.fitness_center_rounded);
+  bool get isWorkoutDayToday => todayWorkout.sets.isNotEmpty;
 
   int get individualizedWaterGoalMl => HealthInsights.waterGoalMl(
         weightKg: user?.weightKg ?? 75,
@@ -463,6 +532,21 @@ class AppState extends ChangeNotifier {
       heartRateBpm: today.heartRateBpm,
     );
     dailyStats = updated;
+  }
+
+  // ---- Meals --------------------------------------------------------------
+
+  void logMeal(MealEntry meal) {
+    meals = [...meals, meal];
+    unawaited(_persistence.saveTodayMeals(meals));
+    notifyListeners();
+  }
+
+  void removeMeal(int index) {
+    final updated = List<MealEntry>.from(meals)..removeAt(index);
+    meals = updated;
+    unawaited(_persistence.saveTodayMeals(meals));
+    notifyListeners();
   }
 
   // ---- Body metrics ---------------------------------------------------------

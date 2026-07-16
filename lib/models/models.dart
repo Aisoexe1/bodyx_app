@@ -195,6 +195,33 @@ class WeightEntry {
       );
 }
 
+/// A progress photo the user captured, for visually comparing any two
+/// points in time. Stores a filename only (not an absolute path) — the
+/// app's documents directory path can change between installs/updates on
+/// iOS, so the real path is always resolved at read time.
+class ProgressPhoto {
+  const ProgressPhoto({
+    required this.id,
+    required this.date,
+    required this.fileName,
+  });
+  final String id;
+  final DateTime date;
+  final String fileName;
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'date': date.toIso8601String(),
+        'fileName': fileName,
+      };
+
+  factory ProgressPhoto.fromJson(Map<String, dynamic> json) => ProgressPhoto(
+        id: json['id'] as String,
+        date: DateTime.parse(json['date'] as String),
+        fileName: json['fileName'] as String,
+      );
+}
+
 /// A single logged glass/bottle of water, timestamped so the day can be
 /// shown as "when you drank", not just a running total.
 class WaterLogEntry {
@@ -211,6 +238,40 @@ class WaterLogEntry {
         DateTime.parse(json['time'] as String),
         json['ml'] as int,
       );
+}
+
+/// A closed, named set of icons meals can use. Persisting an [IconData] by
+/// name (rather than reconstructing `IconData(codePoint, ...)` from stored
+/// numbers) keeps every glyph a literal `Icons.xxx` reference somewhere in
+/// source, which is what Flutter's icon tree-shaker needs to avoid silently
+/// dropping a glyph that's only ever built dynamically.
+class MealIcons {
+  MealIcons._();
+
+  static const Map<String, IconData> byName = {
+    'restaurant': Icons.restaurant_rounded,
+    'egg': Icons.egg_rounded,
+    'set_meal': Icons.set_meal_rounded,
+    'icecream': Icons.icecream_rounded,
+    'kebab_dining': Icons.kebab_dining_rounded,
+    'local_cafe': Icons.local_cafe_rounded,
+    'rice_bowl': Icons.rice_bowl_rounded,
+    'breakfast_dining': Icons.breakfast_dining_rounded,
+    'lunch_dining': Icons.lunch_dining_rounded,
+    'bakery_dining': Icons.bakery_dining_rounded,
+    'ramen_dining': Icons.ramen_dining_rounded,
+    'eco': Icons.eco_rounded,
+    'local_drink': Icons.local_drink_rounded,
+    'grass': Icons.grass_rounded,
+    'opacity': Icons.opacity_rounded,
+  };
+
+  static String nameOf(IconData icon) {
+    for (final entry in byName.entries) {
+      if (entry.value == icon) return entry.key;
+    }
+    return 'restaurant';
+  }
 }
 
 class MealEntry {
@@ -231,6 +292,61 @@ class MealEntry {
   final int carbsG;
   final int fatG;
   final IconData icon;
+
+  Map<String, dynamic> toJson() => {
+        'name': name,
+        'time': time,
+        'kcal': kcal,
+        'proteinG': proteinG,
+        'carbsG': carbsG,
+        'fatG': fatG,
+        'icon': MealIcons.nameOf(icon),
+      };
+
+  factory MealEntry.fromJson(Map<String, dynamic> json) => MealEntry(
+        name: json['name'] as String,
+        time: json['time'] as String,
+        kcal: json['kcal'] as int,
+        proteinG: json['proteinG'] as int,
+        carbsG: json['carbsG'] as int,
+        fatG: json['fatG'] as int,
+        icon: MealIcons.byName[json['icon'] as String] ??
+            Icons.restaurant_rounded,
+      );
+}
+
+/// One working set of one exercise — the checkable unit of a [Workout].
+class WorkoutSet {
+  WorkoutSet({
+    required this.exercise,
+    required this.setNumber,
+    required this.targetReps,
+    this.done = false,
+  });
+
+  final String exercise;
+  final int setNumber;
+  final int targetReps;
+  bool done;
+}
+
+/// Today's workout as a real checklist — each set is individually
+/// trackable instead of a single static "X / Y sets" label.
+class Workout {
+  Workout({
+    required this.name,
+    required this.subtitle,
+    required this.icon,
+    required this.sets,
+  });
+
+  final String name;
+  final String subtitle;
+  final IconData icon;
+  final List<WorkoutSet> sets;
+
+  int get completedCount => sets.where((s) => s.done).length;
+  double get progress => sets.isEmpty ? 0 : completedCount / sets.length;
 }
 
 enum AlertSeverity { info, warning, success }

@@ -23,6 +23,7 @@ class MockData {
       final awake = 5 + _rng.nextInt(20);
       final light = sleep - deep - rem;
       final heartRate = 58 + _rng.nextInt(20);
+      final isToday = i == days - 1;
       return DailyStats(
         date: date,
         steps: steps,
@@ -31,7 +32,12 @@ class MockData {
         calorieGoal: 2200,
         sleepMinutes: sleep,
         sleepGoalMinutes: 480,
-        waterMl: 900 + _rng.nextInt(1800),
+        // Today's water is tracked live via AppState.todayWaterLog, which
+        // genuinely starts empty — seeding a random value here would show
+        // the user water they never logged until their first real entry
+        // overwrites it. Past days keep the random seed so history/charts
+        // still look populated.
+        waterMl: isToday ? 0 : 900 + _rng.nextInt(1800),
         waterGoalMl: 2500,
         lightSleepMinutes: light,
         deepSleepMinutes: deep,
@@ -89,45 +95,6 @@ class MockData {
     return result;
   }
 
-  static List<MealEntry> get todayMeals => const [
-        MealEntry(
-          name: 'Oats & Berries',
-          time: '07:40',
-          kcal: 380,
-          proteinG: 18,
-          carbsG: 54,
-          fatG: 9,
-          icon: Icons.free_breakfast_rounded,
-        ),
-        MealEntry(
-          name: 'Grilled Chicken Bowl',
-          time: '12:30',
-          kcal: 610,
-          proteinG: 48,
-          carbsG: 55,
-          fatG: 16,
-          icon: Icons.lunch_dining_rounded,
-        ),
-        MealEntry(
-          name: 'Protein Shake',
-          time: '16:15',
-          kcal: 220,
-          proteinG: 32,
-          carbsG: 14,
-          fatG: 4,
-          icon: Icons.local_cafe_rounded,
-        ),
-        MealEntry(
-          name: 'Salmon & Greens',
-          time: '19:45',
-          kcal: 520,
-          proteinG: 40,
-          carbsG: 22,
-          fatG: 24,
-          icon: Icons.dinner_dining_rounded,
-        ),
-      ];
-
   static List<AlertItem> get alerts => [
         AlertItem(
           title: 'Low water intake',
@@ -168,26 +135,30 @@ class MockData {
         ),
       ];
 
+  /// Self-reported checklist items only. The workout has its own dedicated,
+  /// progress-tracked card (see [todayWorkout]), and "log body weight" is
+  /// driven off real weight-history data (see `AppState.loggedWeightToday`)
+  /// rather than a togglable checkbox — neither is duplicated here.
   static List<PlanTask> get todayPlan => [
-        PlanTask(
-          title: 'Lower body strength',
-          subtitle: '6 exercises · 48 min · Gym',
-          icon: Icons.fitness_center_rounded,
-        ),
         PlanTask(
           title: 'Mobility & stretch',
           subtitle: '15 min · Recovery',
           icon: Icons.self_improvement_rounded,
         ),
-        PlanTask(
-          title: 'Log body weight',
-          subtitle: 'Morning check-in',
-          icon: Icons.monitor_weight_rounded,
-        ),
-        PlanTask(
-          title: 'Hit protein target',
-          subtitle: '160g goal',
-          icon: Icons.restaurant_rounded,
-        ),
       ];
+
+  /// Fresh (all-unchecked) template — [AppState] overlays today's saved
+  /// completion state on top of this, the same pattern as [todayPlan].
+  static Workout get todayWorkout => Workout(
+        name: 'Lower Body Strength',
+        subtitle: '2 exercises · Gym',
+        icon: Icons.fitness_center_rounded,
+        sets: [
+          WorkoutSet(exercise: 'Squats', setNumber: 1, targetReps: 10),
+          WorkoutSet(exercise: 'Squats', setNumber: 2, targetReps: 10),
+          WorkoutSet(exercise: 'Squats', setNumber: 3, targetReps: 10),
+          WorkoutSet(exercise: 'Leg Press', setNumber: 1, targetReps: 12),
+          WorkoutSet(exercise: 'Leg Press', setNumber: 2, targetReps: 12),
+        ],
+      );
 }

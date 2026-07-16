@@ -9,11 +9,11 @@ import '../../widgets/body/interactive_body.dart';
 import '../../widgets/charts/sparkline.dart';
 import '../../widgets/common/glow_card.dart';
 import '../../widgets/common/scale_tap.dart';
-import 'body_scan_screen.dart';
 import 'log_metrics_sheet.dart';
+import 'progress_photos_screen.dart';
 
 /// The app's signature screen: an interactive pseudo-3D body with tappable
-/// muscle zones, a live detail panel, and quick access to the camera scan
+/// muscle zones, a live detail panel, and quick access to progress photos
 /// and manual measurement logging flows.
 class BodyMetricsScreen extends StatefulWidget {
   const BodyMetricsScreen({super.key});
@@ -59,7 +59,8 @@ class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
                 ScaleTap(
                   onTap: () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const BodyScanScreen()),
+                    MaterialPageRoute(
+                        builder: (_) => const ProgressPhotosScreen()),
                   ),
                   child: Container(
                     padding: const EdgeInsets.all(10),

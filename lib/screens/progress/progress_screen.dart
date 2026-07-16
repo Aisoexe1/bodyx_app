@@ -85,7 +85,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                         ],
                       ),
                       const SizedBox(height: 4),
-                      Text('${last.kg} kg',
+                      Text('${last.kg.round()} kg',
                           style: const TextStyle(
                               color: AppColors.textPrimary,
                               fontWeight: FontWeight.w800,
@@ -105,7 +105,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                     Expanded(
                       child: _RingStatCard(
                         label: 'Body fat',
-                        value: '${last.bodyFatPct}%',
+                        value: '${last.bodyFatPct.toStringAsFixed(1)}%',
                         progress: (last.bodyFatPct / 30).clamp(0, 1),
                         color: AppColors.warning,
                       ),
@@ -262,7 +262,6 @@ class _CaloriesCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final stats = state.selectedStats;
     final surplus = state.calorieSurplus;
     final status = state.calorieSurplusStatus;
     final color = statusColor(status.level);
@@ -278,7 +277,7 @@ class _CaloriesCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('${stats.calories} kcal',
+              Text('${state.todayCaloriesEaten} kcal',
                   style: const TextStyle(
                       color: AppColors.textPrimary,
                       fontWeight: FontWeight.w800,

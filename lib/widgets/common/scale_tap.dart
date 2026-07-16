@@ -53,6 +53,7 @@ class _ScaleTapState extends State<ScaleTap>
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: widget.onTap,
       onTapDown: _onDown,
       onTapUp: _onUp,
