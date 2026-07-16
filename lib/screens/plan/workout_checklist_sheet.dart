@@ -146,6 +146,8 @@ class _WorkoutChecklistSheetState extends State<WorkoutChecklistSheet> {
                   running: state.isWorkoutTimerRunning,
                   onToggle: () =>
                       context.read<AppState>().toggleWorkoutTimer(),
+                  onReset: () =>
+                      context.read<AppState>().resetWorkoutTimer(),
                 ),
                 if (sets.isNotEmpty) ...[
                   const SizedBox(height: 14),
@@ -310,11 +312,13 @@ class _TimerBar extends StatelessWidget {
     required this.elapsed,
     required this.running,
     required this.onToggle,
+    required this.onReset,
   });
 
   final Duration elapsed;
   final bool running;
   final VoidCallback onToggle;
+  final VoidCallback onReset;
 
   String _format(Duration d) {
     final h = d.inHours;
@@ -354,6 +358,15 @@ class _TimerBar extends StatelessWidget {
                     fontSize: 15,
                     fontFeatures: const [FontFeature.tabularFigures()])),
           ),
+          if (elapsed > Duration.zero) ...[
+            ScaleTap(
+              onTap: onReset,
+              child: Icon(Icons.replay_rounded,
+                  size: 18,
+                  color: running ? AppColors.success : AppColors.textMuted),
+            ),
+            const SizedBox(width: 12),
+          ],
           ScaleTap(
             onTap: onToggle,
             child: Container(

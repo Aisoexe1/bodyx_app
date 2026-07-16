@@ -22,7 +22,6 @@ class MockData {
       final rem = (sleep * (0.15 + _rng.nextDouble() * 0.08)).round();
       final awake = 5 + _rng.nextInt(20);
       final light = sleep - deep - rem;
-      final heartRate = 58 + _rng.nextInt(20);
       final isToday = i == days - 1;
       return DailyStats(
         date: date,
@@ -43,7 +42,6 @@ class MockData {
         deepSleepMinutes: deep,
         remSleepMinutes: rem,
         awakeMinutes: awake,
-        heartRateBpm: heartRate,
       );
     });
   }

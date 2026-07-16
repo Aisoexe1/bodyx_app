@@ -95,6 +95,13 @@ class WaterLogSheet extends StatelessWidget {
                               color: AppColors.textPrimary,
                               fontWeight: FontWeight.w600,
                               fontSize: 12.5)),
+                      const SizedBox(width: 10),
+                      ScaleTap(
+                        onTap: () =>
+                            context.read<AppState>().removeWaterEntry(e),
+                        child: const Icon(Icons.close_rounded,
+                            color: AppColors.textMuted, size: 15),
+                      ),
                     ],
                   ),
                 )),

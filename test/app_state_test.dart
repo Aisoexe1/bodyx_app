@@ -33,6 +33,25 @@ void main() {
       state.logWater(250);
       expect(state.dailyStats.last.waterMl, 250);
     });
+
+    test('removeWaterEntry undoes a single logged entry (misclick fix)',
+        () async {
+      final state = AppState();
+      await state.hydrate();
+      state.signIn('water2@bodyx.app', 'pw');
+
+      state.logWater(200);
+      state.logWater(500);
+      expect(state.todayWaterLog.length, 2);
+      expect(state.dailyStats.last.waterMl, 700);
+
+      final wrongEntry = state.todayWaterLog.last; // the 500ml misclick
+      state.removeWaterEntry(wrongEntry);
+
+      expect(state.todayWaterLog.length, 1);
+      expect(state.todayWaterLog.first.ml, 200);
+      expect(state.dailyStats.last.waterMl, 200);
+    });
   });
 
   group('auth flow', () {
@@ -342,6 +361,28 @@ void main() {
       final bankedAfterStop = state.todayWorkoutElapsed;
       expect(state.todayWorkoutElapsed, bankedAfterStop);
     });
+
+    test('resetWorkoutTimer zeroes elapsed time whether running or stopped',
+        () async {
+      final state = AppState();
+      await state.hydrate();
+      state.signIn('workout5@bodyx.app', 'pw');
+
+      state.toggleWorkoutTimer();
+      state.toggleWorkoutTimer();
+      expect(state.todayWorkoutElapsed.isNegative, false);
+
+      state.resetWorkoutTimer();
+      expect(state.todayWorkoutElapsed, Duration.zero);
+      expect(state.isWorkoutTimerRunning, false);
+
+      // Resetting while running also clears the running state.
+      state.toggleWorkoutTimer();
+      expect(state.isWorkoutTimerRunning, true);
+      state.resetWorkoutTimer();
+      expect(state.isWorkoutTimerRunning, false);
+      expect(state.todayWorkoutElapsed, Duration.zero);
+    });
   });
 
   group('mobility tracking', () {
@@ -491,6 +532,15 @@ void main() {
 
       state.togglePlanTask(0);
       expect(state.planTasks[0].done, initial);
+    });
+  });
+
+  group('sleep data honesty', () {
+    test('generated demo history is never mislabeled as Health-synced',
+        () async {
+      final state = AppState();
+      await state.hydrate();
+      expect(state.dailyStats.every((d) => !d.sleepStagesSynced), true);
     });
   });
 

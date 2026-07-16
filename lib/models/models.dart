@@ -116,7 +116,7 @@ class DailyStats {
     required this.deepSleepMinutes,
     required this.remSleepMinutes,
     required this.awakeMinutes,
-    this.heartRateBpm = 68,
+    this.sleepStagesSynced = false,
   });
 
   final DateTime date;
@@ -132,7 +132,12 @@ class DailyStats {
   final int deepSleepMinutes;
   final int remSleepMinutes;
   final int awakeMinutes;
-  final int heartRateBpm;
+
+  /// True only when the light/deep/REM/awake breakdown for this day came
+  /// from a real HealthKit/Health Connect sync — false means it's the
+  /// generated demo split, which callers should disclose rather than
+  /// present as a real reading.
+  final bool sleepStagesSynced;
 
   double get stepProgress => (steps / stepGoal).clamp(0, 1);
   double get calorieProgress => (calories / calorieGoal).clamp(0, 1);

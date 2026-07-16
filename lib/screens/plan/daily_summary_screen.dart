@@ -74,8 +74,12 @@ class DailySummaryScreen extends StatelessWidget {
                     fontWeight: FontWeight.w700,
                     letterSpacing: 1)),
             const SizedBox(height: 4),
-            const Text('Choose a date to view your sleep data',
-                style: TextStyle(color: AppColors.textMuted, fontSize: 12.5)),
+            Text(
+                stats.sleepStagesSynced
+                    ? 'Synced from Health for this day'
+                    : 'Estimated — enable Health sync in Settings for real stages',
+                style: const TextStyle(
+                    color: AppColors.textMuted, fontSize: 12.5)),
             const SizedBox(height: 16),
             GlowCard(
               padding: const EdgeInsets.all(AppSpacing.lg),

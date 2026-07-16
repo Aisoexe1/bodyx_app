@@ -27,7 +27,7 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSHealthShareUsageDescription</key>
-	<string>BodyX reads your steps, calories, sleep, water, weight and heart rate from Health to keep your dashboard accurate.</string>
+	<string>BodyX reads your steps, calories, sleep, water and weight from Health to keep your dashboard accurate.</string>
 	<key>NSHealthUpdateUsageDescription</key>
 	<string>BodyX does not write any data back to Health.</string>
 	<key>NSCameraUsageDescription</key>

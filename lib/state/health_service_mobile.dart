@@ -30,7 +30,6 @@ class HealthService {
     HealthDataType.WATER,
     HealthDataType.WEIGHT,
     HealthDataType.BODY_FAT_PERCENTAGE,
-    HealthDataType.HEART_RATE,
   ];
 
   Future<void> _ensureConfigured() async {
@@ -88,13 +87,6 @@ class HealthService {
         return matches.fold<double>(0, (sum, p) => sum + _numeric(p)).round();
       }
 
-      int? avgOf(HealthDataType type) {
-        final matches = points.where((p) => p.type == type).toList();
-        if (matches.isEmpty) return null;
-        final total = matches.fold<double>(0, (sum, p) => sum + _numeric(p));
-        return (total / matches.length).round();
-      }
-
       var light = sumOf(HealthDataType.SLEEP_LIGHT);
       final deep = sumOf(HealthDataType.SLEEP_DEEP);
       final rem = sumOf(HealthDataType.SLEEP_REM);
@@ -115,7 +107,6 @@ class HealthService {
         sleepRemMinutes: rem,
         sleepAwakeMinutes: sumOf(HealthDataType.SLEEP_AWAKE),
         waterMl: water != null ? (water * 1000).round() : null,
-        heartRateBpm: avgOf(HealthDataType.HEART_RATE),
       );
     } catch (_) {
       return null;

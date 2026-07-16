@@ -6,7 +6,6 @@ import '../../state/app_state.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
 import '../../theme/status_colors.dart';
-import '../../widgets/charts/hr_zone_bar.dart';
 import '../../widgets/charts/macro_bars.dart';
 import '../../widgets/charts/sleep_donut_chart.dart';
 import '../../widgets/charts/steps_bar_chart.dart';
@@ -154,7 +153,12 @@ class _ProgressScreenState extends State<ProgressScreen> {
                 const SizedBox(height: 12),
                 _CaloriesCard(state: state),
                 const SizedBox(height: 24),
-                const SectionHeader(title: 'Sleep', subtitle: "Today's breakdown"),
+                SectionHeader(
+                  title: 'Sleep',
+                  subtitle: todayStats.sleepStagesSynced
+                      ? "Today's breakdown · synced from Health"
+                      : "Today's breakdown · estimated (enable Health sync in Settings for real stages)",
+                ),
                 const SizedBox(height: 12),
                 GlowCard(
                   child: SleepBreakdownCard(
@@ -165,11 +169,6 @@ class _ProgressScreenState extends State<ProgressScreen> {
                     ringSize: 140,
                   ),
                 ),
-                const SizedBox(height: 24),
-                const SectionHeader(
-                    title: 'Heart rate', subtitle: 'Zone and recovery trend'),
-                const SizedBox(height: 12),
-                _HeartRateCard(state: state),
               ]),
             ),
           ),
@@ -297,54 +296,6 @@ class _CaloriesCard extends StatelessWidget {
             carbsG: totalCarbs,
             fatG: totalFat,
             proteinGoal: state.proteinTargetG.round(),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Zones are named by what they mean for the goal ("Стимул для роста
-/// мышц"), not "Zone 2/3" — and the resting-HR trend surfaces
-/// under-recovery before it shows up anywhere else in the app.
-class _HeartRateCard extends StatelessWidget {
-  const _HeartRateCard({required this.state});
-  final AppState state;
-
-  @override
-  Widget build(BuildContext context) {
-    final trend = state.restingHrTrend;
-    final trendColor = statusColor(trend.level);
-
-    return GlowCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text('${state.selectedStats.heartRateBpm} bpm',
-                  style: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 22)),
-              const Spacer(),
-            ],
-          ),
-          const SizedBox(height: 14),
-          HrZoneBar(
-            fraction: state.hrZoneFraction,
-            zoneLabel: state.hrZone.label,
-          ),
-          const Divider(height: 28, color: AppColors.divider),
-          Row(
-            children: [
-              Icon(Icons.monitor_heart_rounded, size: 16, color: trendColor),
-              const SizedBox(width: 8),
-              const Text('Пульс покоя, 7 дней',
-                  style: TextStyle(color: AppColors.textMuted, fontSize: 12.5)),
-              const Spacer(),
-              StatChip(label: trend.label, color: trendColor),
-            ],
           ),
         ],
       ),

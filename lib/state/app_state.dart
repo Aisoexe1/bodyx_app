@@ -323,6 +323,17 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Zeroes the timer back to 0:00, whether it was running or stopped —
+  /// for starting the clock over without leaving the sheet.
+  void resetWorkoutTimer() {
+    HapticFeedback.selectionClick();
+    _workoutAccumulatedSeconds = 0;
+    _workoutTimerStartedAt = null;
+    unawaited(_persistence.saveTodayWorkoutTimer(
+        _workoutAccumulatedSeconds, _workoutTimerStartedAt));
+    notifyListeners();
+  }
+
   // ---- Mobility / stretch (also fully user-defined) ------------------------
   //
   // Same "no fixed template" shape as the workout — starts empty every
@@ -442,36 +453,6 @@ class AppState extends ChangeNotifier {
   StatusResult get proteinStatus =>
       HealthInsights.proteinStatus(todayProteinG, proteinTargetG);
 
-  // ---- Heart rate -----------------------------------------------------------
-
-  ({String label, StatusLevel level}) get hrZone => HealthInsights.hrZoneFor(
-        bpm: selectedStats.heartRateBpm,
-        age: user?.age ?? 25,
-      );
-
-  double get hrZoneFraction => HealthInsights.hrZoneFraction(
-        bpm: selectedStats.heartRateBpm,
-        age: user?.age ?? 25,
-      );
-
-  /// Trend vs. the last 7 days *excluding* today — a rising number here is
-  /// often the earliest sign of under-recovery, before it shows up anywhere
-  /// else.
-  StatusResult get restingHrTrend {
-    final priorDays = dailyStats.length > 1
-        ? dailyStats
-            .sublist(0, dailyStats.length - 1)
-            .reversed
-            .take(7)
-            .map((s) => s.heartRateBpm)
-            .toList()
-        : <int>[];
-    return HealthInsights.restingHrTrend(
-      todayBpm: dailyStats.last.heartRateBpm,
-      priorDaysBpm: priorDays,
-    );
-  }
-
   // ---- Water --------------------------------------------------------------
 
   /// True if today's plan includes a workout — bumps the water target per
@@ -500,6 +481,16 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Undoes a single logged entry (e.g. a misclick on the wrong preset) —
+  /// identity-based removal since [WaterLogEntry] has no id of its own.
+  void removeWaterEntry(WaterLogEntry entry) {
+    HapticFeedback.selectionClick();
+    todayWaterLog = todayWaterLog.where((e) => e != entry).toList();
+    _applyTodayWaterTotal();
+    unawaited(_persistence.saveTodayWaterLog(todayWaterLog));
+    notifyListeners();
+  }
+
   void _applyTodayWaterTotal() {
     final total = todayWaterLog.fold<int>(0, (sum, e) => sum + e.ml);
     final today = dailyStats.last;
@@ -518,7 +509,7 @@ class AppState extends ChangeNotifier {
       deepSleepMinutes: today.deepSleepMinutes,
       remSleepMinutes: today.remSleepMinutes,
       awakeMinutes: today.awakeMinutes,
-      heartRateBpm: today.heartRateBpm,
+      sleepStagesSynced: today.sleepStagesSynced,
     );
     dailyStats = updated;
   }
@@ -751,7 +742,8 @@ class AppState extends ChangeNotifier {
       deepSleepMinutes: snapshot.sleepDeepMinutes ?? base.deepSleepMinutes,
       remSleepMinutes: snapshot.sleepRemMinutes ?? base.remSleepMinutes,
       awakeMinutes: snapshot.sleepAwakeMinutes ?? base.awakeMinutes,
-      heartRateBpm: snapshot.heartRateBpm ?? base.heartRateBpm,
+      sleepStagesSynced:
+          snapshot.totalSleepMinutes != null || base.sleepStagesSynced,
     );
   }
 }
