@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:bodyx_app/l10n/gen/app_localizations.dart';
 import '../../theme/app_colors.dart';
 
 /// Segmented heart-rate zone bar with a marker at the current %-of-max —
@@ -11,13 +12,17 @@ class HrZoneBar extends StatelessWidget {
   final double fraction;
   final String zoneLabel;
 
-  static const _segments = [
-    (width: 0.50, color: AppColors.textMuted, label: 'Отдых'),
-    (width: 0.10, color: AppColors.info, label: 'Разминка'),
-    (width: 0.10, color: AppColors.primary, label: 'Жиросжиг.'),
-    (width: 0.15, color: AppColors.success, label: 'Рост мышц'),
-    (width: 0.15, color: AppColors.warningDeep, label: 'Максимум'),
-  ];
+  static List<({double width, Color color, String label})> _segments(
+      BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return [
+      (width: 0.50, color: AppColors.textMuted, label: l10n.hrZoneBarRest),
+      (width: 0.10, color: AppColors.info, label: l10n.hrZoneBarWarmup),
+      (width: 0.10, color: AppColors.primary, label: l10n.hrZoneBarFatBurn),
+      (width: 0.15, color: AppColors.success, label: l10n.hrZoneBarMuscleGrowth),
+      (width: 0.15, color: AppColors.warningDeep, label: l10n.hrZoneBarMax),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +40,7 @@ class HrZoneBar extends StatelessWidget {
                   ClipRRect(
                     borderRadius: BorderRadius.circular(8),
                     child: Row(
-                      children: _segments
+                      children: _segments(context)
                           .map((s) => Expanded(
                                 flex: (s.width * 1000).round(),
                                 child: Container(height: 28, color: s.color),
@@ -67,7 +72,7 @@ class HrZoneBar extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Row(
-          children: _segments
+          children: _segments(context)
               .map((s) => Expanded(
                     flex: (s.width * 1000).round(),
                     child: Text(

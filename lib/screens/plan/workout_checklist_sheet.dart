@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:bodyx_app/l10n/gen/app_localizations.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
@@ -64,7 +65,10 @@ class WorkoutChecklistSheet extends StatelessWidget {
                   ],
                 ),
               ),
-              Text('${workout.completedCount} / ${workout.sets.length}',
+              Text(
+                  AppLocalizations.of(context)!.workoutChecklistSetsProgress(
+                      workout.completedCount.toString(),
+                      workout.sets.length.toString()),
                   style: const TextStyle(
                       color: AppColors.primaryBright,
                       fontWeight: FontWeight.w800,
@@ -96,7 +100,10 @@ class WorkoutChecklistSheet extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('$exercise · $targetReps reps',
+                  Text(
+                      AppLocalizations.of(context)!
+                          .workoutChecklistExerciseReps(
+                              exercise, targetReps.toString()),
                       style: const TextStyle(
                           color: AppColors.textSecondary,
                           fontWeight: FontWeight.w700,
@@ -137,7 +144,10 @@ class WorkoutChecklistSheet extends StatelessWidget {
                                 size: 18,
                               ),
                               const SizedBox(height: 4),
-                              Text('Set ${set.setNumber}',
+                              Text(
+                                  AppLocalizations.of(context)!
+                                      .workoutChecklistSetLabel(
+                                          set.setNumber.toString()),
                                   style: TextStyle(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w700,
@@ -162,8 +172,8 @@ class WorkoutChecklistSheet extends StatelessWidget {
                 color: AppColors.success.withValues(alpha: 0.14),
                 borderRadius: BorderRadius.circular(AppRadius.sm),
               ),
-              child: const Text('Workout complete 💪',
-                  style: TextStyle(
+              child: Text(AppLocalizations.of(context)!.workoutChecklistComplete,
+                  style: const TextStyle(
                       color: AppColors.success, fontWeight: FontWeight.w700)),
             ),
         ],

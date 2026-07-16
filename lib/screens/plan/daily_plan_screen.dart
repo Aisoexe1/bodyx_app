@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:bodyx_app/l10n/gen/app_localizations.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../models/models.dart';
@@ -34,50 +35,50 @@ class DailyPlanScreen extends StatelessWidget {
                   icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
                 ),
                 const SizedBox(width: 4),
-                const Text('Daily plan',
-                    style: TextStyle(
+                Text(AppLocalizations.of(context)!.dailyPlanTitle,
+                    style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w800,
                         color: AppColors.textPrimary)),
               ],
             ),
             const SizedBox(height: 4),
-            const Padding(
-              padding: EdgeInsets.only(left: 52),
-              child: Text('Track your progress every day',
-                  style: TextStyle(color: AppColors.textMuted, fontSize: 13)),
+            Padding(
+              padding: const EdgeInsets.only(left: 52),
+              child: Text(AppLocalizations.of(context)!.dailyPlanSubtitle,
+                  style: const TextStyle(color: AppColors.textMuted, fontSize: 13)),
             ),
             const SizedBox(height: 24),
             _StatRow(
               icon: Icons.directions_walk_rounded,
-              label: 'Steps',
+              label: AppLocalizations.of(context)!.dailyPlanStepsLabel,
               value: '${today.steps}',
               color: AppColors.primaryBright,
             ),
             const SizedBox(height: 10),
             _StatRow(
               icon: Icons.local_fire_department_rounded,
-              label: 'Calories',
+              label: AppLocalizations.of(context)!.dailyPlanCaloriesLabel,
               value: '${today.calories}',
               color: AppColors.warning,
             ),
             const SizedBox(height: 10),
             _StatRow(
               icon: Icons.bedtime_rounded,
-              label: 'Sleep',
+              label: AppLocalizations.of(context)!.dailyPlanSleepLabel,
               value: today.sleepLabel,
               color: AppColors.info,
             ),
             const SizedBox(height: 28),
-            const Text('SELECT DATE',
-                style: TextStyle(
+            Text(AppLocalizations.of(context)!.dailyPlanSelectDate,
+                style: const TextStyle(
                     color: AppColors.textMuted,
                     fontSize: 11.5,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 1)),
             const SizedBox(height: 4),
-            const Text('Choose a date to view daily plan',
-                style: TextStyle(color: AppColors.textMuted, fontSize: 12.5)),
+            Text(AppLocalizations.of(context)!.dailyPlanChooseDateSubtitle,
+                style: const TextStyle(color: AppColors.textMuted, fontSize: 12.5)),
             const SizedBox(height: 12),
             ...recentDays.map((day) => Padding(
                   padding: const EdgeInsets.only(bottom: 10),

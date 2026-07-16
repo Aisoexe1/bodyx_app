@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:bodyx_app/l10n/gen/app_localizations.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../models/models.dart';
@@ -38,8 +39,8 @@ class PlanScreen extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Your Plan',
-                              style: TextStyle(
+                          Text(AppLocalizations.of(context)!.planYourPlan,
+                              style: const TextStyle(
                                   fontSize: 26,
                                   fontWeight: FontWeight.w800,
                                   color: AppColors.textPrimary)),
@@ -95,8 +96,9 @@ class PlanScreen extends StatelessWidget {
                             StatChip(
                               label: state.todayWorkout.completedCount ==
                                       state.todayWorkout.sets.length
-                                  ? 'Done'
-                                  : 'Today',
+                                  ? AppLocalizations.of(context)!.planDoneLabel
+                                  : AppLocalizations.of(context)!
+                                      .planTodayLabel,
                               color: state.todayWorkout.completedCount ==
                                       state.todayWorkout.sets.length
                                   ? AppColors.success
@@ -106,10 +108,14 @@ class PlanScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 14),
                         _ProgressLine(
-                          label: 'Workout completion',
+                          label: AppLocalizations.of(context)!
+                              .planWorkoutCompletion,
                           value: state.todayWorkout.progress,
-                          trailing:
-                              '${state.todayWorkout.completedCount} / ${state.todayWorkout.sets.length} sets',
+                          trailing: AppLocalizations.of(context)!
+                              .planWorkoutSetsProgress(
+                            state.todayWorkout.completedCount.toString(),
+                            state.todayWorkout.sets.length.toString(),
+                          ),
                         ),
                       ],
                     ),
@@ -120,28 +126,36 @@ class PlanScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Today\'s goals',
-                          style: TextStyle(
+                      Text(AppLocalizations.of(context)!.planTodaysGoals,
+                          style: const TextStyle(
                               color: AppColors.textPrimary,
                               fontWeight: FontWeight.w800,
                               fontSize: 15)),
                       const SizedBox(height: 16),
                       _ProgressLine(
-                        label: 'Steps',
+                        label: AppLocalizations.of(context)!.planSteps,
                         value: stats.stepProgress,
-                        trailing: '${stats.steps} / ${stats.stepGoal}',
+                        trailing: AppLocalizations.of(context)!
+                            .planStepsProgress(
+                          stats.steps.toString(),
+                          stats.stepGoal.toString(),
+                        ),
                         color: AppColors.primaryBright,
                       ),
                       const SizedBox(height: 14),
                       _ProgressLine(
-                        label: 'Calories',
+                        label: AppLocalizations.of(context)!.planCalories,
                         value: stats.calorieProgress,
-                        trailing: '${stats.calories} / ${stats.calorieGoal} kcal',
+                        trailing: AppLocalizations.of(context)!
+                            .planCaloriesProgress(
+                          stats.calories.toString(),
+                          stats.calorieGoal.toString(),
+                        ),
                         color: AppColors.warning,
                       ),
                       const SizedBox(height: 14),
                       _ProgressLine(
-                        label: 'Sleep',
+                        label: AppLocalizations.of(context)!.planSleep,
                         value: stats.sleepProgress,
                         trailing: stats.sleepLabel,
                         color: AppColors.info,
@@ -168,8 +182,10 @@ class PlanScreen extends StatelessWidget {
                                 colors: AppColors.primaryGradient),
                             borderRadius: BorderRadius.circular(AppRadius.sm),
                           ),
-                          child: const Text('Log full activity',
-                              style: TextStyle(
+                          child: Text(
+                              AppLocalizations.of(context)!
+                                  .planLogFullActivity,
+                              style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w700)),
                         ),
@@ -282,9 +298,9 @@ class _ThisWeekSectionState extends State<_ThisWeekSection> {
                 const SizedBox(height: 10),
                 Row(
                   children: [
-                    const Expanded(
-                      child: Text('This week',
-                          style: TextStyle(
+                    Expanded(
+                      child: Text(AppLocalizations.of(context)!.planThisWeek,
+                          style: const TextStyle(
                               color: AppColors.textPrimary,
                               fontWeight: FontWeight.w800,
                               fontSize: 16)),
@@ -343,13 +359,19 @@ class _ThisWeekSectionState extends State<_ThisWeekSection> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                        '${day.steps} steps · ${day.calories} kcal',
+                                        AppLocalizations.of(context)!
+                                            .planDaySummary(
+                                          day.steps.toString(),
+                                          day.calories.toString(),
+                                        ),
                                         style: const TextStyle(
                                             color: AppColors.textPrimary,
                                             fontSize: 12.5,
                                             fontWeight: FontWeight.w600)),
                                     const SizedBox(height: 4),
-                                    Text('Sleep ${day.sleepLabel}',
+                                    Text(
+                                        AppLocalizations.of(context)!
+                                            .planDaySleep(day.sleepLabel),
                                         style: const TextStyle(
                                             color: AppColors.textMuted,
                                             fontSize: 11.5)),

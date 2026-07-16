@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:bodyx_app/l10n/gen/app_localizations.dart';
 import '../../data/food_database.dart';
 import '../../models/models.dart';
 import '../../state/app_state.dart';
@@ -115,8 +116,8 @@ class _LogMealSheetState extends State<LogMealSheet> {
               ),
               Row(
                 children: [
-                  const Text('Приём пищи',
-                      style: TextStyle(
+                  Text(AppLocalizations.of(context)!.logMealTitle,
+                      style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w800,
                           color: AppColors.textPrimary)),
@@ -126,7 +127,9 @@ class _LogMealSheetState extends State<LogMealSheet> {
               ),
               const SizedBox(height: 4),
               Text(
-                '${state.todayCaloriesEaten} / ${state.tdee.round()} ккал сегодня',
+                AppLocalizations.of(context)!.logMealCaloriesToday(
+                    state.todayCaloriesEaten.toString(),
+                    state.tdee.round().toString()),
                 style: const TextStyle(color: AppColors.textMuted, fontSize: 12.5),
               ),
               const SizedBox(height: 16),
@@ -139,8 +142,10 @@ class _LogMealSheetState extends State<LogMealSheet> {
                 ),
                 child: Row(
                   children: [
-                    _modeTab('Найти продукт', _LogMode.search),
-                    _modeTab('Свой вариант', _LogMode.custom),
+                    _modeTab(AppLocalizations.of(context)!.logMealSearchTab,
+                        _LogMode.search),
+                    _modeTab(AppLocalizations.of(context)!.logMealCustomTab,
+                        _LogMode.custom),
                   ],
                 ),
               ),
@@ -149,18 +154,18 @@ class _LogMealSheetState extends State<LogMealSheet> {
                 TextField(
                   onChanged: (v) => setState(() => _query = v),
                   style: const TextStyle(color: AppColors.textPrimary),
-                  decoration: const InputDecoration(
-                    hintText: 'Поиск продукта…',
-                    prefixIcon: Icon(Icons.search_rounded,
+                  decoration: InputDecoration(
+                    hintText: AppLocalizations.of(context)!.logMealSearchHint,
+                    prefixIcon: const Icon(Icons.search_rounded,
                         color: AppColors.textMuted),
                   ),
                 ),
                 const SizedBox(height: 12),
                 if (results.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 20),
-                    child: Text('Ничего не найдено — попробуй свой вариант',
-                        style: TextStyle(color: AppColors.textMuted)),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 20),
+                    child: Text(AppLocalizations.of(context)!.logMealNoResults,
+                        style: const TextStyle(color: AppColors.textMuted)),
                   )
                 else
                   ...results.map((f) => Padding(
@@ -200,27 +205,31 @@ class _LogMealSheetState extends State<LogMealSheet> {
                 TextField(
                   controller: _nameController,
                   style: const TextStyle(color: AppColors.textPrimary),
-                  decoration: const InputDecoration(hintText: 'Название блюда'),
+                  decoration: InputDecoration(
+                      hintText: AppLocalizations.of(context)!.logMealNameHint),
                 ),
                 const SizedBox(height: 14),
-                _macroStepper('Калории', _kcal, 0, 1500, 10,
-                    (v) => setState(() => _kcal = v)),
+                _macroStepper(AppLocalizations.of(context)!.logMealCaloriesLabel,
+                    _kcal, 0, 1500, 10, (v) => setState(() => _kcal = v)),
                 const SizedBox(height: 10),
-                _macroStepper('Белок (г)', _protein, 0, 150, 1,
-                    (v) => setState(() => _protein = v)),
+                _macroStepper(AppLocalizations.of(context)!.logMealProteinLabel,
+                    _protein, 0, 150, 1, (v) => setState(() => _protein = v)),
                 const SizedBox(height: 10),
-                _macroStepper('Углеводы (г)', _carbs, 0, 200, 1,
-                    (v) => setState(() => _carbs = v)),
+                _macroStepper(AppLocalizations.of(context)!.logMealCarbsLabel,
+                    _carbs, 0, 200, 1, (v) => setState(() => _carbs = v)),
                 const SizedBox(height: 10),
-                _macroStepper(
-                    'Жиры (г)', _fat, 0, 100, 1, (v) => setState(() => _fat = v)),
+                _macroStepper(AppLocalizations.of(context)!.logMealFatLabel, _fat,
+                    0, 100, 1, (v) => setState(() => _fat = v)),
                 const SizedBox(height: 16),
-                PrimaryButton(label: 'Добавить', onPressed: _addCustom),
+                PrimaryButton(
+                    label: AppLocalizations.of(context)!.logMealAddButton,
+                    onPressed: _addCustom),
               ],
               if (state.meals.isNotEmpty) ...[
                 const SizedBox(height: 20),
-                const Text('Сегодня',
-                    style: TextStyle(color: AppColors.textMuted, fontSize: 12.5)),
+                Text(AppLocalizations.of(context)!.logMealTodayLabel,
+                    style: const TextStyle(
+                        color: AppColors.textMuted, fontSize: 12.5)),
                 const SizedBox(height: 8),
                 ...List.generate(state.meals.length, (i) {
                   final meal = state.meals[i];
@@ -242,7 +251,10 @@ class _LogMealSheetState extends State<LogMealSheet> {
                                         color: AppColors.textPrimary,
                                         fontWeight: FontWeight.w600,
                                         fontSize: 12.5)),
-                                Text('${meal.time} · ${meal.kcal} ккал',
+                                Text(
+                                    AppLocalizations.of(context)!
+                                        .logMealTimeKcal(meal.time,
+                                            meal.kcal.toString()),
                                     style: const TextStyle(
                                         color: AppColors.textMuted, fontSize: 11)),
                               ],

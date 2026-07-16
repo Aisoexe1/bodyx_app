@@ -75,10 +75,27 @@ class ApiClient {
       return decoded;
     }
 
-    final message = (decoded is Map && decoded['detail'] != null)
-        ? decoded['detail'].toString()
-        : 'Request failed (${response.statusCode})';
-    throw ApiException(response.statusCode, message);
+    throw ApiException(response.statusCode, _extractErrorMessage(decoded, response.statusCode));
+  }
+
+  /// FastAPI's `detail` is a plain string for our own `HTTPException`s, but a
+  /// list of `{msg, loc, ...}` objects for Pydantic validation errors (422) —
+  /// without this, a validation failure would surface as a raw Dart List
+  /// dump instead of a readable message.
+  String _extractErrorMessage(dynamic decoded, int statusCode) {
+    if (decoded is! Map || decoded['detail'] == null) {
+      return 'Request failed ($statusCode)';
+    }
+    final detail = decoded['detail'];
+    if (detail is List) {
+      final messages = detail
+          .map((e) => e is Map && e['msg'] != null ? e['msg'].toString() : e.toString())
+          // Pydantic prefixes custom validator messages with "Value error, ".
+          .map((m) => m.replaceFirst(RegExp(r'^Value error,\s*'), ''))
+          .toList();
+      return messages.isEmpty ? 'Request failed ($statusCode)' : messages.join('; ');
+    }
+    return detail.toString();
   }
 
   Future<http.Response> _dispatch(

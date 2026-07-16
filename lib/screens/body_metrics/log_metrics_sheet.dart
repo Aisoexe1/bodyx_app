@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:bodyx_app/l10n/gen/app_localizations.dart';
 import '../../models/models.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_colors.dart';
@@ -64,8 +65,8 @@ class _LogMetricsSheetState extends State<LogMetricsSheet> {
                 ),
               ),
             ),
-            const Text('Log new entry',
-                style: TextStyle(
+            Text(AppLocalizations.of(context)!.logMetricsTitle,
+                style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w800,
                     color: AppColors.textPrimary)),
@@ -79,15 +80,17 @@ class _LogMetricsSheetState extends State<LogMetricsSheet> {
               ),
               child: Row(
                 children: [
-                  _modeTab('Body measurement', _LogMode.measurement),
-                  _modeTab('Weight & body fat', _LogMode.weight),
+                  _modeTab(AppLocalizations.of(context)!.logMetricsBodyMeasurementTab,
+                      _LogMode.measurement),
+                  _modeTab(AppLocalizations.of(context)!.logMetricsWeightBodyFatTab,
+                      _LogMode.weight),
                 ],
               ),
             ),
             const SizedBox(height: 20),
             if (_mode == _LogMode.measurement) ...[
-              const Text('Muscle zone',
-                  style: TextStyle(color: AppColors.textMuted, fontSize: 12.5)),
+              Text(AppLocalizations.of(context)!.logMetricsMuscleZoneLabel,
+                  style: const TextStyle(color: AppColors.textMuted, fontSize: 12.5)),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
@@ -124,7 +127,8 @@ class _LogMetricsSheetState extends State<LogMetricsSheet> {
               ),
               const SizedBox(height: 20),
               _ValueStepper(
-                label: '${_zone.label} (cm)',
+                label: AppLocalizations.of(context)!
+                    .logMetricsZoneCmLabel(_zone.label),
                 value: _measurementValue!,
                 min: 10,
                 max: 160,
@@ -133,7 +137,7 @@ class _LogMetricsSheetState extends State<LogMetricsSheet> {
               ),
               const SizedBox(height: 24),
               PrimaryButton(
-                label: 'Save measurement',
+                label: AppLocalizations.of(context)!.logMetricsSaveMeasurement,
                 onPressed: () {
                   HapticFeedback.mediumImpact();
                   context
@@ -144,7 +148,7 @@ class _LogMetricsSheetState extends State<LogMetricsSheet> {
               ),
             ] else ...[
               _ValueStepper(
-                label: 'Weight (kg)',
+                label: AppLocalizations.of(context)!.logMetricsWeightKgLabel,
                 value: _weight,
                 min: 35,
                 max: 180,
@@ -153,7 +157,7 @@ class _LogMetricsSheetState extends State<LogMetricsSheet> {
               ),
               const SizedBox(height: 16),
               _ValueStepper(
-                label: 'Body fat (%)',
+                label: AppLocalizations.of(context)!.logMetricsBodyFatPctLabel,
                 value: _bodyFat,
                 min: 3,
                 max: 45,
@@ -162,7 +166,7 @@ class _LogMetricsSheetState extends State<LogMetricsSheet> {
               ),
               const SizedBox(height: 24),
               PrimaryButton(
-                label: 'Save check-in',
+                label: AppLocalizations.of(context)!.logMetricsSaveCheckIn,
                 onPressed: () {
                   HapticFeedback.mediumImpact();
                   context.read<AppState>().logWeight(_weight, _bodyFat);

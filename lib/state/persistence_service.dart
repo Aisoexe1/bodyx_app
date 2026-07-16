@@ -25,6 +25,7 @@ class PersistenceService {
   static const _kMealsDate = 'bodyx.meals_date';
   static const _kWorkoutSetsDone = 'bodyx.workout_sets_done';
   static const _kWorkoutSetsDate = 'bodyx.workout_sets_date';
+  static const _kLocale = 'bodyx.locale';
 
   Future<SharedPreferences> get _prefs => SharedPreferences.getInstance();
 
@@ -188,6 +189,17 @@ class PersistenceService {
     final prefs = await _prefs;
     await prefs.setString(_kWorkoutSetsDate, _todayKey);
     await prefs.setString(_kWorkoutSetsDone, jsonEncode(done));
+  }
+
+  Future<String?> loadLocaleCode() async => (await _prefs).getString(_kLocale);
+
+  Future<void> saveLocaleCode(String? code) async {
+    final prefs = await _prefs;
+    if (code == null) {
+      await prefs.remove(_kLocale);
+    } else {
+      await prefs.setString(_kLocale, code);
+    }
   }
 
   /// Signs the session out without discarding the user's logged history —

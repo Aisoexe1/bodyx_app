@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:bodyx_app/l10n/gen/app_localizations.dart';
+import '../../logic/password_strength.dart';
+import '../../logic/social_auth.dart';
 import '../../network/api_client.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_colors.dart';
@@ -17,22 +20,52 @@ class SignUpScreen extends StatefulWidget {
 class _SignUpScreenState extends State<SignUpScreen> {
   final _email = TextEditingController();
   final _password = TextEditingController();
+  final _confirmPassword = TextEditingController();
   bool _obscure = true;
+  bool _showValidation = false;
+
+  bool get _passwordValid => PasswordStrength.isValid(_password.text);
+  bool get _confirmMatches =>
+      _confirmPassword.text.isNotEmpty && _confirmPassword.text == _password.text;
 
   @override
   void dispose() {
     _email.dispose();
     _password.dispose();
+    _confirmPassword.dispose();
     super.dispose();
   }
 
-  void _socialSignIn(String email, String provider) {
-    context.read<AppState>().signIn(email, provider).catchError((Object e) {
+  Future<void> _signInWithGoogle() async {
+    try {
+      final idToken = await SocialAuth.signInWithGoogle();
+      if (idToken == null || !mounted) return; // user cancelled
+      await context.read<AppState>().signInWithGoogle(idToken);
+    } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text(describeApiError(e))));
       }
-    });
+    }
+  }
+
+  Future<void> _signInWithApple() async {
+    try {
+      final identityToken = await SocialAuth.signInWithApple();
+      if (identityToken == null || !mounted) return; // user cancelled
+      await context.read<AppState>().signInWithApple(identityToken);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(describeApiError(e))));
+      }
+    }
+  }
+
+  void _submit() {
+    setState(() => _showValidation = true);
+    if (!_passwordValid || !_confirmMatches) return;
+    context.read<AppState>().submitSignUp(_email.text, _password.text);
   }
 
   @override
@@ -53,24 +86,24 @@ class _SignUpScreenState extends State<SignUpScreen> {
               const SizedBox(height: 8),
               const Center(child: BrandMark(size: 72)),
               const SizedBox(height: 24),
-              const Text('Create your account',
-                  style: TextStyle(
+              Text(AppLocalizations.of(context)!.signUpTitle,
+                  style: const TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.w800,
                       color: AppColors.textPrimary)),
               const SizedBox(height: 8),
-              const Text('Join us and start your journey',
-                  style: TextStyle(color: AppColors.textMuted, fontSize: 15)),
+              Text(AppLocalizations.of(context)!.signUpSubtitle,
+                  style: const TextStyle(color: AppColors.textMuted, fontSize: 15)),
               const SizedBox(height: 32),
               PrimaryTextField(
-                label: 'Email',
+                label: AppLocalizations.of(context)!.signUpEmailLabel,
                 controller: _email,
                 keyboardType: TextInputType.emailAddress,
                 prefixIcon: Icons.mail_outline_rounded,
               ),
               const SizedBox(height: 14),
               PrimaryTextField(
-                label: 'Password',
+                label: AppLocalizations.of(context)!.signUpPasswordLabel,
                 controller: _password,
                 obscureText: _obscure,
                 prefixIcon: Icons.lock_outline_rounded,
@@ -78,58 +111,74 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     ? Icons.visibility_off_outlined
                     : Icons.visibility_outlined,
                 onSuffixTap: () => setState(() => _obscure = !_obscure),
+                onChanged: (_) => setState(() {}),
+                errorText: _showValidation && !_passwordValid
+                    ? PasswordStrength.hint
+                    : null,
+                helperText: _showValidation && !_passwordValid
+                    ? null
+                    : PasswordStrength.hint,
+                helperColor: _passwordValid ? AppColors.success : null,
               ),
               const SizedBox(height: 14),
               PrimaryTextField(
-                label: 'Repeat the password',
+                label: AppLocalizations.of(context)!.signUpRepeatPasswordLabel,
+                controller: _confirmPassword,
                 obscureText: _obscure,
                 prefixIcon: Icons.lock_outline_rounded,
+                onChanged: (_) => setState(() {}),
+                errorText: _showValidation && !_confirmMatches
+                    ? AppLocalizations.of(context)!.signUpPasswordMismatch
+                    : null,
               ),
               const SizedBox(height: 26),
               PrimaryButton(
-                label: 'Next',
+                label: AppLocalizations.of(context)!.signUpNextButton,
                 light: true,
-                onPressed: () => context
-                    .read<AppState>()
-                    .submitSignUp(_email.text, _password.text),
+                onPressed: _submit,
               ),
-              const SizedBox(height: 28),
-              const Row(
-                children: [
-                  Expanded(child: Divider(color: AppColors.divider)),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 12),
-                    child: Text('or',
-                        style: TextStyle(
-                            color: AppColors.textMuted, fontSize: 12)),
-                  ),
-                  Expanded(child: Divider(color: AppColors.divider)),
-                ],
-              ),
-              const SizedBox(height: 20),
-              SocialAuthButton(
-                label: 'Continue with Google',
-                icon: Icons.g_mobiledata_rounded,
-                light: true,
-                onTap: () => _socialSignIn('alex@gmail.com', 'google-oauth'),
-              ),
-              const SizedBox(height: 12),
-              SocialAuthButton(
-                label: 'Continue with Apple',
-                icon: Icons.apple_rounded,
-                light: true,
-                onTap: () => _socialSignIn('alex@icloud.com', 'apple-oauth'),
-              ),
+              // google_sign_in targets mobile/web and sign_in_with_apple has
+              // no Windows support — hidden outside Android/iOS rather than
+              // shown and silently failing every tap.
+              if (SocialAuth.isSupported) ...[
+                const SizedBox(height: 28),
+                Row(
+                  children: [
+                    const Expanded(child: Divider(color: AppColors.divider)),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Text(AppLocalizations.of(context)!.signUpOrDivider,
+                          style: const TextStyle(
+                              color: AppColors.textMuted, fontSize: 12)),
+                    ),
+                    const Expanded(child: Divider(color: AppColors.divider)),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                SocialAuthButton(
+                  label: AppLocalizations.of(context)!.signUpContinueWithGoogle,
+                  icon: Icons.g_mobiledata_rounded,
+                  light: true,
+                  onTap: _signInWithGoogle,
+                ),
+                const SizedBox(height: 12),
+                SocialAuthButton(
+                  label: AppLocalizations.of(context)!.signUpContinueWithApple,
+                  icon: Icons.apple_rounded,
+                  light: true,
+                  onTap: _signInWithApple,
+                ),
+              ],
               const SizedBox(height: 24),
               Center(
                 child: Wrap(
                   children: [
-                    const Text('Already have an account? ',
-                        style: TextStyle(color: AppColors.textMuted)),
+                    Text(AppLocalizations.of(context)!.signUpAlreadyHaveAccount,
+                        style: const TextStyle(color: AppColors.textMuted)),
                     GestureDetector(
                       onTap: () => context.read<AppState>().goToSignIn(),
-                      child: const Text('Sign in',
-                          style: TextStyle(
+                      child: Text(AppLocalizations.of(context)!.signUpSignInLink,
+                          style: const TextStyle(
                               color: AppColors.primaryBright,
                               fontWeight: FontWeight.w700)),
                     ),

@@ -1,5 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:bodyx_app/l10n/gen/app_localizations.dart';
 import '../../models/models.dart';
 import '../../theme/app_colors.dart';
 import '../common/skeleton.dart';
@@ -27,7 +28,9 @@ class WeightLineChart extends StatelessWidget {
                 ),
               ),
             ),
-            const SkeletonCaption(text: 'Log a check-in to see your trend'),
+            SkeletonCaption(
+              text: AppLocalizations.of(context)!.weightLineChartEmptyCaption,
+            ),
           ],
         ),
       );
@@ -79,7 +82,8 @@ class WeightLineChart extends StatelessWidget {
               tooltipRoundedRadius: 10,
               getTooltipItems: (spots) => spots.map((s) {
                 return LineTooltipItem(
-                  '${s.y.toStringAsFixed(1)} kg',
+                  AppLocalizations.of(context)!
+                      .weightLineChartTooltipKg(s.y.toStringAsFixed(1)),
                   const TextStyle(
                       color: AppColors.textPrimary,
                       fontWeight: FontWeight.w700,

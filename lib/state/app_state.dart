@@ -13,7 +13,16 @@ import 'notification_service.dart';
 import 'persistence_service.dart';
 import 'progress_photo_storage.dart';
 
-enum AuthStage { splash, signIn, signUp, chooseUsername, bodyData, done }
+enum AuthStage {
+  splash,
+  signIn,
+  signUp,
+  chooseUsername,
+  bodyData,
+  done,
+  forgotPassword,
+  resetPassword,
+}
 
 /// Single source of truth for the whole prototype. Everything the UI reads
 /// (auth flow, dashboard numbers, body measurements, plan, alerts) lives
@@ -60,6 +69,11 @@ class AppState extends ChangeNotifier {
   /// Call once, right after construction and before [runApp] — cheap and
   /// fast enough not to need its own loading screen.
   Future<void> hydrate() async {
+    final savedLocaleCode = await _persistence.loadLocaleCode();
+    if (savedLocaleCode != null) {
+      locale = Locale(savedLocaleCode);
+    }
+
     _hasSession = await _persistence.onboardingDone;
     if (!_hasSession) return;
 
@@ -245,7 +259,14 @@ class AppState extends ChangeNotifier {
   AuthStage authStage = AuthStage.splash;
   String? _pendingEmail;
   String? _pendingPassword;
+  String? _pendingResetEmail;
+  String? get pendingResetEmail => _pendingResetEmail;
   UserProfile? user;
+
+  /// Dev-mode only: the raw reset code echoed back by the backend when no
+  /// SMTP is configured yet, so the flow is testable without an inbox.
+  /// Always null once real email delivery is wired up server-side.
+  String? devResetCode;
 
   void finishSplash() {
     authStage = _hasSession ? AuthStage.done : AuthStage.signIn;
@@ -259,6 +280,41 @@ class AppState extends ChangeNotifier {
 
   void goToSignIn() {
     authStage = AuthStage.signIn;
+    notifyListeners();
+  }
+
+  void goToForgotPassword() {
+    devResetCode = null;
+    authStage = AuthStage.forgotPassword;
+    notifyListeners();
+  }
+
+  /// Requests a reset code for [email]. Always succeeds server-side (no
+  /// email enumeration) — throws only on a network/server error, which the
+  /// forgot-password screen surfaces via [describeApiError].
+  Future<void> requestPasswordReset(String email) async {
+    final resolvedEmail = email.trim();
+    devResetCode = await _authRepository.forgotPassword(resolvedEmail);
+    _pendingResetEmail = resolvedEmail;
+    authStage = AuthStage.resetPassword;
+    notifyListeners();
+  }
+
+  /// Verifies [code] and sets [newPassword], logging the user in on success
+  /// — same as [signIn]. Throws [ApiException] on an invalid/expired/reused
+  /// code or a password that fails strength rules; the reset-password
+  /// screen catches this and shows a message, staying put.
+  Future<void> confirmPasswordReset(String code, String newPassword) async {
+    user = await _authRepository.resetPassword(
+      email: _pendingResetEmail ?? '',
+      code: code,
+      newPassword: newPassword,
+    );
+    devResetCode = null;
+    authStage = AuthStage.done;
+    _hasSession = true;
+    _persistUser();
+    unawaited(_persistence.setOnboardingDone(true));
     notifyListeners();
   }
 
@@ -276,6 +332,30 @@ class AppState extends ChangeNotifier {
   Future<void> signIn(String email, String password) async {
     final resolvedEmail = email.trim().isEmpty ? 'alex@bodyx.app' : email.trim();
     user = await _authRepository.login(email: resolvedEmail, password: password);
+    authStage = AuthStage.done;
+    _hasSession = true;
+    _persistUser();
+    unawaited(_persistence.setOnboardingDone(true));
+    notifyListeners();
+  }
+
+  /// Verifies [idToken] server-side and logs in, creating the account on
+  /// first sign-in. Throws [ApiException] on an invalid token or if the
+  /// backend's Google client ID isn't configured yet (501).
+  Future<void> signInWithGoogle(String idToken) async {
+    user = await _authRepository.loginWithGoogle(idToken);
+    authStage = AuthStage.done;
+    _hasSession = true;
+    _persistUser();
+    unawaited(_persistence.setOnboardingDone(true));
+    notifyListeners();
+  }
+
+  /// Verifies [identityToken] server-side and logs in, creating the account
+  /// on first sign-in. Throws [ApiException] on an invalid token or if the
+  /// backend's Apple client ID isn't configured yet (501).
+  Future<void> signInWithApple(String identityToken) async {
+    user = await _authRepository.loginWithApple(identityToken);
     authStage = AuthStage.done;
     _hasSession = true;
     _persistUser();
@@ -324,6 +404,8 @@ class AppState extends ChangeNotifier {
     user = null;
     _pendingEmail = null;
     _pendingPassword = null;
+    _pendingResetEmail = null;
+    devResetCode = null;
     navIndex = 0;
     authStage = AuthStage.signIn;
     _hasSession = false;
@@ -602,6 +684,16 @@ class AppState extends ChangeNotifier {
   bool darkModeLocked = true; // this app is dark-only, shown as a toggle
   bool workoutRemindersEnabled = true;
   bool healthSyncEnabled = false;
+
+  /// Null means "follow system locale". Only set once the user picks a
+  /// language explicitly in Settings.
+  Locale? locale;
+
+  void setLocale(Locale? value) {
+    locale = value;
+    unawaited(_persistence.saveLocaleCode(value?.languageCode));
+    notifyListeners();
+  }
 
   void updateProfile({
     String? name,

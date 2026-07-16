@@ -14,6 +14,16 @@ import 'package:bodyx_app/state/persistence_service.dart';
 class FakeAuthRepository implements AuthRepository {
   UserProfile? restoredSession;
 
+  /// Set to a non-null value to make [forgotPassword] return it (simulating
+  /// dev-mode); set [forgotPasswordThrows] to make it throw instead.
+  String? nextForgotPasswordCode = '123456';
+  Object? forgotPasswordThrows;
+
+  /// Set to make [resetPassword] throw (e.g. simulate a wrong/expired code).
+  Object? resetPasswordThrows;
+  String? lastResetCode;
+  String? lastResetPassword;
+
   @override
   Future<UserProfile> register({
     required String email,
@@ -32,6 +42,40 @@ class FakeAuthRepository implements AuthRepository {
   Future<UserProfile> login({required String email, required String password}) async {
     final derived = email.split('@').first.isEmpty ? 'alex' : email.split('@').first;
     return UserProfile(email: email, username: derived);
+  }
+
+  @override
+  Future<String?> forgotPassword(String email) async {
+    if (forgotPasswordThrows != null) throw forgotPasswordThrows!;
+    return nextForgotPasswordCode;
+  }
+
+  @override
+  Future<UserProfile> resetPassword({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) async {
+    lastResetCode = code;
+    lastResetPassword = newPassword;
+    if (resetPasswordThrows != null) throw resetPasswordThrows!;
+    final derived = email.split('@').first.isEmpty ? 'alex' : email.split('@').first;
+    return UserProfile(email: email, username: derived);
+  }
+
+  Object? googleLoginThrows;
+  Object? appleLoginThrows;
+
+  @override
+  Future<UserProfile> loginWithGoogle(String idToken) async {
+    if (googleLoginThrows != null) throw googleLoginThrows!;
+    return UserProfile(email: 'google-user@bodyx.app', username: 'googleuser');
+  }
+
+  @override
+  Future<UserProfile> loginWithApple(String identityToken) async {
+    if (appleLoginThrows != null) throw appleLoginThrows!;
+    return UserProfile(email: 'apple-user@bodyx.app', username: 'appleuser');
   }
 
   @override

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:bodyx_app/l10n/gen/app_localizations.dart';
 import 'package:intl/intl.dart';
 import '../../models/models.dart';
 import '../../theme/app_colors.dart';
@@ -35,8 +36,8 @@ class DailySummaryScreen extends StatelessWidget {
                       Text(DateFormat('dd MMMM yyyy').format(stats.date),
                           style: const TextStyle(
                               color: AppColors.textMuted, fontSize: 12.5)),
-                      const Text('Daily summary',
-                          style: TextStyle(
+                      Text(AppLocalizations.of(context)!.dailySummaryTitle,
+                          style: const TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.w800,
                               color: AppColors.textPrimary)),
@@ -48,34 +49,36 @@ class DailySummaryScreen extends StatelessWidget {
             const SizedBox(height: 24),
             _StatRow(
               icon: Icons.directions_walk_rounded,
-              label: 'Steps',
+              label: AppLocalizations.of(context)!.dailySummaryStepsLabel,
               value: '${stats.steps}',
               color: AppColors.primaryBright,
             ),
             const SizedBox(height: 10),
             _StatRow(
               icon: Icons.local_fire_department_rounded,
-              label: 'Calories',
+              label: AppLocalizations.of(context)!.dailySummaryCaloriesLabel,
               value: '${stats.calories}',
               color: AppColors.warning,
             ),
             const SizedBox(height: 10),
             _StatRow(
               icon: Icons.bedtime_rounded,
-              label: 'Sleep',
+              label: AppLocalizations.of(context)!.dailySummarySleepLabel,
               value: stats.sleepLabel,
               color: AppColors.info,
             ),
             const SizedBox(height: 28),
-            const Text('SLEEP BREAKDOWN',
-                style: TextStyle(
+            Text(
+                AppLocalizations.of(context)!.dailySummarySleepBreakdownHeading,
+                style: const TextStyle(
                     color: AppColors.textMuted,
                     fontSize: 11.5,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 1)),
             const SizedBox(height: 4),
-            const Text('Choose a date to view your sleep data',
-                style: TextStyle(color: AppColors.textMuted, fontSize: 12.5)),
+            Text(AppLocalizations.of(context)!.dailySummaryChooseDateHint,
+                style: const TextStyle(
+                    color: AppColors.textMuted, fontSize: 12.5)),
             const SizedBox(height: 16),
             GlowCard(
               padding: const EdgeInsets.all(AppSpacing.lg),

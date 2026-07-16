@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:bodyx_app/l10n/gen/app_localizations.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
 
@@ -84,8 +85,16 @@ class _CompareSliderState extends State<CompareSlider> {
                         size: 18, color: AppColors.background),
                   ),
                 ),
-                Positioned(left: 12, bottom: 12, child: _tag('Before')),
-                Positioned(right: 12, bottom: 12, child: _tag('After')),
+                Positioned(
+                    left: 12,
+                    bottom: 12,
+                    child: _tag(
+                        AppLocalizations.of(context)!.compareSliderBeforeLabel)),
+                Positioned(
+                    right: 12,
+                    bottom: 12,
+                    child: _tag(
+                        AppLocalizations.of(context)!.compareSliderAfterLabel)),
               ],
             ),
           );

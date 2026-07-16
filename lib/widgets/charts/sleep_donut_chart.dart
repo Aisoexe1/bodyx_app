@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:bodyx_app/l10n/gen/app_localizations.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
 import '../common/glow_card.dart';
@@ -43,10 +44,26 @@ class _SleepBreakdownCardState extends State<SleepBreakdownCard> {
   int? _selected;
 
   List<(String, int, Color)> get _stages => [
-        ('Light sleep', widget.lightMinutes, SleepBreakdownCard.lightColor),
-        ('Deep sleep', widget.deepMinutes, SleepBreakdownCard.deepColor),
-        ('REM sleep', widget.remMinutes, SleepBreakdownCard.remColor),
-        ('Awake', widget.awakeMinutes, SleepBreakdownCard.awakeColor),
+        (
+          AppLocalizations.of(context)!.sleepDonutChartLightSleep,
+          widget.lightMinutes,
+          SleepBreakdownCard.lightColor
+        ),
+        (
+          AppLocalizations.of(context)!.sleepDonutChartDeepSleep,
+          widget.deepMinutes,
+          SleepBreakdownCard.deepColor
+        ),
+        (
+          AppLocalizations.of(context)!.sleepDonutChartRemSleep,
+          widget.remMinutes,
+          SleepBreakdownCard.remColor
+        ),
+        (
+          AppLocalizations.of(context)!.sleepDonutChartAwake,
+          widget.awakeMinutes,
+          SleepBreakdownCard.awakeColor
+        ),
       ];
 
   int get _total =>
@@ -75,7 +92,8 @@ class _SleepBreakdownCardState extends State<SleepBreakdownCard> {
 
     final efficiencyBadge = Center(
       child: StatChip(
-        label: '$_efficiency% efficient',
+        label: AppLocalizations.of(context)!
+            .sleepDonutChartEfficient(_efficiency.toString()),
         color: _efficiencyColor,
         icon: Icons.auto_awesome_rounded,
       ),
@@ -200,8 +218,11 @@ class _Ring extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     selected == null
-                        ? '${total ~/ 60}h ${total % 60}m'
-                        : '${stages[selected!].$2 ~/ 60}h ${stages[selected!].$2 % 60}m',
+                        ? AppLocalizations.of(context)!.sleepDonutChartDuration(
+                            (total ~/ 60).toString(), (total % 60).toString())
+                        : AppLocalizations.of(context)!.sleepDonutChartDuration(
+                            (stages[selected!].$2 ~/ 60).toString(),
+                            (stages[selected!].$2 % 60).toString()),
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w800,
@@ -209,7 +230,9 @@ class _Ring extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    selected == null ? 'Total sleep' : stages[selected!].$1,
+                    selected == null
+                        ? AppLocalizations.of(context)!.sleepDonutChartTotalSleep
+                        : stages[selected!].$1,
                     style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
                   ),
                 ],
@@ -408,13 +431,18 @@ class _LegendRow extends StatelessWidget {
                             fontSize: 12.5,
                             fontWeight: FontWeight.w600)),
                     const SizedBox(height: 2),
-                    Text('${(pct * 100).round()}% of night',
+                    Text(
+                        AppLocalizations.of(context)!
+                            .sleepDonutChartPercentOfNight(
+                                (pct * 100).round().toString()),
                         style: const TextStyle(
                             color: AppColors.textMuted, fontSize: 11)),
                   ],
                 ),
               ),
-              Text('${minutes ~/ 60}h ${minutes % 60}m',
+              Text(
+                  AppLocalizations.of(context)!.sleepDonutChartDuration(
+                      (minutes ~/ 60).toString(), (minutes % 60).toString()),
                   style: const TextStyle(
                       color: AppColors.textPrimary,
                       fontSize: 13,

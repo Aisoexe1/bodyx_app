@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:bodyx_app/l10n/gen/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../models/models.dart';
 import '../../state/app_state.dart';
@@ -49,9 +50,9 @@ class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
                     icon:
                         const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
                   ),
-                const Expanded(
-                  child: Text('Body metrics',
-                      style: TextStyle(
+                Expanded(
+                  child: Text(AppLocalizations.of(context)!.bodyMetricsTitle,
+                      style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w800,
                           color: AppColors.textPrimary)),
@@ -81,7 +82,10 @@ class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
                 Expanded(
                   child: _SegmentToggle<Gender>(
                     value: gender,
-                    options: const {Gender.male: 'Male', Gender.female: 'Female'},
+                    options: {
+                      Gender.male: AppLocalizations.of(context)!.bodyMetricsMaleOption,
+                      Gender.female: AppLocalizations.of(context)!.bodyMetricsFemaleOption,
+                    },
                     onChanged: (_) =>
                         context.read<AppState>().toggleBodyViewerGender(),
                   ),
@@ -90,9 +94,9 @@ class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
                 Expanded(
                   child: _SegmentToggle<BodyView>(
                     value: _view,
-                    options: const {
-                      BodyView.front: 'Front',
-                      BodyView.back: 'Back',
+                    options: {
+                      BodyView.front: AppLocalizations.of(context)!.bodyMetricsFrontOption,
+                      BodyView.back: AppLocalizations.of(context)!.bodyMetricsBackOption,
                     },
                     onChanged: (v) => setState(() => _view = v),
                   ),
@@ -113,9 +117,9 @@ class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
                     height: 380,
                   ),
                   const SizedBox(height: 4),
-                  const Text('Tap a highlighted zone to inspect it',
-                      style:
-                          TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                  Text(AppLocalizations.of(context)!.bodyMetricsTapZoneHint,
+                      style: const TextStyle(
+                          color: AppColors.textMuted, fontSize: 12)),
                 ],
               ),
             ),
@@ -156,10 +160,12 @@ class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
                               fontWeight: FontWeight.w800,
                               fontSize: 32)),
                       const SizedBox(width: 4),
-                      const Text('cm',
-                          style: TextStyle(color: AppColors.textMuted)),
+                      Text(AppLocalizations.of(context)!.bodyMetricsCmUnit,
+                          style: const TextStyle(color: AppColors.textMuted)),
                       const Spacer(),
-                      Text('Target ${measurement.targetCm.toStringAsFixed(1)} cm',
+                      Text(
+                          AppLocalizations.of(context)!.bodyMetricsTargetValue(
+                              measurement.targetCm.toStringAsFixed(1)),
                           style: const TextStyle(
                               color: AppColors.textMuted, fontSize: 12.5)),
                     ],
@@ -167,13 +173,15 @@ class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
                   const SizedBox(height: 16),
                   Sparkline(values: measurement.history, color: AppColors.primaryBright),
                   const SizedBox(height: 6),
-                  const Text('Last 6 sessions',
-                      style: TextStyle(color: AppColors.textMuted, fontSize: 11.5)),
+                  Text(AppLocalizations.of(context)!.bodyMetricsLastSessions,
+                      style: const TextStyle(
+                          color: AppColors.textMuted, fontSize: 11.5)),
                 ],
               ),
             ),
             const SizedBox(height: 20),
-            const SectionHeader(title: 'All measurements'),
+            SectionHeader(
+                title: AppLocalizations.of(context)!.bodyMetricsAllMeasurements),
             const SizedBox(height: 12),
             Wrap(
               spacing: 10,
@@ -204,7 +212,9 @@ class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
                                     ? AppColors.primaryBright
                                     : AppColors.textMuted)),
                         const SizedBox(height: 2),
-                        Text('${m.valueCm.toStringAsFixed(1)} cm',
+                        Text(
+                            AppLocalizations.of(context)!.bodyMetricsValueCm(
+                                m.valueCm.toStringAsFixed(1)),
                             style: const TextStyle(
                                 color: AppColors.textPrimary,
                                 fontWeight: FontWeight.w800,
@@ -238,8 +248,9 @@ class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
                     ),
                   ],
                 ),
-                child: const Text('Log new measurement',
-                    style: TextStyle(
+                child: Text(
+                    AppLocalizations.of(context)!.bodyMetricsLogNewMeasurement,
+                    style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w700,
                         fontSize: 15)),

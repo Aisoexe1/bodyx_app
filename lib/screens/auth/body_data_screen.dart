@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:bodyx_app/l10n/gen/app_localizations.dart';
 import '../../models/models.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_colors.dart';
@@ -54,22 +55,22 @@ class _BodyDataScreenState extends State<BodyDataScreen> {
                 ],
               ),
               const SizedBox(height: 28),
-              const Text('Your body data',
-                  style: TextStyle(
+              Text(AppLocalizations.of(context)!.bodyDataTitle,
+                  style: const TextStyle(
                       fontSize: 26,
                       fontWeight: FontWeight.w800,
                       color: AppColors.textPrimary)),
               const SizedBox(height: 8),
-              const Text(
-                'We use this to calculate your plan\nand personalize your experience',
-                style: TextStyle(color: AppColors.textMuted, fontSize: 14, height: 1.4),
+              Text(
+                AppLocalizations.of(context)!.bodyDataSubtitle,
+                style: const TextStyle(color: AppColors.textMuted, fontSize: 14, height: 1.4),
               ),
               const SizedBox(height: 28),
               Row(
                 children: [
                   Expanded(
                     child: _GenderCard(
-                      label: 'Male',
+                      label: AppLocalizations.of(context)!.bodyDataMale,
                       icon: Icons.male_rounded,
                       selected: _gender == Gender.male,
                       accent: AppColors.primary,
@@ -79,7 +80,7 @@ class _BodyDataScreenState extends State<BodyDataScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: _GenderCard(
-                      label: 'Female',
+                      label: AppLocalizations.of(context)!.bodyDataFemale,
                       icon: Icons.female_rounded,
                       selected: _gender == Gender.female,
                       accent: AppColors.pink,
@@ -91,9 +92,11 @@ class _BodyDataScreenState extends State<BodyDataScreen> {
               const SizedBox(height: 20),
               _MetricSlider(
                 icon: Icons.height_rounded,
-                label: 'Height',
+                label: AppLocalizations.of(context)!.bodyDataHeightLabel,
                 value: _height,
-                unit: _metric ? 'cm' : 'in',
+                unit: _metric
+                    ? AppLocalizations.of(context)!.bodyDataUnitCm
+                    : AppLocalizations.of(context)!.bodyDataUnitIn,
                 min: _metric ? 140 : 55,
                 max: _metric ? 220 : 87,
                 onChanged: (v) => setState(() => _height = v),
@@ -101,9 +104,11 @@ class _BodyDataScreenState extends State<BodyDataScreen> {
               const SizedBox(height: 14),
               _MetricSlider(
                 icon: Icons.monitor_weight_outlined,
-                label: 'Weight',
+                label: AppLocalizations.of(context)!.bodyDataWeightLabel,
                 value: _weight,
-                unit: _metric ? 'kg' : 'lb',
+                unit: _metric
+                    ? AppLocalizations.of(context)!.bodyDataUnitKg
+                    : AppLocalizations.of(context)!.bodyDataUnitLb,
                 min: _metric ? 40 : 88,
                 max: _metric ? 160 : 350,
                 onChanged: (v) => setState(() => _weight = v),
@@ -111,16 +116,16 @@ class _BodyDataScreenState extends State<BodyDataScreen> {
               const SizedBox(height: 14),
               _MetricSlider(
                 icon: Icons.cake_outlined,
-                label: 'Age',
+                label: AppLocalizations.of(context)!.bodyDataAgeLabel,
                 value: _age.toDouble(),
-                unit: 'yrs',
+                unit: AppLocalizations.of(context)!.bodyDataUnitYrs,
                 min: 13,
                 max: 80,
                 onChanged: (v) => setState(() => _age = v.round()),
               ),
               const SizedBox(height: 32),
               PrimaryButton(
-                label: 'Confirm',
+                label: AppLocalizations.of(context)!.bodyDataConfirm,
                 onPressed: () => context.read<AppState>().submitBodyData(
                       gender: _gender,
                       heightCm: _metric ? _height : _height * 2.54,
@@ -173,8 +178,10 @@ class _UnitToggle extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          seg('cm / kg', metric, () => onChanged(true)),
-          seg('in / lb', !metric, () => onChanged(false)),
+          seg(AppLocalizations.of(context)!.bodyDataToggleMetric, metric,
+              () => onChanged(true)),
+          seg(AppLocalizations.of(context)!.bodyDataToggleImperial, !metric,
+              () => onChanged(false)),
         ],
       ),
     );

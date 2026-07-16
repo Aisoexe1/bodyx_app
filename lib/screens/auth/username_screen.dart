@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:bodyx_app/l10n/gen/app_localizations.dart';
 import '../../network/api_client.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_colors.dart';
@@ -56,34 +57,34 @@ class _UsernameScreenState extends State<UsernameScreen> {
               const Spacer(),
               const Center(child: BrandMark(size: 68)),
               const SizedBox(height: 10),
-              const Center(
-                child: Text('BodyX app',
-                    style: TextStyle(
+              Center(
+                child: Text(AppLocalizations.of(context)!.usernameAppName,
+                    style: const TextStyle(
                         color: AppColors.textMuted,
                         fontWeight: FontWeight.w600)),
               ),
               const SizedBox(height: 36),
-              const Text('Choose a username',
+              Text(AppLocalizations.of(context)!.usernameChooseUsername,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.w800,
                       color: AppColors.textPrimary)),
               const SizedBox(height: 8),
-              const Text(
-                "This won't be visible to others",
+              Text(
+                AppLocalizations.of(context)!.usernameNotVisible,
                 textAlign: TextAlign.center,
-                style: TextStyle(color: AppColors.textMuted, fontSize: 14),
+                style: const TextStyle(color: AppColors.textMuted, fontSize: 14),
               ),
               const SizedBox(height: 28),
               PrimaryTextField(
-                label: 'Username',
+                label: AppLocalizations.of(context)!.usernameLabel,
                 controller: _controller,
                 prefixIcon: Icons.alternate_email_rounded,
               ),
               const Spacer(flex: 2),
               PrimaryButton(
-                label: 'Confirm',
+                label: AppLocalizations.of(context)!.usernameConfirm,
                 light: true,
                 onPressed: _submit,
                 loading: _loading,

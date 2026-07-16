@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:bodyx_app/l10n/gen/app_localizations.dart';
 import '../../models/models.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_colors.dart';
@@ -68,19 +69,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return _SettingsScaffold(
-      title: 'Edit profile',
+      title: AppLocalizations.of(context)!.settingsEditProfileTitle,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          PrimaryTextField(label: 'Full name', controller: _name),
+          PrimaryTextField(
+              label: AppLocalizations.of(context)!.settingsFullNameLabel,
+              controller: _name),
           const SizedBox(height: 14),
           PrimaryTextField(
-              label: 'Username',
+              label: AppLocalizations.of(context)!.settingsUsernameLabel,
               controller: _username,
               prefixIcon: Icons.alternate_email_rounded),
           const SizedBox(height: 24),
           PrimaryButton(
-            label: 'Save changes',
+            label: AppLocalizations.of(context)!.settingsSaveChangesButton,
             onPressed: () {
               context.read<AppState>().updateProfile(
                   name: _name.text, username: _username.text);
@@ -102,26 +105,43 @@ class PersonalDataScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final user = context.watch<AppState>().user;
     final rows = <(IconData, String, String, WidgetBuilder)>[
-      (Icons.straighten_rounded, 'Height',
-          '${user?.heightCm.toStringAsFixed(0) ?? '--'} cm',
-          (ctx) => const EditHeightScreen()),
-      (Icons.monitor_weight_outlined, 'Weight',
-          '${user?.weightKg.toStringAsFixed(0) ?? '--'} kg',
-          (ctx) => const EditWeightScreen()),
-      (Icons.cake_outlined, 'Age', '${user?.age ?? '--'}',
-          (ctx) => const EditAgeScreen()),
-      (Icons.wc_rounded, 'Gender', user?.gender.name ?? 'male',
-          (ctx) => const EditGenderScreen()),
+      (
+        Icons.straighten_rounded,
+        AppLocalizations.of(context)!.settingsHeightLabel,
+        AppLocalizations.of(context)!
+            .settingsHeightValueCm(user?.heightCm.toStringAsFixed(0) ?? '--'),
+        (ctx) => const EditHeightScreen()
+      ),
+      (
+        Icons.monitor_weight_outlined,
+        AppLocalizations.of(context)!.settingsWeightLabel,
+        AppLocalizations.of(context)!
+            .settingsWeightValueKg(user?.weightKg.toStringAsFixed(0) ?? '--'),
+        (ctx) => const EditWeightScreen()
+      ),
+      (
+        Icons.cake_outlined,
+        AppLocalizations.of(context)!.settingsAgeLabel,
+        '${user?.age ?? '--'}',
+        (ctx) => const EditAgeScreen()
+      ),
+      (
+        Icons.wc_rounded,
+        AppLocalizations.of(context)!.settingsGenderLabel,
+        user?.gender.name ?? 'male',
+        (ctx) => const EditGenderScreen()
+      ),
     ];
 
     return _SettingsScaffold(
-      title: 'Personal data',
+      title: AppLocalizations.of(context)!.settingsPersonalDataTitle,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'This data helps us personalize your plan and recommendations.',
-            style: TextStyle(color: AppColors.textMuted, fontSize: 12.5, height: 1.4),
+          Text(
+            AppLocalizations.of(context)!.settingsPersonalDataDescription,
+            style: const TextStyle(
+                color: AppColors.textMuted, fontSize: 12.5, height: 1.4),
           ),
           const SizedBox(height: 16),
           GlowCard(
@@ -234,7 +254,7 @@ class _NumberEditScreenState extends State<_NumberEditScreen> {
           ),
           const SizedBox(height: 24),
           PrimaryButton(
-            label: 'Save',
+            label: AppLocalizations.of(context)!.settingsSaveButton,
             onPressed: () {
               widget.onSave(_value);
               Navigator.pop(context);
@@ -252,8 +272,8 @@ class EditHeightScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final state = context.read<AppState>();
     return _NumberEditScreen(
-      title: 'Edit height',
-      unit: 'cm',
+      title: AppLocalizations.of(context)!.settingsEditHeightTitle,
+      unit: AppLocalizations.of(context)!.settingsCmUnit,
       min: 130,
       max: 220,
       step: 1,
@@ -269,8 +289,8 @@ class EditWeightScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final state = context.read<AppState>();
     return _NumberEditScreen(
-      title: 'Edit weight',
-      unit: 'kg',
+      title: AppLocalizations.of(context)!.settingsEditWeightTitle,
+      unit: AppLocalizations.of(context)!.settingsKgUnit,
       min: 35,
       max: 180,
       step: 0.5,
@@ -286,8 +306,8 @@ class EditAgeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final state = context.read<AppState>();
     return _NumberEditScreen(
-      title: 'Edit age',
-      unit: 'yrs',
+      title: AppLocalizations.of(context)!.settingsEditAgeTitle,
+      unit: AppLocalizations.of(context)!.settingsYrsUnit,
       min: 13,
       max: 90,
       step: 1,
@@ -309,25 +329,31 @@ class _EditGenderScreenState extends State<EditGenderScreen> {
   @override
   Widget build(BuildContext context) {
     return _SettingsScaffold(
-      title: 'Edit gender',
+      title: AppLocalizations.of(context)!.settingsEditGenderTitle,
       child: Column(
         children: [
           Row(
             children: [
               Expanded(
-                child: _choiceCard('Male', Icons.male_rounded, Gender.male,
+                child: _choiceCard(
+                    AppLocalizations.of(context)!.settingsMaleLabel,
+                    Icons.male_rounded,
+                    Gender.male,
                     AppColors.primary),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _choiceCard('Female', Icons.female_rounded,
-                    Gender.female, AppColors.pink),
+                child: _choiceCard(
+                    AppLocalizations.of(context)!.settingsFemaleLabel,
+                    Icons.female_rounded,
+                    Gender.female,
+                    AppColors.pink),
               ),
             ],
           ),
           const SizedBox(height: 24),
           PrimaryButton(
-            label: 'Save',
+            label: AppLocalizations.of(context)!.settingsSaveButton,
             onPressed: () {
               context.read<AppState>().updateGender(_gender);
               Navigator.pop(context);
@@ -387,7 +413,7 @@ class _GoalScreenState extends State<GoalScreen> {
   @override
   Widget build(BuildContext context) {
     return _SettingsScaffold(
-      title: 'Your goal',
+      title: AppLocalizations.of(context)!.settingsYourGoalTitle,
       child: Column(
         children: [
           ..._goals.map((g) {
@@ -422,7 +448,7 @@ class _GoalScreenState extends State<GoalScreen> {
           }),
           const SizedBox(height: 14),
           PrimaryButton(
-            label: 'Save goal',
+            label: AppLocalizations.of(context)!.settingsSaveGoalButton,
             onPressed: () {
               context.read<AppState>().updateProfile(goal: _selected);
               Navigator.pop(context);
@@ -440,19 +466,19 @@ class NotificationsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
     return _SettingsScaffold(
-      title: 'Notifications',
+      title: AppLocalizations.of(context)!.settingsNotificationsTitle,
       child: Column(
         children: [
           _ToggleRow(
             icon: Icons.notifications_active_outlined,
-            label: 'Push notifications',
+            label: AppLocalizations.of(context)!.settingsPushNotificationsLabel,
             value: state.notificationsEnabled,
             onChanged: (v) => context.read<AppState>().toggleNotifications(v),
           ),
           const SizedBox(height: 10),
           _ToggleRow(
             icon: Icons.fitness_center_rounded,
-            label: 'Workout reminders',
+            label: AppLocalizations.of(context)!.settingsWorkoutRemindersLabel,
             value: state.workoutRemindersEnabled,
             onChanged: (v) =>
                 context.read<AppState>().toggleWorkoutReminders(v),
@@ -475,11 +501,11 @@ class _HealthSyncScreenState extends State<HealthSyncScreen> {
   String get _platformLabel {
     switch (defaultTargetPlatform) {
       case TargetPlatform.iOS:
-        return 'Apple Health';
+        return AppLocalizations.of(context)!.settingsAppleHealthLabel;
       case TargetPlatform.android:
-        return 'Health Connect';
+        return AppLocalizations.of(context)!.settingsHealthConnectLabel;
       default:
-        return 'Health app';
+        return AppLocalizations.of(context)!.settingsHealthAppLabel;
     }
   }
 
@@ -488,7 +514,9 @@ class _HealthSyncScreenState extends State<HealthSyncScreen> {
     if (!mounted) return;
     if (value && !granted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$_platformLabel access was not granted.')),
+        SnackBar(
+            content: Text(AppLocalizations.of(context)!
+                .settingsHealthAccessDenied(_platformLabel))),
       );
     }
   }
@@ -499,29 +527,30 @@ class _HealthSyncScreenState extends State<HealthSyncScreen> {
     await context.read<AppState>().syncHealthData();
     if (!mounted) return;
     setState(() => _syncing = false);
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text('Synced with $_platformLabel.')));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(AppLocalizations.of(context)!
+            .settingsSyncedWithPlatform(_platformLabel))));
   }
 
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
     return _SettingsScaffold(
-      title: 'Health sync',
+      title: AppLocalizations.of(context)!.settingsHealthSyncTitle,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _ToggleRow(
             icon: Icons.favorite_border_rounded,
-            label: 'Sync with $_platformLabel',
+            label: AppLocalizations.of(context)!
+                .settingsSyncWithPlatformLabel(_platformLabel),
             value: state.healthSyncEnabled,
             onChanged: (v) => _handleToggle(v),
           ),
           const SizedBox(height: 14),
-          const Text(
-            'Reads steps, calories, sleep, water, weight and heart rate to '
-            'keep your dashboard accurate. BodyX never writes data back.',
-            style: TextStyle(
+          Text(
+            AppLocalizations.of(context)!.settingsHealthSyncDescription,
+            style: const TextStyle(
               color: AppColors.textMuted,
               fontSize: 12.5,
               height: 1.4,
@@ -530,7 +559,7 @@ class _HealthSyncScreenState extends State<HealthSyncScreen> {
           if (state.healthSyncEnabled) ...[
             const SizedBox(height: 20),
             PrimaryButton(
-              label: 'Sync now',
+              label: AppLocalizations.of(context)!.settingsSyncNowButton,
               loading: _syncing,
               onPressed: _syncing ? null : _syncNow,
             ),
@@ -547,33 +576,86 @@ class UnitsLanguageScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
     return _SettingsScaffold(
-      title: 'Units & language',
+      title: AppLocalizations.of(context)!.settingsUnitsLanguageTitle,
       child: Column(
         children: [
           _ToggleRow(
             icon: Icons.straighten_rounded,
-            label: 'Use metric units (cm / kg)',
+            label: AppLocalizations.of(context)!.settingsUseMetricUnitsLabel,
             value: state.user?.unitsMetric ?? true,
             onChanged: (_) => context.read<AppState>().toggleUnits(),
           ),
           const SizedBox(height: 10),
-          const GlowCard(
-            child: Row(
-              children: [
-                Icon(Icons.language_rounded, color: AppColors.primaryBright),
-                SizedBox(width: 12),
-                Expanded(
-                  child: Text('Language',
-                      style: TextStyle(
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w600)),
-                ),
-                Text('English (US)',
-                    style: TextStyle(color: AppColors.textMuted)),
-              ],
-            ),
-          ),
+          _LanguageRow(locale: state.locale),
         ],
+      ),
+    );
+  }
+}
+
+class _LanguageRow extends StatelessWidget {
+  const _LanguageRow({required this.locale});
+  final Locale? locale;
+
+  static const _options = <String, String>{
+    'en': 'English (US)',
+    'ru': 'Русский',
+    'uk': 'Українська',
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final label = _options[locale?.languageCode] ?? _options['en']!;
+    return ScaleTap(
+      onTap: () => _showPicker(context),
+      child: GlowCard(
+        child: Row(
+          children: [
+            const Icon(Icons.language_rounded, color: AppColors.primaryBright),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(AppLocalizations.of(context)!.settingsLanguageLabel,
+                  style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w600)),
+            ),
+            Text(label, style: const TextStyle(color: AppColors.textMuted)),
+            const SizedBox(width: 4),
+            const Icon(Icons.chevron_right_rounded,
+                color: AppColors.textMuted, size: 18),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showPicker(BuildContext context) {
+    final appState = context.read<AppState>();
+    final currentCode = locale?.languageCode ?? 'en';
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: _options.entries.map((entry) {
+            final selected = currentCode == entry.key;
+            return ListTile(
+              title: Text(entry.value,
+                  style: const TextStyle(color: AppColors.textPrimary)),
+              trailing: selected
+                  ? const Icon(Icons.check_rounded,
+                      color: AppColors.primaryBright)
+                  : null,
+              onTap: () {
+                appState.setLocale(entry.key == 'en' ? null : Locale(entry.key));
+                Navigator.pop(sheetContext);
+              },
+            );
+          }).toList(),
+        ),
       ),
     );
   }
@@ -592,19 +674,19 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
   @override
   Widget build(BuildContext context) {
     return _SettingsScaffold(
-      title: 'Privacy',
+      title: AppLocalizations.of(context)!.settingsPrivacyTitle,
       child: Column(
         children: [
           _ToggleRow(
             icon: Icons.public_rounded,
-            label: 'Public profile',
+            label: AppLocalizations.of(context)!.settingsPublicProfileLabel,
             value: _publicProfile,
             onChanged: (v) => setState(() => _publicProfile = v),
           ),
           const SizedBox(height: 10),
           _ToggleRow(
             icon: Icons.analytics_outlined,
-            label: 'Share anonymous usage data',
+            label: AppLocalizations.of(context)!.settingsShareAnonDataLabel,
             value: _shareAnonData,
             onChanged: (v) => setState(() => _shareAnonData = v),
           ),
@@ -612,21 +694,25 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
           SizedBox(
             width: double.infinity,
             child: PrimaryButton(
-              label: 'Delete account',
+              label: AppLocalizations.of(context)!.settingsDeleteAccountLabel,
               outlined: true,
               onPressed: () => showDialog(
                 context: context,
                 builder: (_) => AlertDialog(
                   backgroundColor: AppColors.surface,
-                  title: const Text('Delete account?',
-                      style: TextStyle(color: AppColors.textPrimary)),
-                  content: const Text(
-                      'This is a prototype — no data will actually be deleted.',
-                      style: TextStyle(color: AppColors.textMuted)),
+                  title: Text(
+                      AppLocalizations.of(context)!
+                          .settingsDeleteAccountDialogTitle,
+                      style: const TextStyle(color: AppColors.textPrimary)),
+                  content: Text(
+                      AppLocalizations.of(context)!
+                          .settingsDeleteAccountDialogContent,
+                      style: const TextStyle(color: AppColors.textMuted)),
                   actions: [
                     TextButton(
                         onPressed: () => Navigator.pop(context),
-                        child: const Text('Cancel')),
+                        child: Text(
+                            AppLocalizations.of(context)!.settingsCancelButton)),
                   ],
                 ),
               ),
@@ -687,7 +773,7 @@ class HelpSupportScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _SettingsScaffold(
-      title: 'Help & support',
+      title: AppLocalizations.of(context)!.settingsHelpSupportTitle,
       child: Column(
         children: [
           ScaleTap(
@@ -695,38 +781,43 @@ class HelpSupportScreen extends StatelessWidget {
               context,
               MaterialPageRoute(builder: (_) => const ContactSupportScreen()),
             ),
-            child: const GlowCard(
+            child: GlowCard(
               child: Row(
                 children: [
-                  Icon(Icons.chat_bubble_outline_rounded,
+                  const Icon(Icons.chat_bubble_outline_rounded,
                       color: AppColors.primaryBright),
-                  SizedBox(width: 12),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Contact support',
-                            style: TextStyle(
+                        Text(
+                            AppLocalizations.of(context)!
+                                .settingsContactSupportLabel,
+                            style: const TextStyle(
                                 color: AppColors.textPrimary,
                                 fontWeight: FontWeight.w700)),
-                        SizedBox(height: 2),
-                        Text('Chat with the BodyX assistant',
-                            style: TextStyle(
+                        const SizedBox(height: 2),
+                        Text(
+                            AppLocalizations.of(context)!
+                                .settingsContactSupportSubtitle,
+                            style: const TextStyle(
                                 color: AppColors.textMuted, fontSize: 12)),
                       ],
                     ),
                   ),
-                  Icon(Icons.chevron_right_rounded,
+                  const Icon(Icons.chevron_right_rounded,
                       color: AppColors.textMuted),
                 ],
               ),
             ),
           ),
           const SizedBox(height: 20),
-          const Align(
+          Align(
             alignment: Alignment.centerLeft,
-            child: Text('FREQUENTLY ASKED',
-                style: TextStyle(
+            child: Text(
+                AppLocalizations.of(context)!.settingsFrequentlyAskedHeader,
+                style: const TextStyle(
                     color: AppColors.textMuted,
                     fontSize: 11.5,
                     fontWeight: FontWeight.w700,
@@ -809,7 +900,7 @@ class AboutScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _SettingsScaffold(
-      title: 'About BodyX',
+      title: AppLocalizations.of(context)!.settingsAboutTitle,
       child: Column(
         children: [
           Container(
@@ -822,21 +913,21 @@ class AboutScreen extends StatelessWidget {
             child: const Icon(Icons.bolt_rounded, color: Colors.white, size: 34),
           ),
           const SizedBox(height: 12),
-          const Text('BodyX',
-              style: TextStyle(
+          Text(AppLocalizations.of(context)!.settingsAppName,
+              style: const TextStyle(
                   color: AppColors.textPrimary,
                   fontWeight: FontWeight.w800,
                   fontSize: 18)),
           const Text('Version 1.0.0 (prototype)',
               style: TextStyle(color: AppColors.textMuted, fontSize: 12.5)),
           const SizedBox(height: 20),
-          const GlowCard(
+          GlowCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('BodyX helps you track training, sleep, nutrition and '
-                    'body composition in one premium, dark-neon experience.',
-                    style: TextStyle(color: AppColors.textSecondary, height: 1.5)),
+                Text(AppLocalizations.of(context)!.settingsAboutDescription,
+                    style: const TextStyle(
+                        color: AppColors.textSecondary, height: 1.5)),
               ],
             ),
           ),
@@ -869,20 +960,20 @@ class LogoutScreen extends StatelessWidget {
                     color: AppColors.warningDeep, size: 38),
               ),
               const SizedBox(height: 20),
-              const Text('Log out?',
-                  style: TextStyle(
+              Text(AppLocalizations.of(context)!.settingsLogOutQuestion,
+                  style: const TextStyle(
                       color: AppColors.textPrimary,
                       fontWeight: FontWeight.w800,
                       fontSize: 22)),
               const SizedBox(height: 8),
-              const Text(
-                'You can always sign back in with your email and password.',
+              Text(
+                AppLocalizations.of(context)!.settingsLogOutDescription,
                 textAlign: TextAlign.center,
-                style: TextStyle(color: AppColors.textMuted, fontSize: 13.5),
+                style: const TextStyle(color: AppColors.textMuted, fontSize: 13.5),
               ),
               const SizedBox(height: 28),
               PrimaryButton(
-                label: 'Log out',
+                label: AppLocalizations.of(context)!.settingsLogOutButton,
                 onPressed: () {
                   Navigator.of(context).popUntil((r) => r.isFirst);
                   context.read<AppState>().signOut();
@@ -890,7 +981,7 @@ class LogoutScreen extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               PrimaryButton(
-                label: 'Cancel',
+                label: AppLocalizations.of(context)!.settingsCancelButton,
                 outlined: true,
                 onPressed: () => Navigator.pop(context),
               ),
