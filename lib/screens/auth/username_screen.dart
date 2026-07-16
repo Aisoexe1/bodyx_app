@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../network/api_client.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
@@ -15,11 +16,26 @@ class UsernameScreen extends StatefulWidget {
 
 class _UsernameScreenState extends State<UsernameScreen> {
   final _controller = TextEditingController();
+  bool _loading = false;
 
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  Future<void> _submit() async {
+    setState(() => _loading = true);
+    try {
+      await context.read<AppState>().submitUsername(_controller.text);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(describeApiError(e))));
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   @override
@@ -69,8 +85,8 @@ class _UsernameScreenState extends State<UsernameScreen> {
               PrimaryButton(
                 label: 'Confirm',
                 light: true,
-                onPressed: () =>
-                    context.read<AppState>().submitUsername(_controller.text),
+                onPressed: _submit,
+                loading: _loading,
               ),
               const SizedBox(height: 12),
             ],

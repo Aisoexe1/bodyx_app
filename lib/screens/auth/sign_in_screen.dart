@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../network/api_client.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
@@ -27,9 +28,25 @@ class _SignInScreenState extends State<SignInScreen> {
 
   Future<void> _submit() async {
     setState(() => _loading = true);
-    await Future.delayed(const Duration(milliseconds: 500));
-    if (!mounted) return;
-    context.read<AppState>().signIn(_email.text, _password.text);
+    try {
+      await context.read<AppState>().signIn(_email.text, _password.text);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(describeApiError(e))));
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  void _socialSignIn(String email, String provider) {
+    context.read<AppState>().signIn(email, provider).catchError((Object e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(describeApiError(e))));
+      }
+    });
   }
 
   @override
@@ -104,8 +121,7 @@ class _SignInScreenState extends State<SignInScreen> {
                       label: 'Google',
                       icon: Icons.g_mobiledata_rounded,
                       light: true,
-                      onTap: () => context.read<AppState>().signIn(
-                          'alex@gmail.com', 'google-oauth'),
+                      onTap: () => _socialSignIn('alex@gmail.com', 'google-oauth'),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -114,8 +130,7 @@ class _SignInScreenState extends State<SignInScreen> {
                       label: 'Apple',
                       icon: Icons.apple_rounded,
                       light: true,
-                      onTap: () => context.read<AppState>().signIn(
-                          'alex@icloud.com', 'apple-oauth'),
+                      onTap: () => _socialSignIn('alex@icloud.com', 'apple-oauth'),
                     ),
                   ),
                 ],
