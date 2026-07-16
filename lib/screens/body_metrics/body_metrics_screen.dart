@@ -35,7 +35,7 @@ class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
         {for (final z in silhouette.zones()) z.zone}.toList();
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(

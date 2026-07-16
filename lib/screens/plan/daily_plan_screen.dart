@@ -21,7 +21,7 @@ class DailyPlanScreen extends StatelessWidget {
     final recentDays = state.dailyStats.reversed.take(10).toList();
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(

@@ -33,11 +33,7 @@ class AppTheme {
     );
 
     return base.copyWith(
-      // Screens leave their Scaffold background transparent so the shared
-      // AppBackground (wired in app.dart's MaterialApp.builder) shows
-      // through everywhere consistently — this is just the safety-net
-      // fallback for any Scaffold that doesn't set one explicitly.
-      scaffoldBackgroundColor: Colors.transparent,
+      scaffoldBackgroundColor: AppColors.background,
       primaryColor: AppColors.primary,
       colorScheme: base.colorScheme.copyWith(
         primary: AppColors.primary,

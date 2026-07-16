@@ -19,6 +19,9 @@ class StepsBarChart extends StatelessWidget {
   final double height;
   final ValueChanged<int>? onBarTap;
 
+  // DateTime.weekday is 1 (Monday) .. 7 (Sunday).
+  static const _weekdayLetters = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+
   @override
   Widget build(BuildContext context) {
     if (stats.isEmpty) {
@@ -87,7 +90,7 @@ class StepsBarChart extends StatelessWidget {
                   return Padding(
                     padding: const EdgeInsets.only(top: 8),
                     child: Text(
-                      DateFormat('E').format(stats[i].date).substring(0, 1),
+                      _weekdayLetters[stats[i].date.weekday - 1],
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: isLast ? FontWeight.w800 : FontWeight.w500,
