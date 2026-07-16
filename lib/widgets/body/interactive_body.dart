@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../models/models.dart';
 import 'body_geometry.dart';
 import 'body_painter.dart';
@@ -43,7 +44,10 @@ class _InteractiveBodyState extends State<InteractiveBody>
 
   void _handleTap(TapUpDetails details, Size size, BodyPainter painter) {
     final zone = painter.zoneAt(details.localPosition, size);
-    if (zone != null) widget.onZoneTap(zone);
+    if (zone != null) {
+      if (zone != widget.selectedZone) HapticFeedback.lightImpact();
+      widget.onZoneTap(zone);
+    }
   }
 
   @override

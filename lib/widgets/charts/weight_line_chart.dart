@@ -13,6 +13,18 @@ class WeightLineChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (entries.isEmpty) {
+      return SizedBox(
+        height: height,
+        child: const Center(
+          child: Text(
+            'Log a check-in to see your trend',
+            style: TextStyle(color: AppColors.textMuted, fontSize: 12.5),
+          ),
+        ),
+      );
+    }
+
     final spots = List.generate(
       entries.length,
       (i) => FlSpot(i.toDouble(), entries[i].kg),

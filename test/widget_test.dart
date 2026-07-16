@@ -2,13 +2,19 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:bodyx_app/app.dart';
+import 'package:bodyx_app/state/app_state.dart';
 
 void main() {
   testWidgets('BodyX boots to the splash screen then the sign-in screen',
       (WidgetTester tester) async {
-    await tester.pumpWidget(const BodyXApp());
+    SharedPreferences.setMockInitialValues({});
+    final appState = AppState();
+    await appState.hydrate();
+
+    await tester.pumpWidget(BodyXApp(appState: appState));
     await tester.pump();
 
     expect(find.text('BodyX'), findsOneWidget);

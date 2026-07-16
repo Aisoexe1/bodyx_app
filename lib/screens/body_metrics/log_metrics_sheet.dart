@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../models/models.dart';
 import '../../state/app_state.dart';
@@ -134,6 +135,7 @@ class _LogMetricsSheetState extends State<LogMetricsSheet> {
               PrimaryButton(
                 label: 'Save measurement',
                 onPressed: () {
+                  HapticFeedback.mediumImpact();
                   context
                       .read<AppState>()
                       .logMeasurement(_zone, _measurementValue!);
@@ -162,6 +164,7 @@ class _LogMetricsSheetState extends State<LogMetricsSheet> {
               PrimaryButton(
                 label: 'Save check-in',
                 onPressed: () {
+                  HapticFeedback.mediumImpact();
                   context.read<AppState>().logWeight(_weight, _bodyFat);
                   Navigator.pop(context);
                 },

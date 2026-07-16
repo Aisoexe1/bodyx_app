@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../models/models.dart';
 import '../../state/app_state.dart';
@@ -35,9 +36,11 @@ class _BodyScanScreenState extends State<BodyScanScreen>
 
   Future<void> _capture() async {
     if (_scanning || _done) return;
+    HapticFeedback.mediumImpact();
     setState(() => _scanning = true);
     await _scanController.forward(from: 0);
     if (!mounted) return;
+    HapticFeedback.heavyImpact();
     setState(() {
       _scanning = false;
       _done = true;

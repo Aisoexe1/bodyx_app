@@ -71,6 +71,34 @@ class UserProfile {
   int avatarSeed;
 
   double get bmi => weightKg / ((heightCm / 100) * (heightCm / 100));
+
+  Map<String, dynamic> toJson() => {
+        'email': email,
+        'username': username,
+        'name': name,
+        'gender': gender.name,
+        'heightCm': heightCm,
+        'weightKg': weightKg,
+        'age': age,
+        'goal': goal,
+        'activityLevel': activityLevel,
+        'unitsMetric': unitsMetric,
+        'avatarSeed': avatarSeed,
+      };
+
+  factory UserProfile.fromJson(Map<String, dynamic> json) => UserProfile(
+        email: json['email'] as String,
+        username: json['username'] as String,
+        name: json['name'] as String,
+        gender: Gender.values.byName(json['gender'] as String),
+        heightCm: (json['heightCm'] as num).toDouble(),
+        weightKg: (json['weightKg'] as num).toDouble(),
+        age: json['age'] as int,
+        goal: json['goal'] as String,
+        activityLevel: json['activityLevel'] as String,
+        unitsMetric: json['unitsMetric'] as bool,
+        avatarSeed: json['avatarSeed'] as int,
+      );
 }
 
 class DailyStats {
@@ -128,6 +156,22 @@ class BodyMeasurement {
 
   double get deltaFromFirst =>
       history.isEmpty ? 0 : valueCm - history.first;
+
+  Map<String, dynamic> toJson() => {
+        'zone': zone.name,
+        'valueCm': valueCm,
+        'history': history,
+        'targetCm': targetCm,
+      };
+
+  factory BodyMeasurement.fromJson(Map<String, dynamic> json) => BodyMeasurement(
+        zone: MuscleZone.values.byName(json['zone'] as String),
+        valueCm: (json['valueCm'] as num).toDouble(),
+        history: (json['history'] as List)
+            .map((e) => (e as num).toDouble())
+            .toList(),
+        targetCm: (json['targetCm'] as num).toDouble(),
+      );
 }
 
 class WeightEntry {
@@ -135,6 +179,18 @@ class WeightEntry {
   final DateTime date;
   final double kg;
   final double bodyFatPct;
+
+  Map<String, dynamic> toJson() => {
+        'date': date.toIso8601String(),
+        'kg': kg,
+        'bodyFatPct': bodyFatPct,
+      };
+
+  factory WeightEntry.fromJson(Map<String, dynamic> json) => WeightEntry(
+        DateTime.parse(json['date'] as String),
+        (json['kg'] as num).toDouble(),
+        (json['bodyFatPct'] as num).toDouble(),
+      );
 }
 
 class MealEntry {

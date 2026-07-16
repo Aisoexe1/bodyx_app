@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../models/models.dart';
 import '../../state/app_state.dart';
@@ -743,7 +744,13 @@ class _ToggleRow extends StatelessWidget {
               child: Text(label,
                   style: const TextStyle(
                       color: AppColors.textPrimary, fontWeight: FontWeight.w600))),
-          Switch(value: value, onChanged: onChanged),
+          Switch(
+            value: value,
+            onChanged: (v) {
+              HapticFeedback.selectionClick();
+              onChanged(v);
+            },
+          ),
         ],
       ),
     );

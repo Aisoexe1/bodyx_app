@@ -125,25 +125,12 @@ class _ProgressScreenState extends State<ProgressScreen> {
                 const SectionHeader(title: 'Sleep', subtitle: "Today's breakdown"),
                 const SizedBox(height: 12),
                 GlowCard(
-                  child: Row(
-                    children: [
-                      SleepDonutChart(
-                        lightMinutes: todayStats.lightSleepMinutes,
-                        deepMinutes: todayStats.deepSleepMinutes,
-                        remMinutes: todayStats.remSleepMinutes,
-                        awakeMinutes: todayStats.awakeMinutes,
-                        size: 140,
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: SleepLegend(
-                          lightMinutes: todayStats.lightSleepMinutes,
-                          deepMinutes: todayStats.deepSleepMinutes,
-                          remMinutes: todayStats.remSleepMinutes,
-                          awakeMinutes: todayStats.awakeMinutes,
-                        ),
-                      ),
-                    ],
+                  child: SleepBreakdownCard(
+                    lightMinutes: todayStats.lightSleepMinutes,
+                    deepMinutes: todayStats.deepSleepMinutes,
+                    remMinutes: todayStats.remSleepMinutes,
+                    awakeMinutes: todayStats.awakeMinutes,
+                    ringSize: 140,
                   ),
                 ),
               ]),

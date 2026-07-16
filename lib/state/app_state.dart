@@ -1,14 +1,24 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../data/mock_data.dart';
 import '../models/models.dart';
+import 'notification_service.dart';
+import 'persistence_service.dart';
 
 enum AuthStage { splash, signIn, signUp, chooseUsername, bodyData, done }
 
 /// Single source of truth for the whole prototype. Everything the UI reads
 /// (auth flow, dashboard numbers, body measurements, plan, alerts) lives
 /// here so every screen updates reactively when mock data changes.
+///
+/// Anything the user actively logs or configures (profile, weight/
+/// measurement history, plan/alert read-state, settings) is persisted via
+/// [PersistenceService] and restored on the next launch through [hydrate].
+/// Generated demo history (daily steps/calories/sleep, today's meals) is
+/// deliberately re-rolled each session so the dashboard always feels alive.
 class AppState extends ChangeNotifier {
-  AppState() {
+  AppState({PersistenceService? persistence})
+      : _persistence = persistence ?? PersistenceService() {
     dailyStats = MockData.generateDailyStats();
     weightHistory = MockData.generateWeightHistory();
     bodyMeasurements = MockData.generateBodyMeasurements(Gender.male);
@@ -17,13 +27,77 @@ class AppState extends ChangeNotifier {
     meals = MockData.todayMeals;
   }
 
+  final PersistenceService _persistence;
+  bool _hasSession = false;
+
+  /// Loads any persisted session/data over the freshly-seeded mock state.
+  /// Call once, right after construction and before [runApp] — cheap and
+  /// fast enough not to need its own loading screen.
+  Future<void> hydrate() async {
+    _hasSession = await _persistence.onboardingDone;
+    if (!_hasSession) return;
+
+    final savedUser = await _persistence.loadUserProfile();
+    if (savedUser == null) {
+      _hasSession = false;
+      return;
+    }
+    user = savedUser;
+    bodyViewerGender = savedUser.gender;
+
+    final savedWeight = await _persistence.loadWeightHistory();
+    if (savedWeight != null && savedWeight.isNotEmpty) {
+      weightHistory = savedWeight;
+    }
+
+    final savedMeasurements = await _persistence.loadBodyMeasurements();
+    if (savedMeasurements != null && savedMeasurements.isNotEmpty) {
+      bodyMeasurements = savedMeasurements;
+    }
+
+    final savedTasksDone = await _persistence.loadPlanTaskDone();
+    if (savedTasksDone != null && savedTasksDone.length == planTasks.length) {
+      for (var i = 0; i < planTasks.length; i++) {
+        planTasks[i].done = savedTasksDone[i];
+      }
+    }
+
+    final savedAlertsRead = await _persistence.loadAlertRead();
+    if (savedAlertsRead != null && savedAlertsRead.length == alerts.length) {
+      for (var i = 0; i < alerts.length; i++) {
+        alerts[i].read = savedAlertsRead[i];
+      }
+    }
+
+    notificationsEnabled =
+        await _persistence.loadNotificationsEnabled() ?? notificationsEnabled;
+    workoutRemindersEnabled = await _persistence.loadWorkoutRemindersEnabled() ??
+        workoutRemindersEnabled;
+  }
+
+  void _persistUser() {
+    if (user != null) unawaited(_persistence.saveUserProfile(user!));
+  }
+
+  void _persistPlanTasks() => unawaited(
+      _persistence.savePlanTaskDone(planTasks.map((t) => t.done).toList()));
+
+  void _persistAlerts() => unawaited(
+      _persistence.saveAlertRead(alerts.map((a) => a.read).toList()));
+
+  void _persistWeight() =>
+      unawaited(_persistence.saveWeightHistory(weightHistory));
+
+  void _persistMeasurements() =>
+      unawaited(_persistence.saveBodyMeasurements(bodyMeasurements));
+
   // ---- Auth / onboarding -------------------------------------------------
   AuthStage authStage = AuthStage.splash;
   String? _pendingEmail;
   UserProfile? user;
 
   void finishSplash() {
-    authStage = AuthStage.signIn;
+    authStage = _hasSession ? AuthStage.done : AuthStage.signIn;
     notifyListeners();
   }
 
@@ -49,6 +123,9 @@ class AppState extends ChangeNotifier {
       username: email.split('@').first.isEmpty ? 'alex' : email.split('@').first,
     );
     authStage = AuthStage.done;
+    _hasSession = true;
+    _persistUser();
+    unawaited(_persistence.setOnboardingDone(true));
     notifyListeners();
   }
 
@@ -73,7 +150,12 @@ class AppState extends ChangeNotifier {
     user!.weightKg = weightKg;
     user!.age = age;
     bodyMeasurements = MockData.generateBodyMeasurements(gender);
+    bodyViewerGender = gender;
     authStage = AuthStage.done;
+    _hasSession = true;
+    _persistUser();
+    _persistMeasurements();
+    unawaited(_persistence.setOnboardingDone(true));
     notifyListeners();
   }
 
@@ -82,6 +164,8 @@ class AppState extends ChangeNotifier {
     _pendingEmail = null;
     navIndex = 0;
     authStage = AuthStage.signIn;
+    _hasSession = false;
+    unawaited(_persistence.clearSession());
     notifyListeners();
   }
 
@@ -111,6 +195,7 @@ class AppState extends ChangeNotifier {
 
   void togglePlanTask(int index) {
     planTasks[index].done = !planTasks[index].done;
+    _persistPlanTasks();
     notifyListeners();
   }
 
@@ -120,6 +205,8 @@ class AppState extends ChangeNotifier {
       WeightEntry(DateTime.now(), kg, bodyFatPct),
     ];
     if (user != null) user!.weightKg = kg;
+    _persistWeight();
+    _persistUser();
     notifyListeners();
   }
 
@@ -147,6 +234,7 @@ class AppState extends ChangeNotifier {
       history: [...current.history, valueCm],
       targetCm: current.targetCm,
     );
+    _persistMeasurements();
     notifyListeners();
   }
 
@@ -157,6 +245,7 @@ class AppState extends ChangeNotifier {
 
   void markAlertRead(int index) {
     alerts[index].read = true;
+    _persistAlerts();
     notifyListeners();
   }
 
@@ -164,6 +253,7 @@ class AppState extends ChangeNotifier {
     for (final a in alerts) {
       a.read = true;
     }
+    _persistAlerts();
     notifyListeners();
   }
 
@@ -183,6 +273,7 @@ class AppState extends ChangeNotifier {
     if (username != null) user!.username = username;
     if (goal != null) user!.goal = goal;
     if (activityLevel != null) user!.activityLevel = activityLevel;
+    _persistUser();
     notifyListeners();
   }
 
@@ -191,6 +282,8 @@ class AppState extends ChangeNotifier {
     user!.gender = gender;
     bodyViewerGender = gender;
     bodyMeasurements = MockData.generateBodyMeasurements(gender);
+    _persistUser();
+    _persistMeasurements();
     notifyListeners();
   }
 
@@ -199,22 +292,65 @@ class AppState extends ChangeNotifier {
     if (heightCm != null) user!.heightCm = heightCm;
     if (weightKg != null) user!.weightKg = weightKg;
     if (age != null) user!.age = age;
+    _persistUser();
     notifyListeners();
   }
 
   void toggleUnits() {
     if (user == null) return;
     user!.unitsMetric = !user!.unitsMetric;
+    _persistUser();
     notifyListeners();
   }
 
   void toggleNotifications(bool value) {
     notificationsEnabled = value;
+    unawaited(_persistence.saveNotificationsEnabled(value));
+    unawaited(_syncHydrationReminder());
     notifyListeners();
   }
 
   void toggleWorkoutReminders(bool value) {
     workoutRemindersEnabled = value;
+    unawaited(_persistence.saveWorkoutRemindersEnabled(value));
+    unawaited(_syncWorkoutReminder());
     notifyListeners();
+  }
+
+  /// Local notifications are a nice-to-have, not core app functionality —
+  /// any failure here (denied permission, missing plugin binding in tests,
+  /// no platform channel) is swallowed so it never breaks a settings toggle.
+  Future<void> _syncHydrationReminder() async {
+    try {
+      if (notificationsEnabled) {
+        await NotificationService.instance.requestPermission();
+        await NotificationService.instance.scheduleHydrationReminder();
+      } else {
+        await NotificationService.instance.cancelHydrationReminder();
+      }
+    } catch (e) {
+      debugPrint('Hydration reminder sync failed: $e');
+    }
+  }
+
+  Future<void> _syncWorkoutReminder() async {
+    try {
+      if (workoutRemindersEnabled) {
+        await NotificationService.instance.requestPermission();
+        await NotificationService.instance.scheduleWorkoutReminder();
+      } else {
+        await NotificationService.instance.cancelWorkoutReminder();
+      }
+    } catch (e) {
+      debugPrint('Workout reminder sync failed: $e');
+    }
+  }
+
+  /// Re-applies the persisted reminder settings on launch — called once
+  /// after [hydrate] so a returning user's toggles keep working without
+  /// having to flip them again.
+  Future<void> syncNotificationSchedules() async {
+    await _syncHydrationReminder();
+    await _syncWorkoutReminder();
   }
 }

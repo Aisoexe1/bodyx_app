@@ -79,23 +79,13 @@ class DailySummaryScreen extends StatelessWidget {
             const SizedBox(height: 16),
             GlowCard(
               padding: const EdgeInsets.all(AppSpacing.lg),
-              child: Column(
-                children: [
-                  SleepDonutChart(
-                    lightMinutes: stats.lightSleepMinutes,
-                    deepMinutes: stats.deepSleepMinutes,
-                    remMinutes: stats.remSleepMinutes,
-                    awakeMinutes: stats.awakeMinutes,
-                    size: 190,
-                  ),
-                  const SizedBox(height: 20),
-                  SleepLegend(
-                    lightMinutes: stats.lightSleepMinutes,
-                    deepMinutes: stats.deepSleepMinutes,
-                    remMinutes: stats.remSleepMinutes,
-                    awakeMinutes: stats.awakeMinutes,
-                  ),
-                ],
+              child: SleepBreakdownCard(
+                lightMinutes: stats.lightSleepMinutes,
+                deepMinutes: stats.deepSleepMinutes,
+                remMinutes: stats.remSleepMinutes,
+                awakeMinutes: stats.awakeMinutes,
+                ringSize: 190,
+                direction: Axis.vertical,
               ),
             ),
           ],

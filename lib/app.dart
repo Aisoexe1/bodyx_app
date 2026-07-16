@@ -10,12 +10,14 @@ import 'state/app_state.dart';
 import 'theme/app_theme.dart';
 
 class BodyXApp extends StatelessWidget {
-  const BodyXApp({super.key});
+  const BodyXApp({super.key, required this.appState});
+
+  final AppState appState;
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => AppState(),
+    return ChangeNotifierProvider<AppState>.value(
+      value: appState,
       child: MaterialApp(
         title: 'BodyX',
         debugShowCheckedModeBanner: false,

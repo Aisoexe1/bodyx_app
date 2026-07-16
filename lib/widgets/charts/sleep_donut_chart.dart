@@ -2,44 +2,148 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
+import '../common/glow_card.dart';
+import '../common/scale_tap.dart';
 
-/// Sleep-stage breakdown ring (Light / Deep / REM / Awake) — a custom-painted
-/// multi-segment arc sharing the same smooth, glowing sweep animation as
-/// [ProgressRing] (used for Body fat / BMI), rather than a static pie chart.
-/// The ring "draws itself" clockwise from 0 to a full circle, each segment
-/// claiming its true proportion of the night.
-class SleepDonutChart extends StatelessWidget {
-  const SleepDonutChart({
+/// Sleep-stage breakdown: an animated multi-segment ring (Light / Deep / REM
+/// / Awake) sharing the smooth glowing sweep of [ProgressRing], paired with
+/// a tappable legend — selecting a stage highlights it on the ring and dims
+/// the rest. Also surfaces a quick sleep-efficiency read-out.
+class SleepBreakdownCard extends StatefulWidget {
+  const SleepBreakdownCard({
     super.key,
     required this.lightMinutes,
     required this.deepMinutes,
     required this.remMinutes,
     required this.awakeMinutes,
-    this.size = 180,
+    this.ringSize = 160,
+    this.direction = Axis.horizontal,
   });
 
   final int lightMinutes;
   final int deepMinutes;
   final int remMinutes;
   final int awakeMinutes;
-  final double size;
+  final double ringSize;
+  final Axis direction;
 
-  static const Color lightColor = AppColors.primarySoft;
+  // Four genuinely distinct hues so the stages read at a glance instead of
+  // blurring into one purple gradient: blue (light) -> violet (deep) ->
+  // pink (REM) -> grey (awake, deliberately recessive).
+  static const Color lightColor = AppColors.info;
   static const Color deepColor = AppColors.primary;
-  static const Color remColor = AppColors.primaryBright;
+  static const Color remColor = AppColors.pink;
   static const Color awakeColor = AppColors.textMuted;
 
-  int get total => lightMinutes + deepMinutes + remMinutes + awakeMinutes;
+  @override
+  State<SleepBreakdownCard> createState() => _SleepBreakdownCardState();
+}
+
+class _SleepBreakdownCardState extends State<SleepBreakdownCard> {
+  int? _selected;
+
+  List<(String, int, Color)> get _stages => [
+        ('Light sleep', widget.lightMinutes, SleepBreakdownCard.lightColor),
+        ('Deep sleep', widget.deepMinutes, SleepBreakdownCard.deepColor),
+        ('REM sleep', widget.remMinutes, SleepBreakdownCard.remColor),
+        ('Awake', widget.awakeMinutes, SleepBreakdownCard.awakeColor),
+      ];
+
+  int get _total =>
+      widget.lightMinutes + widget.deepMinutes + widget.remMinutes + widget.awakeMinutes;
+
+  int get _efficiency {
+    if (_total <= 0) return 0;
+    return (((_total - widget.awakeMinutes) / _total) * 100).round();
+  }
+
+  Color get _efficiencyColor {
+    final e = _efficiency;
+    if (e >= 85) return AppColors.success;
+    if (e >= 70) return AppColors.warning;
+    return AppColors.warningDeep;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ring = _Ring(
+      stages: _stages,
+      total: _total,
+      size: widget.ringSize,
+      selected: _selected,
+    );
+
+    final efficiencyBadge = Center(
+      child: StatChip(
+        label: '$_efficiency% efficient',
+        color: _efficiencyColor,
+        icon: Icons.auto_awesome_rounded,
+      ),
+    );
+
+    final legend = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(_stages.length, (i) {
+        final (label, minutes, color) = _stages[i];
+        final selected = _selected == i;
+        return _LegendRow(
+          label: label,
+          minutes: minutes,
+          total: _total,
+          color: color,
+          selected: selected,
+          dimmed: _selected != null && !selected,
+          onTap: () => setState(() => _selected = selected ? null : i),
+        );
+      }),
+    );
+
+    if (widget.direction == Axis.vertical) {
+      return Column(
+        children: [
+          ring,
+          const SizedBox(height: 12),
+          efficiencyBadge,
+          const SizedBox(height: 20),
+          legend,
+        ],
+      );
+    }
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Column(
+          children: [
+            ring,
+            const SizedBox(height: 10),
+            efficiencyBadge,
+          ],
+        ),
+        const SizedBox(width: 16),
+        Expanded(child: legend),
+      ],
+    );
+  }
+}
+
+class _Ring extends StatelessWidget {
+  const _Ring({
+    required this.stages,
+    required this.total,
+    required this.size,
+    required this.selected,
+  });
+
+  final List<(String, int, Color)> stages;
+  final int total;
+  final double size;
+  final int? selected;
 
   @override
   Widget build(BuildContext context) {
     final ringWidth = size * 0.12;
-    final segments = <(int, Color)>[
-      (lightMinutes, lightColor),
-      (deepMinutes, deepColor),
-      (remMinutes, remColor),
-      (awakeMinutes, awakeColor),
-    ];
 
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: 1),
@@ -53,39 +157,60 @@ class SleepDonutChart extends StatelessWidget {
             alignment: Alignment.center,
             children: [
               Container(
-                width: size * 0.86,
-                height: size * 0.86,
+                width: size * 0.92,
+                height: size * 0.92,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.primary.withValues(alpha: 0.05),
+                  gradient: RadialGradient(
+                    colors: [
+                      AppColors.primary.withValues(alpha: 0.10),
+                      AppColors.primary.withValues(alpha: 0.0),
+                    ],
+                  ),
                 ),
               ),
-              CustomPaint(
-                size: Size(size, size),
-                painter: _SleepRingPainter(
-                  segments: segments,
-                  total: total,
-                  strokeWidth: ringWidth,
-                  progress: t,
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 250),
+                child: CustomPaint(
+                  key: ValueKey(selected),
+                  size: Size(size, size),
+                  painter: _SleepRingPainter(
+                    stages: stages,
+                    total: total,
+                    strokeWidth: ringWidth,
+                    progress: t,
+                    highlightIndex: selected,
+                  ),
                 ),
               ),
               Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.bedtime_rounded,
-                      color: AppColors.primaryBright, size: 16),
+                  Icon(
+                    selected == null
+                        ? Icons.bedtime_rounded
+                        : stages[selected!].$3 == SleepBreakdownCard.awakeColor
+                            ? Icons.visibility_rounded
+                            : Icons.bedtime_rounded,
+                    color: selected == null
+                        ? AppColors.primaryBright
+                        : stages[selected!].$3,
+                    size: 16,
+                  ),
                   const SizedBox(height: 4),
                   Text(
-                    '${total ~/ 60}h ${total % 60}m',
+                    selected == null
+                        ? '${total ~/ 60}h ${total % 60}m'
+                        : '${stages[selected!].$2 ~/ 60}h ${stages[selected!].$2 % 60}m',
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w800,
                       color: AppColors.textPrimary,
                     ),
                   ),
-                  const Text(
-                    'Total sleep',
-                    style: TextStyle(fontSize: 11, color: AppColors.textMuted),
+                  Text(
+                    selected == null ? 'Total sleep' : stages[selected!].$1,
+                    style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
                   ),
                 ],
               ),
@@ -99,34 +224,35 @@ class SleepDonutChart extends StatelessWidget {
 
 class _SleepRingPainter extends CustomPainter {
   _SleepRingPainter({
-    required this.segments,
+    required this.stages,
     required this.total,
     required this.strokeWidth,
     required this.progress,
+    required this.highlightIndex,
   });
 
-  final List<(int, Color)> segments;
+  final List<(String, int, Color)> stages;
   final int total;
   final double strokeWidth;
   final double progress; // 0..1, how much of the full ring is revealed
+  final int? highlightIndex;
 
   static const _gap = 0.05; // radians of breathing room between segments
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = size.center(Offset.zero);
-    final radius = (min(size.width, size.height) - strokeWidth) / 2;
+    final baseRadius = (min(size.width, size.height) - strokeWidth) / 2;
 
     final trackPaint = Paint()
       ..color = AppColors.surfaceElevated
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth
       ..strokeCap = StrokeCap.round;
-    canvas.drawCircle(center, radius, trackPaint);
+    canvas.drawCircle(center, baseRadius, trackPaint);
 
     if (total <= 0 || progress <= 0) return;
 
-    final rect = Rect.fromCircle(center: center, radius: radius);
     final revealedSweep = 2 * pi * progress;
 
     double cursor = -pi / 2;
@@ -134,7 +260,26 @@ class _SleepRingPainter extends CustomPainter {
     Offset? tip;
     Color? tipColor;
 
-    for (final (minutes, color) in segments) {
+    // Round off just the very start of the ring (12 o'clock) so it doesn't
+    // begin on a hard flat edge — every internal seam between stages stays
+    // a clean cut via StrokeCap.butt below.
+    final firstIndex = stages.indexWhere((s) => s.$2 > 0);
+    if (firstIndex != -1) {
+      final firstStage = stages[firstIndex];
+      final firstDimmed = highlightIndex != null && highlightIndex != firstIndex;
+      final startPoint = Offset(
+        center.dx + baseRadius * cos(-pi / 2),
+        center.dy + baseRadius * sin(-pi / 2),
+      );
+      canvas.drawCircle(
+        startPoint,
+        strokeWidth / 2,
+        Paint()..color = firstStage.$3.withValues(alpha: firstDimmed ? 0.25 : 1),
+      );
+    }
+
+    for (var i = 0; i < stages.length; i++) {
+      final (_, minutes, color) = stages[i];
       if (minutes <= 0) continue;
       final fullSweep = 2 * pi * (minutes / total);
       final insetSweep = (fullSweep - _gap).clamp(0.0, fullSweep);
@@ -142,31 +287,52 @@ class _SleepRingPainter extends CustomPainter {
           (revealedSweep - consumedBudget).clamp(0.0, fullSweep);
       final visibleSweep = min(insetSweep, availableBudget);
 
+      final isHighlighted = highlightIndex == i;
+      final isDimmed = highlightIndex != null && !isHighlighted;
+      final segStrokeWidth = isHighlighted ? strokeWidth * 1.28 : strokeWidth;
+      final segRadius = baseRadius;
+      final rect = Rect.fromCircle(center: center, radius: segRadius);
+
       if (visibleSweep > 0.001) {
         final arcPaint = Paint()
           ..shader = SweepGradient(
             startAngle: cursor,
             endAngle: cursor + visibleSweep,
-            colors: [color.withValues(alpha: 0.6), color],
+            colors: [
+              color.withValues(alpha: isDimmed ? 0.18 : 0.6),
+              color.withValues(alpha: isDimmed ? 0.22 : 1),
+            ],
           ).createShader(rect)
           ..style = PaintingStyle.stroke
-          ..strokeWidth = strokeWidth
-          ..strokeCap = StrokeCap.round;
+          ..strokeWidth = segStrokeWidth
+          ..strokeCap = StrokeCap.butt;
         canvas.drawArc(rect, cursor, visibleSweep, false, arcPaint);
 
-        final tipAngle = cursor + visibleSweep;
-        tip = Offset(
-          center.dx + radius * cos(tipAngle),
-          center.dy + radius * sin(tipAngle),
-        );
-        tipColor = color;
+        if (isHighlighted) {
+          final haloPaint = Paint()
+            ..color = color.withValues(alpha: 0.35)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = segStrokeWidth + 8
+            ..strokeCap = StrokeCap.round
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+          canvas.drawArc(rect, cursor, visibleSweep, false, haloPaint);
+        }
+
+        if (!isDimmed) {
+          final tipAngle = cursor + visibleSweep;
+          tip = Offset(
+            center.dx + segRadius * cos(tipAngle),
+            center.dy + segRadius * sin(tipAngle),
+          );
+          tipColor = color;
+        }
       }
 
       consumedBudget += fullSweep;
       cursor += fullSweep;
     }
 
-    if (tip != null && tipColor != null) {
+    if (tip != null && tipColor != null && highlightIndex == null) {
       final glowPaint = Paint()
         ..color = tipColor
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
@@ -177,78 +343,86 @@ class _SleepRingPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _SleepRingPainter oldDelegate) =>
       oldDelegate.progress != progress ||
-      oldDelegate.segments != segments ||
-      oldDelegate.total != total;
+      oldDelegate.stages != stages ||
+      oldDelegate.total != total ||
+      oldDelegate.highlightIndex != highlightIndex;
 }
 
-class SleepLegend extends StatelessWidget {
-  const SleepLegend({
-    super.key,
-    required this.lightMinutes,
-    required this.deepMinutes,
-    required this.remMinutes,
-    required this.awakeMinutes,
+class _LegendRow extends StatelessWidget {
+  const _LegendRow({
+    required this.label,
+    required this.minutes,
+    required this.total,
+    required this.color,
+    required this.selected,
+    required this.dimmed,
+    required this.onTap,
   });
 
-  final int lightMinutes;
-  final int deepMinutes;
-  final int remMinutes;
-  final int awakeMinutes;
+  final String label;
+  final int minutes;
+  final int total;
+  final Color color;
+  final bool selected;
+  final bool dimmed;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final total = lightMinutes + deepMinutes + remMinutes + awakeMinutes;
-
-    Widget row(String label, int minutes, Color color) {
-      final pct = total == 0 ? 0.0 : minutes / total;
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Container(
-              width: 4,
-              height: 28,
-              decoration: BoxDecoration(
-                color: color,
-                borderRadius: BorderRadius.circular(AppRadius.pill),
-              ),
+    final pct = total == 0 ? 0.0 : minutes / total;
+    return ScaleTap(
+      onTap: onTap,
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 200),
+        opacity: dimmed ? 0.45 : 1,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          margin: const EdgeInsets.symmetric(vertical: 3),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          decoration: BoxDecoration(
+            color: selected ? color.withValues(alpha: 0.12) : Colors.transparent,
+            borderRadius: BorderRadius.circular(AppRadius.sm),
+            border: Border.all(
+              color: selected ? color.withValues(alpha: 0.4) : Colors.transparent,
             ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(label,
-                      style: const TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 2),
-                  Text('${(pct * 100).round()}% of night',
-                      style: const TextStyle(
-                          color: AppColors.textMuted, fontSize: 11)),
-                ],
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                width: 4,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
+                ),
               ),
-            ),
-            Text('${minutes ~/ 60}h ${minutes % 60}m',
-                style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700)),
-          ],
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(label,
+                        style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 2),
+                    Text('${(pct * 100).round()}% of night',
+                        style: const TextStyle(
+                            color: AppColors.textMuted, fontSize: 11)),
+                  ],
+                ),
+              ),
+              Text('${minutes ~/ 60}h ${minutes % 60}m',
+                  style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700)),
+            ],
+          ),
         ),
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        row('Light sleep', lightMinutes, SleepDonutChart.lightColor),
-        row('Deep sleep', deepMinutes, SleepDonutChart.deepColor),
-        row('REM sleep', remMinutes, SleepDonutChart.remColor),
-        row('Awake', awakeMinutes, SleepDonutChart.awakeColor),
-      ],
+      ),
     );
   }
 }

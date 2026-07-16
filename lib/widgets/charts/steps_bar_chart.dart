@@ -20,6 +20,18 @@ class StepsBarChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (stats.isEmpty) {
+      return SizedBox(
+        height: height,
+        child: const Center(
+          child: Text(
+            'No step history yet',
+            style: TextStyle(color: AppColors.textMuted, fontSize: 12.5),
+          ),
+        ),
+      );
+    }
+
     final maxSteps =
         stats.map((s) => s.steps).reduce((a, b) => a > b ? a : b).toDouble();
     final maxY = (maxSteps / 2000).ceil() * 2000.0 + 2000;
