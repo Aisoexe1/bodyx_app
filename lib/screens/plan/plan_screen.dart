@@ -88,9 +88,11 @@ class PlanScreen extends StatelessWidget {
                             const GlowIconBadge(
                                 icon: Icons.fitness_center_rounded),
                             const SizedBox(width: 12),
-                            const Expanded(
-                              child: Text('Today\'s Workout',
-                                  style: TextStyle(
+                            Expanded(
+                              child: Text(
+                                  AppLocalizations.of(context)!
+                                      .planTodaysWorkoutTitle,
+                                  style: const TextStyle(
                                       color: AppColors.textPrimary,
                                       fontWeight: FontWeight.w800,
                                       fontSize: 15)),
@@ -101,7 +103,8 @@ class PlanScreen extends StatelessWidget {
                                         state.todayWorkoutSets.length
                                     ? AppLocalizations.of(context)!
                                         .planDoneLabel
-                                    : 'In progress',
+                                    : AppLocalizations.of(context)!
+                                        .planInProgressLabel,
                                 color: state.todayWorkoutCompletedSets ==
                                         state.todayWorkoutSets.length
                                     ? AppColors.success
@@ -111,9 +114,10 @@ class PlanScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 14),
                         if (state.todayWorkoutSets.isEmpty)
-                          const Text(
-                              'No exercises added yet — tap to build today\'s workout.',
-                              style: TextStyle(
+                          Text(
+                              AppLocalizations.of(context)!
+                                  .planNoExercisesAddedYet,
+                              style: const TextStyle(
                                   color: AppColors.textMuted, fontSize: 12.5))
                         else
                           _ProgressLine(
@@ -147,9 +151,11 @@ class PlanScreen extends StatelessWidget {
                             const GlowIconBadge(
                                 icon: Icons.self_improvement_rounded),
                             const SizedBox(width: 12),
-                            const Expanded(
-                              child: Text('Mobility & Stretch',
-                                  style: TextStyle(
+                            Expanded(
+                              child: Text(
+                                  AppLocalizations.of(context)!
+                                      .planMobilityStretchTitle,
+                                  style: const TextStyle(
                                       color: AppColors.textPrimary,
                                       fontWeight: FontWeight.w800,
                                       fontSize: 15)),
@@ -160,7 +166,8 @@ class PlanScreen extends StatelessWidget {
                                         state.todayMobilityActivities.length
                                     ? AppLocalizations.of(context)!
                                         .planDoneLabel
-                                    : 'In progress',
+                                    : AppLocalizations.of(context)!
+                                        .planInProgressLabel,
                                 color: state.todayMobilityCompletedCount ==
                                         state.todayMobilityActivities.length
                                     ? AppColors.success
@@ -170,16 +177,21 @@ class PlanScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 14),
                         if (state.todayMobilityActivities.isEmpty)
-                          const Text(
-                              'No activities added yet — tap to plan today\'s mobility work.',
-                              style: TextStyle(
+                          Text(
+                              AppLocalizations.of(context)!
+                                  .planNoActivitiesAddedYet,
+                              style: const TextStyle(
                                   color: AppColors.textMuted, fontSize: 12.5))
                         else
                           _ProgressLine(
-                            label: 'Mobility completion',
+                            label: AppLocalizations.of(context)!
+                                .planMobilityCompletion,
                             value: state.todayMobilityProgress,
-                            trailing:
-                                '${state.todayMobilityCompletedCount} / ${state.todayMobilityActivities.length} done',
+                            trailing: AppLocalizations.of(context)!
+                                .planMobilityProgress(
+                              state.todayMobilityCompletedCount.toString(),
+                              state.todayMobilityActivities.length.toString(),
+                            ),
                           ),
                       ],
                     ),

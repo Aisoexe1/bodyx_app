@@ -58,19 +58,24 @@ class _WorkoutChecklistSheetState extends State<WorkoutChecklistSheet> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.surfaceElevated,
-        title: Text('Remove $exercise?',
+        title: Text(
+            AppLocalizations.of(context)!
+                .workoutChecklistRemoveExerciseTitle(exercise),
             style: const TextStyle(color: AppColors.textPrimary)),
-        content: const Text('This removes all of its sets from today.',
-            style: TextStyle(color: AppColors.textSecondary)),
+        content: Text(
+            AppLocalizations.of(context)!
+                .workoutChecklistRemoveExerciseContent,
+            style: const TextStyle(color: AppColors.textSecondary)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context)!.settingsCancelButton),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Remove',
-                style: TextStyle(color: AppColors.warningDeep)),
+            child: Text(
+                AppLocalizations.of(context)!.workoutChecklistRemoveButton,
+                style: const TextStyle(color: AppColors.warningDeep)),
           ),
         ],
       ),
@@ -125,9 +130,11 @@ class _WorkoutChecklistSheetState extends State<WorkoutChecklistSheet> {
                   children: [
                     const GlowIconBadge(icon: Icons.fitness_center_rounded),
                     const SizedBox(width: 12),
-                    const Expanded(
-                      child: Text("Today's Workout",
-                          style: TextStyle(
+                    Expanded(
+                      child: Text(
+                          AppLocalizations.of(context)!
+                              .planTodaysWorkoutTitle,
+                          style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w800,
                               color: AppColors.textPrimary)),
@@ -286,8 +293,10 @@ class _WorkoutChecklistSheetState extends State<WorkoutChecklistSheet> {
                           borderRadius: BorderRadius.circular(AppRadius.sm),
                           border: Border.all(color: AppColors.cardBorder),
                         ),
-                        child: const Text('+ Add another exercise',
-                            style: TextStyle(
+                        child: Text(
+                            AppLocalizations.of(context)!
+                                .workoutChecklistAddAnotherExercise,
+                            style: const TextStyle(
                                 color: AppColors.primaryBright,
                                 fontWeight: FontWeight.w700)),
                       ),
@@ -389,7 +398,12 @@ class _TimerBar extends StatelessWidget {
                 color: running ? AppColors.warningDeep : AppColors.primary,
                 borderRadius: BorderRadius.circular(AppRadius.pill),
               ),
-              child: Text(running ? 'Stop' : 'Start',
+              child: Text(
+                  running
+                      ? AppLocalizations.of(context)!
+                          .workoutChecklistStopButton
+                      : AppLocalizations.of(context)!
+                          .workoutChecklistStartButton,
                   style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w700,
@@ -415,17 +429,22 @@ class _EmptyWorkoutState extends StatelessWidget {
           const Icon(Icons.playlist_add_rounded,
               color: AppColors.textMuted, size: 36),
           const SizedBox(height: 12),
-          const Text('No exercises yet',
-              style: TextStyle(
+          Text(AppLocalizations.of(context)!.workoutChecklistEmptyTitle,
+              style: const TextStyle(
                   color: AppColors.textPrimary,
                   fontWeight: FontWeight.w800,
                   fontSize: 15)),
           const SizedBox(height: 6),
-          const Text('Add what you\'re training today — name, sets, reps.',
+          Text(
+              AppLocalizations.of(context)!.workoutChecklistEmptyDescription,
               textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.textMuted, fontSize: 12.5)),
+              style:
+                  const TextStyle(color: AppColors.textMuted, fontSize: 12.5)),
           const SizedBox(height: 18),
-          PrimaryButton(label: 'Add exercise', onPressed: onAdd),
+          PrimaryButton(
+              label:
+                  AppLocalizations.of(context)!.workoutChecklistAddExerciseButton,
+              onPressed: onAdd),
         ],
       ),
     );

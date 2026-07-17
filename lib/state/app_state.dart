@@ -32,10 +32,11 @@ enum AuthStage {
 /// Anything the user actively logs or configures (profile, weight/
 /// measurement history, plan/alert read-state, settings, today's water/
 /// meals) is persisted via [PersistenceService] and restored on the next
-/// launch through [hydrate]. Generated demo history (daily steps/calories/
-/// sleep) is deliberately re-rolled each session so the dashboard always
-/// feels alive — meals start empty each day since there's no realistic way
-/// to fake "what you ate" the way a step count can be simulated.
+/// launch through [hydrate]. A fresh account starts every metric at an
+/// honest zero/empty state (see [MockData.emptyDailyStats]/
+/// [MockData.emptyBodyMeasurements]) rather than fabricated history — real
+/// numbers come from the user's own logging or, once enabled, a real
+/// HealthKit/Health Connect sync via [syncHealthData].
 class AppState extends ChangeNotifier {
   AppState({
     PersistenceService? persistence,
@@ -49,9 +50,9 @@ class AppState extends ChangeNotifier {
         _weightRepository = weightRepository ?? ApiWeightRepository(),
         _measurementRepository =
             measurementRepository ?? ApiMeasurementRepository() {
-    dailyStats = MockData.generateDailyStats();
-    weightHistory = MockData.generateWeightHistory();
-    bodyMeasurements = MockData.generateBodyMeasurements(Gender.male);
+    dailyStats = MockData.emptyDailyStats();
+    weightHistory = [];
+    bodyMeasurements = MockData.emptyBodyMeasurements(Gender.male);
     alerts = MockData.alerts;
     planTasks = MockData.todayPlan;
     todayWorkoutSets = [];
@@ -122,6 +123,8 @@ class AppState extends ChangeNotifier {
         workoutRemindersEnabled;
     healthSyncEnabled =
         await _persistence.loadHealthSyncEnabled() ?? healthSyncEnabled;
+    publicProfile = await _persistence.loadPublicProfile() ?? publicProfile;
+    shareAnonData = await _persistence.loadShareAnonData() ?? shareAnonData;
 
     final savedWaterLog = await _persistence.loadTodayWaterLog();
     if (savedWaterLog != null && savedWaterLog.isNotEmpty) {
@@ -424,7 +427,7 @@ class AppState extends ChangeNotifier {
     user!.heightCm = heightCm;
     user!.weightKg = weightKg;
     user!.age = age;
-    bodyMeasurements = MockData.generateBodyMeasurements(gender);
+    bodyMeasurements = MockData.emptyBodyMeasurements(gender);
     bodyViewerGender = gender;
     authStage = AuthStage.done;
     _hasSession = true;
@@ -447,6 +450,39 @@ class AppState extends ChangeNotifier {
     _hasSession = false;
     unawaited(_persistence.clearSession());
     unawaited(_authRepository.signOut());
+    notifyListeners();
+  }
+
+  /// Permanently deletes the account. The server-side deletion is
+  /// best-effort — swallowed on failure, same as every other network call
+  /// in this class — but every local trace (profile, weight/measurement
+  /// history, photos, settings) is always wiped and the session always
+  /// ends, so deletion works for the user even when the backend is
+  /// unreachable.
+  Future<void> deleteAccount() async {
+    try {
+      await _authRepository.deleteAccount();
+    } catch (e) {
+      debugPrint('Server-side account deletion failed: $e');
+    }
+    await ProgressPhotoStorage.instance.deleteAll();
+    await _persistence.clearAllData();
+    user = null;
+    _pendingEmail = null;
+    _pendingPassword = null;
+    _pendingResetEmail = null;
+    devResetCode = null;
+    navIndex = 0;
+    authStage = AuthStage.signIn;
+    _hasSession = false;
+    progressPhotos = [];
+    weightHistory = [];
+    bodyMeasurements = MockData.emptyBodyMeasurements(Gender.male);
+    meals = [];
+    todayWorkoutSets = [];
+    todayMobilityActivities = [];
+    todayWaterLog = [];
+    dailyStats = MockData.emptyDailyStats();
     notifyListeners();
   }
 
@@ -820,6 +856,20 @@ class AppState extends ChangeNotifier {
   bool darkModeLocked = true; // this app is dark-only, shown as a toggle
   bool workoutRemindersEnabled = true;
   bool healthSyncEnabled = false;
+  bool publicProfile = false;
+  bool shareAnonData = true;
+
+  void togglePublicProfile(bool value) {
+    publicProfile = value;
+    unawaited(_persistence.savePublicProfile(value));
+    notifyListeners();
+  }
+
+  void toggleShareAnonData(bool value) {
+    shareAnonData = value;
+    unawaited(_persistence.saveShareAnonData(value));
+    notifyListeners();
+  }
 
   /// Null means "follow system locale". Only set once the user picks a
   /// language explicitly in Settings.
@@ -829,6 +879,19 @@ class AppState extends ChangeNotifier {
     locale = value;
     unawaited(_persistence.saveLocaleCode(value?.languageCode));
     notifyListeners();
+  }
+
+  /// The locale to render reminder notifications in: the user's explicit
+  /// choice if set, otherwise the system locale — clamped to a supported
+  /// language, since rendering with an unsupported one would throw.
+  static const _supportedLocaleCodes = {'en', 'ru', 'uk'};
+
+  Locale get _effectiveLocale {
+    final candidate =
+        locale ?? WidgetsBinding.instance.platformDispatcher.locale;
+    return _supportedLocaleCodes.contains(candidate.languageCode)
+        ? candidate
+        : const Locale('en');
   }
 
   void updateProfile({
@@ -851,7 +914,7 @@ class AppState extends ChangeNotifier {
     if (user == null) return;
     user!.gender = gender;
     bodyViewerGender = gender;
-    bodyMeasurements = MockData.generateBodyMeasurements(gender);
+    bodyMeasurements = MockData.emptyBodyMeasurements(gender);
     _persistUser();
     _persistMeasurements();
     _syncUserToServer();
@@ -877,46 +940,64 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void toggleNotifications(bool value) {
-    notificationsEnabled = value;
-    unawaited(_persistence.saveNotificationsEnabled(value));
-    unawaited(_syncHydrationReminder());
+  /// Returns whether OS notification permission is actually granted — the
+  /// toggle only turns on if it is, mirroring [toggleHealthSync], so the
+  /// caller can show a "not granted" message instead of leaving the switch
+  /// silently ON with reminders that never fire.
+  Future<bool> toggleNotifications(bool value) async {
+    final granted = value ? await _syncHydrationReminder(requestFor: true) : true;
+    notificationsEnabled = value && granted;
+    unawaited(_persistence.saveNotificationsEnabled(notificationsEnabled));
+    if (!value) unawaited(_syncHydrationReminder(requestFor: false));
     notifyListeners();
+    return granted;
   }
 
-  void toggleWorkoutReminders(bool value) {
-    workoutRemindersEnabled = value;
-    unawaited(_persistence.saveWorkoutRemindersEnabled(value));
-    unawaited(_syncWorkoutReminder());
+  Future<bool> toggleWorkoutReminders(bool value) async {
+    final granted = value ? await _syncWorkoutReminder(requestFor: true) : true;
+    workoutRemindersEnabled = value && granted;
+    unawaited(_persistence.saveWorkoutRemindersEnabled(workoutRemindersEnabled));
+    if (!value) unawaited(_syncWorkoutReminder(requestFor: false));
     notifyListeners();
+    return granted;
   }
 
   /// Local notifications are a nice-to-have, not core app functionality —
-  /// any failure here (denied permission, missing plugin binding in tests,
-  /// no platform channel) is swallowed so it never breaks a settings toggle.
-  Future<void> _syncHydrationReminder() async {
+  /// any local failure (missing plugin binding in tests, no platform
+  /// channel) is swallowed and treated as granted, since it isn't a real
+  /// user denial; an actual OS permission denial returns false so the
+  /// caller can surface it.
+  Future<bool> _syncHydrationReminder({required bool requestFor}) async {
     try {
-      if (notificationsEnabled) {
-        await NotificationService.instance.requestPermission();
-        await NotificationService.instance.scheduleHydrationReminder();
+      if (requestFor) {
+        final granted = await NotificationService.instance.requestPermission();
+        if (!granted) return false;
+        await NotificationService.instance
+            .scheduleHydrationReminder(_effectiveLocale);
       } else {
         await NotificationService.instance.cancelHydrationReminder();
       }
+      return true;
     } catch (e) {
       debugPrint('Hydration reminder sync failed: $e');
+      return true;
     }
   }
 
-  Future<void> _syncWorkoutReminder() async {
+  Future<bool> _syncWorkoutReminder({required bool requestFor}) async {
     try {
-      if (workoutRemindersEnabled) {
-        await NotificationService.instance.requestPermission();
-        await NotificationService.instance.scheduleWorkoutReminder();
+      if (requestFor) {
+        final granted = await NotificationService.instance.requestPermission();
+        if (!granted) return false;
+        await NotificationService.instance
+            .scheduleWorkoutReminder(_effectiveLocale);
       } else {
         await NotificationService.instance.cancelWorkoutReminder();
       }
+      return true;
     } catch (e) {
       debugPrint('Workout reminder sync failed: $e');
+      return true;
     }
   }
 
@@ -924,8 +1005,8 @@ class AppState extends ChangeNotifier {
   /// after [hydrate] so a returning user's toggles keep working without
   /// having to flip them again.
   Future<void> syncNotificationSchedules() async {
-    await _syncHydrationReminder();
-    await _syncWorkoutReminder();
+    await _syncHydrationReminder(requestFor: notificationsEnabled);
+    await _syncWorkoutReminder(requestFor: workoutRemindersEnabled);
   }
 
   // ---- Health sync (Apple Health / Google Health Connect) ----------------

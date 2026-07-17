@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:bodyx_app/l10n/gen/app_localizations.dart';
+import '../../logic/goal_labels.dart';
 import '../../models/models.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_colors.dart';
@@ -433,7 +434,7 @@ class _GoalScreenState extends State<GoalScreen> {
                               : AppColors.textMuted),
                       const SizedBox(width: 12),
                       Expanded(
-                          child: Text(g.$1,
+                          child: Text(goalLabel(context, g.$1),
                               style: const TextStyle(
                                   color: AppColors.textPrimary,
                                   fontWeight: FontWeight.w600))),
@@ -460,8 +461,32 @@ class _GoalScreenState extends State<GoalScreen> {
   }
 }
 
-class NotificationsScreen extends StatelessWidget {
+class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
+  @override
+  State<NotificationsScreen> createState() => _NotificationsScreenState();
+}
+
+class _NotificationsScreenState extends State<NotificationsScreen> {
+  Future<void> _handleNotifications(bool value) async {
+    final granted = await context.read<AppState>().toggleNotifications(value);
+    if (!mounted) return;
+    if (value && !granted) _showDeniedSnackBar();
+  }
+
+  Future<void> _handleWorkoutReminders(bool value) async {
+    final granted =
+        await context.read<AppState>().toggleWorkoutReminders(value);
+    if (!mounted) return;
+    if (value && !granted) _showDeniedSnackBar();
+  }
+
+  void _showDeniedSnackBar() {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(
+            AppLocalizations.of(context)!.settingsNotificationsAccessDenied)));
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
@@ -473,15 +498,14 @@ class NotificationsScreen extends StatelessWidget {
             icon: Icons.notifications_active_outlined,
             label: AppLocalizations.of(context)!.settingsPushNotificationsLabel,
             value: state.notificationsEnabled,
-            onChanged: (v) => context.read<AppState>().toggleNotifications(v),
+            onChanged: _handleNotifications,
           ),
           const SizedBox(height: 10),
           _ToggleRow(
             icon: Icons.fitness_center_rounded,
             label: AppLocalizations.of(context)!.settingsWorkoutRemindersLabel,
             value: state.workoutRemindersEnabled,
-            onChanged: (v) =>
-                context.read<AppState>().toggleWorkoutReminders(v),
+            onChanged: _handleWorkoutReminders,
           ),
         ],
       ),
@@ -549,8 +573,9 @@ class _HealthSyncScreenState extends State<HealthSyncScreen> {
           ),
           const SizedBox(height: 14),
           const Text(
-            'Reads steps, calories, sleep, water and weight to keep your '
-            'dashboard accurate. BodyX never writes data back.',
+            'Reads steps, calories, sleep, water, weight and body fat '
+            'percentage to keep your dashboard accurate. BodyX never '
+            'writes data back.',
             style: TextStyle(
               color: AppColors.textMuted,
               fontSize: 12.5,
@@ -669,11 +694,48 @@ class PrivacyScreen extends StatefulWidget {
 }
 
 class _PrivacyScreenState extends State<PrivacyScreen> {
-  bool _publicProfile = false;
-  bool _shareAnonData = true;
+  bool _deleting = false;
+
+  Future<void> _confirmDelete() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: Text(
+            AppLocalizations.of(context)!.settingsDeleteAccountDialogTitle,
+            style: const TextStyle(color: AppColors.textPrimary)),
+        content: Text(
+            AppLocalizations.of(context)!.settingsDeleteAccountDialogContent,
+            style: const TextStyle(color: AppColors.textMuted)),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child:
+                  Text(AppLocalizations.of(context)!.settingsCancelButton)),
+          TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text(
+                  AppLocalizations.of(context)!
+                      .settingsDeleteAccountConfirmButton,
+                  style: const TextStyle(
+                      color: AppColors.warningDeep,
+                      fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _deleting = true);
+    HapticFeedback.mediumImpact();
+    await context.read<AppState>().deleteAccount();
+    if (!mounted) return;
+    Navigator.of(context).popUntil((r) => r.isFirst);
+  }
 
   @override
   Widget build(BuildContext context) {
+    final state = context.watch<AppState>();
     return _SettingsScaffold(
       title: AppLocalizations.of(context)!.settingsPrivacyTitle,
       child: Column(
@@ -681,15 +743,15 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
           _ToggleRow(
             icon: Icons.public_rounded,
             label: AppLocalizations.of(context)!.settingsPublicProfileLabel,
-            value: _publicProfile,
-            onChanged: (v) => setState(() => _publicProfile = v),
+            value: state.publicProfile,
+            onChanged: (v) => context.read<AppState>().togglePublicProfile(v),
           ),
           const SizedBox(height: 10),
           _ToggleRow(
             icon: Icons.analytics_outlined,
             label: AppLocalizations.of(context)!.settingsShareAnonDataLabel,
-            value: _shareAnonData,
-            onChanged: (v) => setState(() => _shareAnonData = v),
+            value: state.shareAnonData,
+            onChanged: (v) => context.read<AppState>().toggleShareAnonData(v),
           ),
           const SizedBox(height: 24),
           SizedBox(
@@ -697,26 +759,8 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
             child: PrimaryButton(
               label: AppLocalizations.of(context)!.settingsDeleteAccountLabel,
               outlined: true,
-              onPressed: () => showDialog(
-                context: context,
-                builder: (_) => AlertDialog(
-                  backgroundColor: AppColors.surface,
-                  title: Text(
-                      AppLocalizations.of(context)!
-                          .settingsDeleteAccountDialogTitle,
-                      style: const TextStyle(color: AppColors.textPrimary)),
-                  content: Text(
-                      AppLocalizations.of(context)!
-                          .settingsDeleteAccountDialogContent,
-                      style: const TextStyle(color: AppColors.textMuted)),
-                  actions: [
-                    TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: Text(
-                            AppLocalizations.of(context)!.settingsCancelButton)),
-                  ],
-                ),
-              ),
+              loading: _deleting,
+              onPressed: _deleting ? null : _confirmDelete,
             ),
           ),
         ],
@@ -758,9 +802,10 @@ class HelpSupportScreen extends StatelessWidget {
     ),
     (
       q: 'Can I export my progress data?',
-      a: "Not yet — that's on the roadmap. Everything you log (weight, "
-          "meals, workouts) is stored locally on this device only; "
-          "nothing is uploaded to a server.",
+      a: "Not yet — that's on the roadmap. Your profile, weight and body "
+          "measurements sync to your account when you're signed in and a "
+          "server is reachable; progress photos, meals, and workouts stay "
+          "on this device only.",
     ),
     (
       q: 'How do I change my daily goals?',
@@ -919,7 +964,7 @@ class AboutScreen extends StatelessWidget {
                   color: AppColors.textPrimary,
                   fontWeight: FontWeight.w800,
                   fontSize: 18)),
-          const Text('Version 1.0.0 (prototype)',
+          const Text('Version 1.0.0',
               style: TextStyle(color: AppColors.textMuted, fontSize: 12.5)),
           const SizedBox(height: 20),
           GlowCard(

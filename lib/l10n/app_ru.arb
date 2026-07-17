@@ -53,6 +53,7 @@
   "signInStayConsistent": "Сохраняйте регулярность",
   "signInEmailLabel": "Email",
   "signInPasswordLabel": "Пароль",
+  "signInFieldsRequired": "Введите email и пароль, чтобы продолжить.",
   "signInSignInButton": "Войти",
   "signInForgotPassword": "Забыли пароль?",
   "signInOrContinueWith": "или продолжить через",
@@ -444,6 +445,7 @@
       "platform": {}
     }
   },
+  "settingsNotificationsAccessDenied": "Уведомления не разрешены, напоминания не будут срабатывать. Включите их в настройках iOS.",
   "settingsSyncedWithPlatform": "Синхронизировано с {platform}.",
   "@settingsSyncedWithPlatform": {
     "placeholders": {
@@ -467,7 +469,8 @@
   "settingsShareAnonDataLabel": "Делиться анонимными данными об использовании",
   "settingsDeleteAccountLabel": "Удалить аккаунт",
   "settingsDeleteAccountDialogTitle": "Удалить аккаунт?",
-  "settingsDeleteAccountDialogContent": "Это прототип — данные фактически не будут удалены.",
+  "settingsDeleteAccountDialogContent": "Это навсегда удалит ваш аккаунт и все данные с устройства. Это действие нельзя отменить.",
+  "settingsDeleteAccountConfirmButton": "Удалить",
   "settingsCancelButton": "Отмена",
   "settingsHelpSupportTitle": "Помощь и поддержка",
   "settingsContactSupportLabel": "Связаться с поддержкой",
@@ -541,5 +544,77 @@
     }
   },
   "compareSliderBeforeLabel": "До",
-  "compareSliderAfterLabel": "После"
+  "compareSliderAfterLabel": "После",
+  "planTodaysWorkoutTitle": "Сегодняшняя тренировка",
+  "planMobilityStretchTitle": "Мобильность и растяжка",
+  "planInProgressLabel": "В процессе",
+  "planNoExercisesAddedYet": "Упражнения ещё не добавлены — нажмите, чтобы составить тренировку на сегодня.",
+  "planNoActivitiesAddedYet": "Активности ещё не добавлены — нажмите, чтобы спланировать мобильность на сегодня.",
+  "planMobilityCompletion": "Прогресс мобильности",
+  "planMobilityProgress": "{completed} / {total} выполнено",
+  "@planMobilityProgress": {
+    "placeholders": {
+      "completed": {},
+      "total": {}
+    }
+  },
+  "dashboardNoExercisesYet": "Упражнений пока нет — нажмите, чтобы добавить",
+  "dashboardWorkoutSetsProgress": "{completed} / {total} подходов",
+  "@dashboardWorkoutSetsProgress": {
+    "placeholders": {
+      "completed": {},
+      "total": {}
+    }
+  },
+  "dashboardNoActivitiesYet": "Активностей пока нет — нажмите, чтобы добавить",
+  "workoutChecklistRemoveExerciseTitle": "Удалить {exercise}?",
+  "@workoutChecklistRemoveExerciseTitle": {
+    "placeholders": {
+      "exercise": {}
+    }
+  },
+  "workoutChecklistRemoveExerciseContent": "Это удалит все подходы этого упражнения за сегодня.",
+  "workoutChecklistRemoveButton": "Удалить",
+  "workoutChecklistAddAnotherExercise": "+ Добавить ещё упражнение",
+  "workoutChecklistStartButton": "Старт",
+  "workoutChecklistStopButton": "Стоп",
+  "workoutChecklistEmptyTitle": "Упражнений пока нет",
+  "workoutChecklistEmptyDescription": "Добавьте, что тренируете сегодня — название, подходы, повторения.",
+  "workoutChecklistAddExerciseButton": "Добавить упражнение",
+  "settingsGoalLoseWeight": "Похудеть",
+  "settingsGoalBuildMuscle": "Набрать мышечную массу",
+  "settingsGoalMaintainWeight": "Поддерживать вес",
+  "settingsGoalImproveEndurance": "Улучшить выносливость",
+  "notificationWorkoutReminderTitle": "Сегодняшняя тренировка ждёт",
+  "notificationWorkoutReminderBody": "Загляните в план и приступайте — у вас всё получится.",
+  "notificationHydrationReminderTitle": "Проверка гидратации",
+  "notificationHydrationReminderBody": "Вы уже выполнили норму воды на сегодня?",
+  "mobilityChecklistAddAnotherActivity": "+ Добавить ещё активность",
+  "mobilityChecklistCompleteBanner": "Мобильность выполнена 🧘",
+  "mobilityChecklistEmptyTitle": "Активностей по мобильности пока нет",
+  "mobilityChecklistEmptyDescription": "Добавьте растяжку, раскатку или йогу — название и минуты.",
+  "mobilityChecklistAddActivityButton": "Добавить активность",
+  "dailySummarySleepSynced": "Синхронизировано с Health за этот день",
+  "dailySummarySleepEstimated": "Оценочно — включите синхронизацию Health в настройках для реальных данных",
+  "addExerciseTitle": "Добавить упражнение",
+  "addExerciseNameHint": "Название упражнения (напр. жим лёжа)",
+  "addExerciseSetsLabel": "Подходы",
+  "addExerciseRepsLabel": "Повторения",
+  "addExerciseSubmitButton": "Добавить {sets} × {reps} в тренировку на сегодня",
+  "@addExerciseSubmitButton": {
+    "placeholders": {
+      "sets": {},
+      "reps": {}
+    }
+  },
+  "addMobilityActivityTitle": "Добавить активность мобильности",
+  "addMobilityActivityHint": "Напр. растяжка тазобедренных, раскатка, йога.",
+  "addMobilityActivityNameHint": "Название активности (напр. растяжка тазобедренных)",
+  "addMobilityActivityMinutesLabel": "Минуты",
+  "addMobilityActivitySubmitButton": "Добавить {minutes} мин в план на сегодня",
+  "@addMobilityActivitySubmitButton": {
+    "placeholders": {
+      "minutes": {}
+    }
+  }
 }

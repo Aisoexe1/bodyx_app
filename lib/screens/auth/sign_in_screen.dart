@@ -16,8 +16,8 @@ class SignInScreen extends StatefulWidget {
 }
 
 class _SignInScreenState extends State<SignInScreen> {
-  final _email = TextEditingController(text: 'alex@bodyx.app');
-  final _password = TextEditingController(text: '••••••••');
+  final _email = TextEditingController();
+  final _password = TextEditingController();
   bool _obscure = true;
   bool _loading = false;
 
@@ -29,6 +29,11 @@ class _SignInScreenState extends State<SignInScreen> {
   }
 
   Future<void> _submit() async {
+    if (_email.text.trim().isEmpty || _password.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(AppLocalizations.of(context)!.signInFieldsRequired)));
+      return;
+    }
     setState(() => _loading = true);
     try {
       await context.read<AppState>().signIn(_email.text, _password.text);

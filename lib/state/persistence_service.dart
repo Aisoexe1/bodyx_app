@@ -31,6 +31,8 @@ class PersistenceService {
   static const _kMobilityActivities = 'bodyx.mobility_activities';
   static const _kMobilityActivitiesDate = 'bodyx.mobility_activities_date';
   static const _kLocale = 'bodyx.locale';
+  static const _kPublicProfile = 'bodyx.public_profile';
+  static const _kShareAnonData = 'bodyx.share_anon_data';
 
   Future<SharedPreferences> get _prefs => SharedPreferences.getInstance();
 
@@ -251,6 +253,18 @@ class PersistenceService {
         jsonEncode(activities.map((a) => a.toJson()).toList()));
   }
 
+  Future<bool?> loadPublicProfile() async =>
+      (await _prefs).getBool(_kPublicProfile);
+
+  Future<void> savePublicProfile(bool value) async =>
+      (await _prefs).setBool(_kPublicProfile, value);
+
+  Future<bool?> loadShareAnonData() async =>
+      (await _prefs).getBool(_kShareAnonData);
+
+  Future<void> saveShareAnonData(bool value) async =>
+      (await _prefs).setBool(_kShareAnonData, value);
+
   Future<String?> loadLocaleCode() async => (await _prefs).getString(_kLocale);
 
   Future<void> saveLocaleCode(String? code) async {
@@ -263,9 +277,15 @@ class PersistenceService {
   }
 
   /// Signs the session out without discarding the user's logged history —
-  /// there's only ever one local "account" in this prototype, so their
+  /// there's only ever one local "account" in this app, so their
   /// weight/measurement log survives a sign-out/sign-in cycle.
   Future<void> clearSession() async {
     await (await _prefs).remove(_kOnboardingDone);
+  }
+
+  /// Wipes every locally persisted value — used for account deletion, where
+  /// (unlike [clearSession]) the logged history must not survive.
+  Future<void> clearAllData() async {
+    await (await _prefs).clear();
   }
 }

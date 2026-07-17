@@ -165,10 +165,13 @@ class _TodayChecklistCard extends StatelessWidget {
           const SizedBox(height: 16),
           _ChecklistRow(
             icon: Icons.fitness_center_rounded,
-            title: "Today's Workout",
+            title: AppLocalizations.of(context)!.planTodaysWorkoutTitle,
             subtitle: workoutSets.isEmpty
-                ? 'No exercises yet — tap to add'
-                : '${state.todayWorkoutCompletedSets} / ${workoutSets.length} sets',
+                ? AppLocalizations.of(context)!.dashboardNoExercisesYet
+                : AppLocalizations.of(context)!.dashboardWorkoutSetsProgress(
+                    state.todayWorkoutCompletedSets.toString(),
+                    workoutSets.length.toString(),
+                  ),
             done: workoutDone,
             progress: workoutSets.isEmpty ? null : state.todayWorkoutProgress,
             onTap: () => showModalBottomSheet(
@@ -181,10 +184,13 @@ class _TodayChecklistCard extends StatelessWidget {
           const _ChecklistDivider(),
           _ChecklistRow(
             icon: Icons.self_improvement_rounded,
-            title: 'Mobility & Stretch',
+            title: AppLocalizations.of(context)!.planMobilityStretchTitle,
             subtitle: mobilityActivities.isEmpty
-                ? 'No activities yet — tap to add'
-                : '${state.todayMobilityCompletedCount} / ${mobilityActivities.length} done',
+                ? AppLocalizations.of(context)!.dashboardNoActivitiesYet
+                : AppLocalizations.of(context)!.planMobilityProgress(
+                    state.todayMobilityCompletedCount.toString(),
+                    mobilityActivities.length.toString(),
+                  ),
             done: mobilityDone,
             progress:
                 mobilityActivities.isEmpty ? null : state.todayMobilityProgress,

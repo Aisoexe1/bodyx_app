@@ -50,6 +50,12 @@ abstract class AuthRepository {
   Future<UserProfile?> restoreSession();
 
   Future<void> signOut();
+
+  /// Permanently deletes the account and all server-side data for the
+  /// signed-in user. Callers should treat this as best-effort: local data
+  /// is wiped and the session ends regardless of whether this succeeds, so
+  /// deletion is never blocked by an unreachable server.
+  Future<void> deleteAccount();
 }
 
 class ApiAuthRepository implements AuthRepository {
@@ -144,4 +150,10 @@ class ApiAuthRepository implements AuthRepository {
 
   @override
   Future<void> signOut() => _tokenStorage.clearToken();
+
+  @override
+  Future<void> deleteAccount() async {
+    await _client.delete('/users/me');
+    await _tokenStorage.clearToken();
+  }
 }

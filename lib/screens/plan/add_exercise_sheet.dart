@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:bodyx_app/l10n/gen/app_localizations.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
@@ -72,14 +73,14 @@ class _AddExerciseSheetState extends State<AddExerciseSheet> {
                 ),
               ),
             ),
-            const Text('Add Exercise',
-                style: TextStyle(
+            Text(AppLocalizations.of(context)!.addExerciseTitle,
+                style: const TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.w800,
                     color: AppColors.textPrimary)),
             const SizedBox(height: 16),
             PrimaryTextField(
-              label: 'Exercise name (e.g. Bench Press)',
+              label: AppLocalizations.of(context)!.addExerciseNameHint,
               controller: _nameController,
             ),
             const SizedBox(height: 16),
@@ -87,7 +88,7 @@ class _AddExerciseSheetState extends State<AddExerciseSheet> {
               children: [
                 Expanded(
                   child: CountStepper(
-                    label: 'Sets',
+                    label: AppLocalizations.of(context)!.addExerciseSetsLabel,
                     value: _sets,
                     min: 1,
                     max: 10,
@@ -97,7 +98,7 @@ class _AddExerciseSheetState extends State<AddExerciseSheet> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: CountStepper(
-                    label: 'Reps',
+                    label: AppLocalizations.of(context)!.addExerciseRepsLabel,
                     value: _reps,
                     min: 1,
                     max: 50,
@@ -108,7 +109,8 @@ class _AddExerciseSheetState extends State<AddExerciseSheet> {
             ),
             const SizedBox(height: 20),
             PrimaryButton(
-              label: 'Add $_sets × $_reps to today\'s workout',
+              label: AppLocalizations.of(context)!
+                  .addExerciseSubmitButton(_sets.toString(), _reps.toString()),
               onPressed: name.isEmpty ? null : _submit,
             ),
           ],

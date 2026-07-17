@@ -53,6 +53,7 @@
   "signInStayConsistent": "Stay consistent",
   "signInEmailLabel": "Email",
   "signInPasswordLabel": "Password",
+  "signInFieldsRequired": "Enter your email and password to continue.",
   "signInSignInButton": "Sign in",
   "signInForgotPassword": "Forgot password?",
   "signInOrContinueWith": "or continue with",
@@ -444,6 +445,7 @@
       "platform": {}
     }
   },
+  "settingsNotificationsAccessDenied": "Notifications weren't allowed, so reminders won't fire. Enable them in iOS Settings.",
   "settingsSyncedWithPlatform": "Synced with {platform}.",
   "@settingsSyncedWithPlatform": {
     "placeholders": {
@@ -467,7 +469,8 @@
   "settingsShareAnonDataLabel": "Share anonymous usage data",
   "settingsDeleteAccountLabel": "Delete account",
   "settingsDeleteAccountDialogTitle": "Delete account?",
-  "settingsDeleteAccountDialogContent": "This is a prototype — no data will actually be deleted.",
+  "settingsDeleteAccountDialogContent": "This permanently deletes your account and all data from this device. This can't be undone.",
+  "settingsDeleteAccountConfirmButton": "Delete",
   "settingsCancelButton": "Cancel",
   "settingsHelpSupportTitle": "Help & support",
   "settingsContactSupportLabel": "Contact support",
@@ -541,5 +544,77 @@
     }
   },
   "compareSliderBeforeLabel": "Before",
-  "compareSliderAfterLabel": "After"
+  "compareSliderAfterLabel": "After",
+  "planTodaysWorkoutTitle": "Today's Workout",
+  "planMobilityStretchTitle": "Mobility & Stretch",
+  "planInProgressLabel": "In progress",
+  "planNoExercisesAddedYet": "No exercises added yet — tap to build today's workout.",
+  "planNoActivitiesAddedYet": "No activities added yet — tap to plan today's mobility work.",
+  "planMobilityCompletion": "Mobility completion",
+  "planMobilityProgress": "{completed} / {total} done",
+  "@planMobilityProgress": {
+    "placeholders": {
+      "completed": {},
+      "total": {}
+    }
+  },
+  "dashboardNoExercisesYet": "No exercises yet — tap to add",
+  "dashboardWorkoutSetsProgress": "{completed} / {total} sets",
+  "@dashboardWorkoutSetsProgress": {
+    "placeholders": {
+      "completed": {},
+      "total": {}
+    }
+  },
+  "dashboardNoActivitiesYet": "No activities yet — tap to add",
+  "workoutChecklistRemoveExerciseTitle": "Remove {exercise}?",
+  "@workoutChecklistRemoveExerciseTitle": {
+    "placeholders": {
+      "exercise": {}
+    }
+  },
+  "workoutChecklistRemoveExerciseContent": "This removes all of its sets from today.",
+  "workoutChecklistRemoveButton": "Remove",
+  "workoutChecklistAddAnotherExercise": "+ Add another exercise",
+  "workoutChecklistStartButton": "Start",
+  "workoutChecklistStopButton": "Stop",
+  "workoutChecklistEmptyTitle": "No exercises yet",
+  "workoutChecklistEmptyDescription": "Add what you're training today — name, sets, reps.",
+  "workoutChecklistAddExerciseButton": "Add exercise",
+  "settingsGoalLoseWeight": "Lose weight",
+  "settingsGoalBuildMuscle": "Build muscle",
+  "settingsGoalMaintainWeight": "Maintain weight",
+  "settingsGoalImproveEndurance": "Improve endurance",
+  "notificationWorkoutReminderTitle": "Today's workout is waiting",
+  "notificationWorkoutReminderBody": "Check your plan and get moving — you've got this.",
+  "notificationHydrationReminderTitle": "Hydration check",
+  "notificationHydrationReminderBody": "Have you hit your water goal today?",
+  "mobilityChecklistAddAnotherActivity": "+ Add another activity",
+  "mobilityChecklistCompleteBanner": "Mobility complete 🧘",
+  "mobilityChecklistEmptyTitle": "No mobility activities yet",
+  "mobilityChecklistEmptyDescription": "Add a stretch, foam roll, or yoga flow — name + minutes.",
+  "mobilityChecklistAddActivityButton": "Add activity",
+  "dailySummarySleepSynced": "Synced from Health for this day",
+  "dailySummarySleepEstimated": "Estimated — enable Health sync in Settings for real stages",
+  "addExerciseTitle": "Add Exercise",
+  "addExerciseNameHint": "Exercise name (e.g. Bench Press)",
+  "addExerciseSetsLabel": "Sets",
+  "addExerciseRepsLabel": "Reps",
+  "addExerciseSubmitButton": "Add {sets} × {reps} to today's workout",
+  "@addExerciseSubmitButton": {
+    "placeholders": {
+      "sets": {},
+      "reps": {}
+    }
+  },
+  "addMobilityActivityTitle": "Add Mobility Activity",
+  "addMobilityActivityHint": "E.g. hip flexor stretch, foam rolling, yoga flow.",
+  "addMobilityActivityNameHint": "Activity name (e.g. Hip flexor stretch)",
+  "addMobilityActivityMinutesLabel": "Minutes",
+  "addMobilityActivitySubmitButton": "Add {minutes} min to today's plan",
+  "@addMobilityActivitySubmitButton": {
+    "placeholders": {
+      "minutes": {}
+    }
+  }
 }

@@ -85,6 +85,13 @@ class FakeAuthRepository implements AuthRepository {
 
   @override
   Future<void> signOut() async {}
+
+  bool deleteAccountCalled = false;
+
+  @override
+  Future<void> deleteAccount() async {
+    deleteAccountCalled = true;
+  }
 }
 
 /// Simulates a completely unreachable backend (no server deployed, offline,
@@ -129,6 +136,10 @@ class UnreachableAuthRepository implements AuthRepository {
 
   @override
   Future<void> signOut() async {}
+
+  @override
+  Future<void> deleteAccount() =>
+      throw const SocketException('Network is unreachable');
 }
 
 class FakeProfileRepository implements ProfileRepository {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:bodyx_app/l10n/gen/app_localizations.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
@@ -68,22 +69,25 @@ class _AddMobilityActivitySheetState extends State<AddMobilityActivitySheet> {
                 ),
               ),
             ),
-            const Text('Add Mobility Activity',
-                style: TextStyle(
+            Text(AppLocalizations.of(context)!.addMobilityActivityTitle,
+                style: const TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.w800,
                     color: AppColors.textPrimary)),
             const SizedBox(height: 4),
-            const Text('E.g. hip flexor stretch, foam rolling, yoga flow.',
-                style: TextStyle(color: AppColors.textMuted, fontSize: 12.5)),
+            Text(AppLocalizations.of(context)!.addMobilityActivityHint,
+                style: const TextStyle(
+                    color: AppColors.textMuted, fontSize: 12.5)),
             const SizedBox(height: 16),
             PrimaryTextField(
-              label: 'Activity name (e.g. Hip flexor stretch)',
+              label:
+                  AppLocalizations.of(context)!.addMobilityActivityNameHint,
               controller: _nameController,
             ),
             const SizedBox(height: 16),
             CountStepper(
-              label: 'Minutes',
+              label:
+                  AppLocalizations.of(context)!.addMobilityActivityMinutesLabel,
               value: _minutes,
               min: 1,
               max: 60,
@@ -91,7 +95,8 @@ class _AddMobilityActivitySheetState extends State<AddMobilityActivitySheet> {
             ),
             const SizedBox(height: 20),
             PrimaryButton(
-              label: 'Add $_minutes min to today\'s plan',
+              label: AppLocalizations.of(context)!
+                  .addMobilityActivitySubmitButton(_minutes.toString()),
               onPressed: name.isEmpty ? null : _submit,
             ),
           ],

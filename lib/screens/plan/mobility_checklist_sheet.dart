@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:bodyx_app/l10n/gen/app_localizations.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
@@ -29,17 +30,20 @@ class MobilityChecklistSheet extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.surfaceElevated,
-        title: Text('Remove $name?',
+        title: Text(
+            AppLocalizations.of(context)!
+                .workoutChecklistRemoveExerciseTitle(name),
             style: const TextStyle(color: AppColors.textPrimary)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context)!.settingsCancelButton),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Remove',
-                style: TextStyle(color: AppColors.warningDeep)),
+            child: Text(
+                AppLocalizations.of(context)!.workoutChecklistRemoveButton,
+                style: const TextStyle(color: AppColors.warningDeep)),
           ),
         ],
       ),
@@ -86,9 +90,11 @@ class MobilityChecklistSheet extends StatelessWidget {
                   children: [
                     const GlowIconBadge(icon: Icons.self_improvement_rounded),
                     const SizedBox(width: 12),
-                    const Expanded(
-                      child: Text('Mobility & Stretch',
-                          style: TextStyle(
+                    Expanded(
+                      child: Text(
+                          AppLocalizations.of(context)!
+                              .planMobilityStretchTitle,
+                          style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w800,
                               color: AppColors.textPrimary)),
@@ -190,8 +196,10 @@ class MobilityChecklistSheet extends StatelessWidget {
                           borderRadius: BorderRadius.circular(AppRadius.sm),
                           border: Border.all(color: AppColors.cardBorder),
                         ),
-                        child: const Text('+ Add another activity',
-                            style: TextStyle(
+                        child: Text(
+                            AppLocalizations.of(context)!
+                                .mobilityChecklistAddAnotherActivity,
+                            style: const TextStyle(
                                 color: AppColors.primaryBright,
                                 fontWeight: FontWeight.w700)),
                       ),
@@ -206,8 +214,10 @@ class MobilityChecklistSheet extends StatelessWidget {
                           color: AppColors.success.withValues(alpha: 0.14),
                           borderRadius: BorderRadius.circular(AppRadius.sm),
                         ),
-                        child: const Text('Mobility complete 🧘',
-                            style: TextStyle(
+                        child: Text(
+                            AppLocalizations.of(context)!
+                                .mobilityChecklistCompleteBanner,
+                            style: const TextStyle(
                                 color: AppColors.success,
                                 fontWeight: FontWeight.w700)),
                       ),
@@ -236,17 +246,23 @@ class _EmptyMobilityState extends StatelessWidget {
           const Icon(Icons.playlist_add_rounded,
               color: AppColors.textMuted, size: 36),
           const SizedBox(height: 12),
-          const Text('No mobility activities yet',
-              style: TextStyle(
+          Text(AppLocalizations.of(context)!.mobilityChecklistEmptyTitle,
+              style: const TextStyle(
                   color: AppColors.textPrimary,
                   fontWeight: FontWeight.w800,
                   fontSize: 15)),
           const SizedBox(height: 6),
-          const Text('Add a stretch, foam roll, or yoga flow — name + minutes.',
+          Text(
+              AppLocalizations.of(context)!
+                  .mobilityChecklistEmptyDescription,
               textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.textMuted, fontSize: 12.5)),
+              style:
+                  const TextStyle(color: AppColors.textMuted, fontSize: 12.5)),
           const SizedBox(height: 18),
-          PrimaryButton(label: 'Add activity', onPressed: onAdd),
+          PrimaryButton(
+              label: AppLocalizations.of(context)!
+                  .mobilityChecklistAddActivityButton,
+              onPressed: onAdd),
         ],
       ),
     );

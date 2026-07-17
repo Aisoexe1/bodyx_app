@@ -53,6 +53,7 @@
   "signInStayConsistent": "Будьте послідовні",
   "signInEmailLabel": "Email",
   "signInPasswordLabel": "Пароль",
+  "signInFieldsRequired": "Введіть email і пароль, щоб продовжити.",
   "signInSignInButton": "Увійти",
   "signInForgotPassword": "Забули пароль?",
   "signInOrContinueWith": "або продовжити через",
@@ -444,6 +445,7 @@
       "platform": {}
     }
   },
+  "settingsNotificationsAccessDenied": "Сповіщення не дозволено, нагадування не спрацюють. Увімкніть їх у налаштуваннях iOS.",
   "settingsSyncedWithPlatform": "Синхронізовано з {platform}.",
   "@settingsSyncedWithPlatform": {
     "placeholders": {
@@ -467,7 +469,8 @@
   "settingsShareAnonDataLabel": "Ділитися анонімними даними використання",
   "settingsDeleteAccountLabel": "Видалити акаунт",
   "settingsDeleteAccountDialogTitle": "Видалити акаунт?",
-  "settingsDeleteAccountDialogContent": "Це прототип — дані фактично не будуть видалені.",
+  "settingsDeleteAccountDialogContent": "Це назавжди видалить ваш акаунт і всі дані з пристрою. Цю дію не можна скасувати.",
+  "settingsDeleteAccountConfirmButton": "Видалити",
   "settingsCancelButton": "Скасувати",
   "settingsHelpSupportTitle": "Допомога та підтримка",
   "settingsContactSupportLabel": "Зв'язатися з підтримкою",
@@ -541,5 +544,77 @@
     }
   },
   "compareSliderBeforeLabel": "До",
-  "compareSliderAfterLabel": "Після"
+  "compareSliderAfterLabel": "Після",
+  "planTodaysWorkoutTitle": "Сьогоднішнє тренування",
+  "planMobilityStretchTitle": "Мобільність і розтяжка",
+  "planInProgressLabel": "У процесі",
+  "planNoExercisesAddedYet": "Вправи ще не додано — торкніться, щоб скласти тренування на сьогодні.",
+  "planNoActivitiesAddedYet": "Активності ще не додано — торкніться, щоб спланувати мобільність на сьогодні.",
+  "planMobilityCompletion": "Прогрес мобільності",
+  "planMobilityProgress": "{completed} / {total} виконано",
+  "@planMobilityProgress": {
+    "placeholders": {
+      "completed": {},
+      "total": {}
+    }
+  },
+  "dashboardNoExercisesYet": "Вправ поки немає — торкніться, щоб додати",
+  "dashboardWorkoutSetsProgress": "{completed} / {total} підходів",
+  "@dashboardWorkoutSetsProgress": {
+    "placeholders": {
+      "completed": {},
+      "total": {}
+    }
+  },
+  "dashboardNoActivitiesYet": "Активностей поки немає — торкніться, щоб додати",
+  "workoutChecklistRemoveExerciseTitle": "Видалити {exercise}?",
+  "@workoutChecklistRemoveExerciseTitle": {
+    "placeholders": {
+      "exercise": {}
+    }
+  },
+  "workoutChecklistRemoveExerciseContent": "Це видалить усі підходи цієї вправи за сьогодні.",
+  "workoutChecklistRemoveButton": "Видалити",
+  "workoutChecklistAddAnotherExercise": "+ Додати ще вправу",
+  "workoutChecklistStartButton": "Старт",
+  "workoutChecklistStopButton": "Стоп",
+  "workoutChecklistEmptyTitle": "Вправ поки немає",
+  "workoutChecklistEmptyDescription": "Додайте, що тренуєте сьогодні — назву, підходи, повторення.",
+  "workoutChecklistAddExerciseButton": "Додати вправу",
+  "settingsGoalLoseWeight": "Схуднути",
+  "settingsGoalBuildMuscle": "Набрати м'язову масу",
+  "settingsGoalMaintainWeight": "Підтримувати вагу",
+  "settingsGoalImproveEndurance": "Покращити витривалість",
+  "notificationWorkoutReminderTitle": "Сьогоднішнє тренування чекає",
+  "notificationWorkoutReminderBody": "Перегляньте план і починайте — у вас все вийде.",
+  "notificationHydrationReminderTitle": "Перевірка гідратації",
+  "notificationHydrationReminderBody": "Ви вже виконали норму води на сьогодні?",
+  "mobilityChecklistAddAnotherActivity": "+ Додати ще активність",
+  "mobilityChecklistCompleteBanner": "Мобільність виконана 🧘",
+  "mobilityChecklistEmptyTitle": "Активностей з мобільності ще немає",
+  "mobilityChecklistEmptyDescription": "Додайте розтяжку, розкатку або йогу — назву й хвилини.",
+  "mobilityChecklistAddActivityButton": "Додати активність",
+  "dailySummarySleepSynced": "Синхронізовано з Health за цей день",
+  "dailySummarySleepEstimated": "Орієнтовно — увімкніть синхронізацію Health у налаштуваннях для реальних даних",
+  "addExerciseTitle": "Додати вправу",
+  "addExerciseNameHint": "Назва вправи (напр. жим лежачи)",
+  "addExerciseSetsLabel": "Підходи",
+  "addExerciseRepsLabel": "Повторення",
+  "addExerciseSubmitButton": "Додати {sets} × {reps} до тренування на сьогодні",
+  "@addExerciseSubmitButton": {
+    "placeholders": {
+      "sets": {},
+      "reps": {}
+    }
+  },
+  "addMobilityActivityTitle": "Додати активність мобільності",
+  "addMobilityActivityHint": "Напр. розтяжка стегна, розкатка, йога.",
+  "addMobilityActivityNameHint": "Назва активності (напр. розтяжка стегна)",
+  "addMobilityActivityMinutesLabel": "Хвилини",
+  "addMobilityActivitySubmitButton": "Додати {minutes} хв до плану на сьогодні",
+  "@addMobilityActivitySubmitButton": {
+    "placeholders": {
+      "minutes": {}
+    }
+  }
 }

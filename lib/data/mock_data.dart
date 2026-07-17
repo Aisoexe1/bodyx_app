@@ -46,6 +46,37 @@ class MockData {
     });
   }
 
+  /// Real starting state for a brand-new account — every metric is an
+  /// honest zero rather than a fabricated reading, so a fresh install never
+  /// shows history the user never produced. Kept the same 14-day shape as
+  /// [generateDailyStats] so chart code that indexes by day offset still
+  /// works; [AppState.syncHealthData] overlays real values per-field once
+  /// Health sync is enabled, and today's entry updates as the user logs
+  /// water/meals/etc.
+  static List<DailyStats> emptyDailyStats({int days = 14}) {
+    final now = DateTime.now();
+    return List.generate(days, (i) {
+      final date = DateTime(now.year, now.month, now.day)
+          .subtract(Duration(days: days - 1 - i));
+      return DailyStats(
+        date: date,
+        steps: 0,
+        stepGoal: 10000,
+        calories: 0,
+        calorieGoal: 2200,
+        sleepMinutes: 0,
+        sleepGoalMinutes: 480,
+        waterMl: 0,
+        waterGoalMl: 2500,
+        lightSleepMinutes: 0,
+        deepSleepMinutes: 0,
+        remSleepMinutes: 0,
+        awakeMinutes: 0,
+        sleepStagesSynced: false,
+      );
+    });
+  }
+
   static List<WeightEntry> generateWeightHistory({
     int weeks = 10,
     double startKg = 78.4,
@@ -87,6 +118,38 @@ class MockData {
         zone: zone,
         valueCm: history.last,
         history: history,
+        targetCm: double.parse((target + 4).toStringAsFixed(1)),
+      );
+    }
+    return result;
+  }
+
+  /// Real starting state for a brand-new account: every zone gets a
+  /// suggested target (the same gender-average table [generateBodyMeasurements]
+  /// uses, which is a reasonable goal default, not a claimed measurement)
+  /// but no current value or history, since the user hasn't logged a
+  /// measurement yet.
+  static Map<MuscleZone, BodyMeasurement> emptyBodyMeasurements(
+      Gender gender) {
+    final base = <MuscleZone, double>{
+      MuscleZone.shoulders: gender == Gender.male ? 118 : 102,
+      MuscleZone.chest: gender == Gender.male ? 104 : 92,
+      MuscleZone.biceps: gender == Gender.male ? 36 : 27,
+      MuscleZone.forearms: gender == Gender.male ? 29 : 23,
+      MuscleZone.abs: gender == Gender.male ? 84 : 71,
+      MuscleZone.back: gender == Gender.male ? 112 : 96,
+      MuscleZone.quads: gender == Gender.male ? 58 : 55,
+      MuscleZone.hamstrings: gender == Gender.male ? 41 : 39,
+      MuscleZone.calves: gender == Gender.male ? 38 : 34,
+      MuscleZone.glutes: gender == Gender.male ? 98 : 101,
+    };
+    final result = <MuscleZone, BodyMeasurement>{};
+    for (final zone in MuscleZone.values) {
+      final target = base[zone]!;
+      result[zone] = BodyMeasurement(
+        zone: zone,
+        valueCm: 0,
+        history: const [],
         targetCm: double.parse((target + 4).toStringAsFixed(1)),
       );
     }

@@ -78,8 +78,9 @@ class DailySummaryScreen extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
                 stats.sleepStagesSynced
-                    ? 'Synced from Health for this day'
-                    : 'Estimated — enable Health sync in Settings for real stages',
+                    ? AppLocalizations.of(context)!.dailySummarySleepSynced
+                    : AppLocalizations.of(context)!
+                        .dailySummarySleepEstimated,
                 style: const TextStyle(
                     color: AppColors.textMuted, fontSize: 12.5)),
             const SizedBox(height: 16),

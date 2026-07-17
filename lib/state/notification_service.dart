@@ -1,6 +1,9 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
+
+import '../l10n/gen/app_localizations.dart';
 
 /// Thin wrapper around `flutter_local_notifications` — schedules the two
 /// daily reminders the Settings screen's toggles promise ("Workout
@@ -80,12 +83,13 @@ class NotificationService {
     return scheduled;
   }
 
-  Future<void> scheduleWorkoutReminder() async {
+  Future<void> scheduleWorkoutReminder(Locale locale) async {
     await init();
+    final l10n = lookupAppLocalizations(locale);
     await _plugin.zonedSchedule(
       _workoutReminderId,
-      "Today's workout is waiting",
-      "Check your plan and get moving — you've got this.",
+      l10n.notificationWorkoutReminderTitle,
+      l10n.notificationWorkoutReminderBody,
       _nextInstanceOfTime(18, 0),
       _dailyDetails,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
@@ -100,12 +104,13 @@ class NotificationService {
     await _plugin.cancel(_workoutReminderId);
   }
 
-  Future<void> scheduleHydrationReminder() async {
+  Future<void> scheduleHydrationReminder(Locale locale) async {
     await init();
+    final l10n = lookupAppLocalizations(locale);
     await _plugin.zonedSchedule(
       _hydrationReminderId,
-      'Hydration check',
-      "Have you hit your water goal today?",
+      l10n.notificationHydrationReminderTitle,
+      l10n.notificationHydrationReminderBody,
       _nextInstanceOfTime(14, 0),
       _dailyDetails,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,

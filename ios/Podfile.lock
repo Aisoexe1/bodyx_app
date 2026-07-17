@@ -6,12 +6,15 @@ PODS:
     - Flutter
   - health (13.3.1):
     - Flutter
+  - sign_in_with_apple (0.0.1):
+    - Flutter
 
 DEPENDENCIES:
   - Flutter (from `Flutter`)
   - flutter_local_notifications (from `.symlinks/plugins/flutter_local_notifications/ios`)
   - flutter_secure_storage (from `.symlinks/plugins/flutter_secure_storage/ios`)
   - health (from `.symlinks/plugins/health/ios`)
+  - sign_in_with_apple (from `.symlinks/plugins/sign_in_with_apple/ios`)
 
 EXTERNAL SOURCES:
   Flutter:
@@ -22,12 +25,15 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/flutter_secure_storage/ios"
   health:
     :path: ".symlinks/plugins/health/ios"
+  sign_in_with_apple:
+    :path: ".symlinks/plugins/sign_in_with_apple/ios"
 
 SPEC CHECKSUMS:
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
   flutter_local_notifications: 395056b3175ba4f08480a7c5de30cd36d69827e4
   flutter_secure_storage: 1ed9476fba7e7a782b22888f956cce43e2c62f13
   health: 4decf5d74e8f54c58a8c07a385fc72f629a831d9
+  sign_in_with_apple: c5dcc141574c8c54d5ac99dd2163c0c72ad22418
 
 PODFILE CHECKSUM: 9e91cf4060749aac372d08c4cdef3bcb68bfeb8b
 
