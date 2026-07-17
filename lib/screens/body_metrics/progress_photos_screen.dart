@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:bodyx_app/l10n/gen/app_localizations.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../models/models.dart';
@@ -105,9 +106,9 @@ class _ProgressPhotosScreenState extends State<ProgressPhotosScreen> {
                       size: 18),
                 ),
                 const SizedBox(width: 4),
-                const Expanded(
-                  child: Text('Progress Photos',
-                      style: TextStyle(
+                Expanded(
+                  child: Text(AppLocalizations.of(context)!.progressPhotosTitle,
+                      style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w800,
                           color: AppColors.textPrimary)),
@@ -118,15 +119,15 @@ class _ProgressPhotosScreenState extends State<ProgressPhotosScreen> {
                 if (photos.length >= 2 && !_selecting)
                   TextButton(
                     onPressed: _toggleSelecting,
-                    child: const Text('Compare'),
+                    child: Text(AppLocalizations.of(context)!.progressPhotosCompareButton),
                   ),
               ],
             ),
-            const Padding(
-              padding: EdgeInsets.only(left: 52),
+            Padding(
+              padding: const EdgeInsets.only(left: 52),
               child: Text(
-                  'See how your body has changed over any stretch of time',
-                  style: TextStyle(color: AppColors.textMuted, fontSize: 12.5)),
+                  AppLocalizations.of(context)!.progressPhotosSubtitle,
+                  style: const TextStyle(color: AppColors.textMuted, fontSize: 12.5)),
             ),
             const SizedBox(height: 20),
             if (photos.isEmpty) _EmptyState(onAdd: _openAddSheet),
@@ -221,7 +222,7 @@ class _ProgressPhotosScreenState extends State<ProgressPhotosScreen> {
             if (_selecting)
               _selected.length == 2
                   ? PrimaryButton(
-                      label: 'Compare selected',
+                      label: AppLocalizations.of(context)!.progressPhotosCompareSelectedButton,
                       onPressed: () => Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -234,15 +235,15 @@ class _ProgressPhotosScreenState extends State<ProgressPhotosScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       child: Text(
                         _selected.isEmpty
-                            ? 'Select 2 photos to compare'
-                            : 'Select 1 more photo to compare',
+                            ? AppLocalizations.of(context)!.progressPhotosSelectTwoPhotos
+                            : AppLocalizations.of(context)!.progressPhotosSelectOneMorePhoto,
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                             color: AppColors.textMuted, fontSize: 12.5),
                       ),
                     )
             else if (photos.isNotEmpty)
-              PrimaryButton(label: 'Add Photo', onPressed: _openAddSheet),
+              PrimaryButton(label: AppLocalizations.of(context)!.progressPhotosAddPhotoButton, onPressed: _openAddSheet),
           ],
         ),
       ),
@@ -257,19 +258,19 @@ Future<bool> confirmDeletePhotoDialog(BuildContext context) async {
     context: context,
     builder: (context) => AlertDialog(
       backgroundColor: AppColors.surfaceElevated,
-      title: const Text('Delete this photo?',
-          style: TextStyle(color: AppColors.textPrimary)),
-      content: const Text("This can't be undone.",
-          style: TextStyle(color: AppColors.textSecondary)),
+      title: Text(AppLocalizations.of(context)!.progressPhotosDeleteDialogTitle,
+          style: const TextStyle(color: AppColors.textPrimary)),
+      content: Text(AppLocalizations.of(context)!.progressPhotosDeleteDialogContent,
+          style: const TextStyle(color: AppColors.textSecondary)),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context, false),
-          child: const Text('Cancel'),
+          child: Text(AppLocalizations.of(context)!.progressPhotosCancelButton),
         ),
         TextButton(
           onPressed: () => Navigator.pop(context, true),
-          child: const Text('Delete',
-              style: TextStyle(color: AppColors.warningDeep)),
+          child: Text(AppLocalizations.of(context)!.progressPhotosDeleteButton,
+              style: const TextStyle(color: AppColors.warningDeep)),
         ),
       ],
     ),
@@ -376,17 +377,17 @@ class _DirPathError extends StatelessWidget {
           const Icon(Icons.error_outline_rounded,
               color: AppColors.warning, size: 32),
           const SizedBox(height: 12),
-          const Text("Couldn't load your photos",
-              style: TextStyle(
+          Text(AppLocalizations.of(context)!.progressPhotosLoadErrorTitle,
+              style: const TextStyle(
                   color: AppColors.textPrimary,
                   fontWeight: FontWeight.w800,
                   fontSize: 15)),
           const SizedBox(height: 6),
-          const Text('Something went wrong reading local storage.',
+          Text(AppLocalizations.of(context)!.progressPhotosLoadErrorMessage,
               textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.textMuted, fontSize: 12.5)),
+              style: const TextStyle(color: AppColors.textMuted, fontSize: 12.5)),
           const SizedBox(height: 16),
-          PrimaryButton(label: 'Try again', outlined: true, onPressed: onRetry),
+          PrimaryButton(label: AppLocalizations.of(context)!.progressPhotosTryAgainButton, outlined: true, onPressed: onRetry),
         ],
       ),
     );
@@ -405,19 +406,19 @@ class _EmptyState extends StatelessWidget {
         children: [
           const GlowIconBadge(icon: Icons.photo_camera_back_rounded, size: 56),
           const SizedBox(height: 16),
-          const Text('No progress photos yet',
-              style: TextStyle(
+          Text(AppLocalizations.of(context)!.progressPhotosEmptyTitle,
+              style: const TextStyle(
                   color: AppColors.textPrimary,
                   fontWeight: FontWeight.w800,
                   fontSize: 15)),
           const SizedBox(height: 6),
-          const Text(
-              "Take one now, then another in a few weeks to see how far you've come.",
+          Text(
+              AppLocalizations.of(context)!.progressPhotosEmptyMessage,
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                   color: AppColors.textMuted, fontSize: 12.5, height: 1.4)),
           const SizedBox(height: 20),
-          PrimaryButton(label: 'Take your first photo', onPressed: onAdd),
+          PrimaryButton(label: AppLocalizations.of(context)!.progressPhotosTakeFirstPhotoButton, onPressed: onAdd),
         ],
       ),
     );

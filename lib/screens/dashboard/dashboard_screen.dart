@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:bodyx_app/l10n/gen/app_localizations.dart';
 import '../../models/models.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_colors.dart';
@@ -35,7 +36,9 @@ class DashboardScreen extends StatelessWidget {
                 AppSpacing.lg, AppSpacing.md, AppSpacing.lg, 140),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-                _GreetingRow(name: user?.name ?? 'Athlete'),
+                _GreetingRow(
+                    name: user?.name ??
+                        AppLocalizations.of(context)!.dashboardAthlete),
                 const SizedBox(height: 24),
                 _DailyOverviewCard(state: state, stats: stats),
                 const SizedBox(height: 20),
@@ -45,7 +48,7 @@ class DashboardScreen extends StatelessWidget {
                       child: _MiniStatCard(
                         icon: Icons.water_drop_rounded,
                         color: AppColors.info,
-                        label: 'Water',
+                        label: AppLocalizations.of(context)!.dashboardWaterLabel,
                         value: CountUpText(
                           value: stats.waterMl,
                           formatter: (v) => '${(v / 1000).toStringAsFixed(1)}L',
@@ -67,7 +70,7 @@ class DashboardScreen extends StatelessWidget {
                       child: _MiniStatCard(
                         icon: Icons.local_fire_department_rounded,
                         color: AppColors.warning,
-                        label: 'Calories',
+                        label: AppLocalizations.of(context)!.dashboardCaloriesLabel,
                         value: CountUpText(
                           value: state.todayCaloriesEaten,
                           formatter: (v) => '$v kcal',
@@ -87,13 +90,14 @@ class DashboardScreen extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 24),
-                const SectionHeader(title: 'Last body scan'),
+                SectionHeader(
+                    title: AppLocalizations.of(context)!.dashboardLastBodyScan),
                 const SizedBox(height: 12),
                 _LastBodyScanCard(state: state),
                 const SizedBox(height: 24),
                 SectionHeader(
-                  title: 'Action for today',
-                  action: 'See plan',
+                  title: AppLocalizations.of(context)!.dashboardActionForToday,
+                  action: AppLocalizations.of(context)!.dashboardSeePlan,
                   onActionTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => const DailyPlanScreen()),
@@ -141,15 +145,17 @@ class _TodayChecklistCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Expanded(
-                child: Text("Today's checklist",
-                    style: TextStyle(
+              Expanded(
+                child: Text(
+                    AppLocalizations.of(context)!.dashboardTodaysChecklist,
+                    style: const TextStyle(
                         color: AppColors.textPrimary,
                         fontWeight: FontWeight.w800,
                         fontSize: 15)),
               ),
               StatChip(
-                label: '$doneCount / $totalCount done',
+                label: AppLocalizations.of(context)!.dashboardDoneCount(
+                    doneCount.toString(), totalCount.toString()),
                 color: doneCount == totalCount
                     ? AppColors.success
                     : AppColors.primary,
@@ -192,8 +198,10 @@ class _TodayChecklistCard extends StatelessWidget {
           const _ChecklistDivider(),
           _ChecklistRow(
             icon: Icons.monitor_weight_rounded,
-            title: 'Log body weight',
-            subtitle: weightDone ? 'Logged today' : 'Morning check-in',
+            title: AppLocalizations.of(context)!.dashboardLogBodyWeight,
+            subtitle: weightDone
+                ? AppLocalizations.of(context)!.dashboardLoggedToday
+                : AppLocalizations.of(context)!.dashboardMorningCheckIn,
             done: weightDone,
             onTap: () => showModalBottomSheet(
               context: context,
@@ -337,8 +345,9 @@ class _GreetingRow extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Good morning',
-                  style: TextStyle(color: AppColors.textMuted, fontSize: 12.5)),
+              Text(AppLocalizations.of(context)!.dashboardGoodMorning,
+                  style: const TextStyle(
+                      color: AppColors.textMuted, fontSize: 12.5)),
               Text(name,
                   style: const TextStyle(
                       color: AppColors.textPrimary,
@@ -370,8 +379,8 @@ class _DailyOverviewCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Daily overview',
-              style: TextStyle(
+          Text(AppLocalizations.of(context)!.dashboardDailyOverview,
+              style: const TextStyle(
                   color: AppColors.textPrimary,
                   fontWeight: FontWeight.w800,
                   fontSize: 16)),
@@ -405,12 +414,16 @@ class _DailyOverviewCard extends StatelessWidget {
                   children: [
                     _statLine(
                       Icons.directions_walk_rounded,
-                      'Steps',
+                      AppLocalizations.of(context)!.dashboardStepsLabel,
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           CountUpText(value: stats.steps, style: _valueStyle),
-                          Text(' / ${stats.stepGoal}', style: _valueStyle),
+                          Text(
+                              AppLocalizations.of(context)!
+                                  .dashboardStepGoalSuffix(
+                                      stats.stepGoal.toString()),
+                              style: _valueStyle),
                         ],
                       ),
                       AppColors.primaryBright,
@@ -418,7 +431,7 @@ class _DailyOverviewCard extends StatelessWidget {
                     const SizedBox(height: 10),
                     _statLine(
                       Icons.local_fire_department_rounded,
-                      'Calories',
+                      AppLocalizations.of(context)!.dashboardCaloriesLabel,
                       CountUpText(
                         value: stats.calories,
                         formatter: (v) => '$v kcal',
@@ -429,7 +442,7 @@ class _DailyOverviewCard extends StatelessWidget {
                     const SizedBox(height: 10),
                     _statLine(
                       Icons.bedtime_rounded,
-                      'Sleep',
+                      AppLocalizations.of(context)!.dashboardSleepLabel,
                       CountUpText(
                         value: stats.sleepMinutes,
                         formatter: (v) => '${v ~/ 60}h ${v % 60}m',
@@ -558,15 +571,19 @@ class _LastBodyScanCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                      '${latest.kg.round()} kg  •  ${latest.bodyFatPct.toStringAsFixed(1)}% BF',
+                      AppLocalizations.of(context)!.dashboardBodyScanSummary(
+                          latest.kg.round().toString(),
+                          latest.bodyFatPct.toStringAsFixed(1)),
                       style: const TextStyle(
                           color: AppColors.textPrimary,
                           fontWeight: FontWeight.w800,
                           fontSize: 15)),
                   const SizedBox(height: 4),
-                  const Text('Tap to view full report',
-                      style:
-                          TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                  Text(
+                      AppLocalizations.of(context)!
+                          .dashboardTapToViewFullReport,
+                      style: const TextStyle(
+                          color: AppColors.textMuted, fontSize: 12)),
                 ],
               ),
             ),

@@ -14,6 +14,10 @@ class PrimaryTextField extends StatefulWidget {
     this.prefixIcon,
     this.suffixIcon,
     this.onSuffixTap,
+    this.onChanged,
+    this.errorText,
+    this.helperText,
+    this.helperColor,
   });
 
   final String label;
@@ -23,6 +27,17 @@ class PrimaryTextField extends StatefulWidget {
   final IconData? prefixIcon;
   final IconData? suffixIcon;
   final VoidCallback? onSuffixTap;
+  final ValueChanged<String>? onChanged;
+
+  /// Shown below the field in an error color — takes priority over
+  /// [helperText] when both are non-null.
+  final String? errorText;
+
+  /// Shown below the field when [errorText] is null — e.g. a live
+  /// password-strength hint. Defaults to [AppColors.textMuted]; pass
+  /// [helperColor] to recolor it (e.g. green once a rule is satisfied).
+  final String? helperText;
+  final Color? helperColor;
 
   @override
   State<PrimaryTextField> createState() => _PrimaryTextFieldState();
@@ -48,7 +63,7 @@ class _PrimaryTextFieldState extends State<PrimaryTextField> {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
+    final field = AnimatedContainer(
       duration: const Duration(milliseconds: 180),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(AppRadius.sm),
@@ -67,6 +82,7 @@ class _PrimaryTextFieldState extends State<PrimaryTextField> {
         focusNode: _focusNode,
         obscureText: widget.obscureText,
         keyboardType: widget.keyboardType,
+        onChanged: widget.onChanged,
         style: const TextStyle(color: AppColors.textPrimary),
         decoration: InputDecoration(
           hintText: widget.label,
@@ -82,6 +98,25 @@ class _PrimaryTextFieldState extends State<PrimaryTextField> {
                 ),
         ),
       ),
+    );
+
+    final message = widget.errorText ?? widget.helperText;
+    if (message == null) return field;
+
+    final messageColor = widget.errorText != null
+        ? AppColors.warningDeep
+        : (widget.helperColor ?? AppColors.textMuted);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        field,
+        Padding(
+          padding: const EdgeInsets.only(top: 6, left: 4),
+          child: Text(message,
+              style: TextStyle(fontSize: 12, color: messageColor)),
+        ),
+      ],
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:bodyx_app/l10n/gen/app_localizations.dart';
 import '../../models/models.dart';
 import '../../theme/app_colors.dart';
 import '../common/skeleton.dart';
@@ -19,12 +20,20 @@ class StepsBarChart extends StatelessWidget {
   final double height;
   final ValueChanged<int>? onBarTap;
 
-  // DateTime.weekday is 1 (Monday) .. 7 (Sunday). Two letters avoid the
-  // Tue/Thu and Sat/Sun collisions a single initial would have.
-  static const _weekdayLetters = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
-
   @override
   Widget build(BuildContext context) {
+    // DateTime.weekday is 1 (Monday) .. 7 (Sunday). Two letters avoid the
+    // Tue/Thu and Sat/Sun collisions a single initial would have.
+    final weekdayLetters = [
+      AppLocalizations.of(context)!.stepsBarChartMonday,
+      AppLocalizations.of(context)!.stepsBarChartTuesday,
+      AppLocalizations.of(context)!.stepsBarChartWednesday,
+      AppLocalizations.of(context)!.stepsBarChartThursday,
+      AppLocalizations.of(context)!.stepsBarChartFriday,
+      AppLocalizations.of(context)!.stepsBarChartSaturday,
+      AppLocalizations.of(context)!.stepsBarChartSunday,
+    ];
+
     if (stats.isEmpty) {
       return SizedBox(
         height: height,
@@ -46,7 +55,9 @@ class StepsBarChart extends StatelessWidget {
                 ),
               ),
             ),
-            const SkeletonCaption(text: 'No step history yet'),
+            SkeletonCaption(
+              text: AppLocalizations.of(context)!.stepsBarChartNoHistory,
+            ),
           ],
         ),
       );
@@ -94,7 +105,7 @@ class StepsBarChart extends StatelessWidget {
                   return Padding(
                     padding: const EdgeInsets.only(top: 8),
                     child: Text(
-                      _weekdayLetters[stats[i].date.weekday - 1],
+                      weekdayLetters[stats[i].date.weekday - 1],
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight:
@@ -116,7 +127,9 @@ class StepsBarChart extends StatelessWidget {
               tooltipRoundedRadius: 10,
               getTooltipItem: (group, groupIndex, rod, rodIndex) {
                 return BarTooltipItem(
-                  '${NumberFormat.decimalPattern().format(rod.toY.toInt())} steps',
+                  AppLocalizations.of(context)!.stepsBarChartStepsTooltip(
+                    NumberFormat.decimalPattern().format(rod.toY.toInt()),
+                  ),
                   const TextStyle(
                     color: AppColors.textPrimary,
                     fontWeight: FontWeight.w700,

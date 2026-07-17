@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:bodyx_app/l10n/gen/app_localizations.dart';
 import 'package:intl/intl.dart';
 import '../../logic/date_format_helpers.dart';
 import '../../models/models.dart';
@@ -51,8 +52,8 @@ class _ProgressPhotoCompareScreenState
                         const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
                   ),
                   const SizedBox(width: 4),
-                  const Text('Compare',
-                      style: TextStyle(
+                  Text(AppLocalizations.of(context)!.progressPhotoCompareTitle,
+                      style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w800,
                           color: AppColors.textPrimary)),
@@ -80,14 +81,17 @@ class _ProgressPhotoCompareScreenState
                             const Icon(Icons.error_outline_rounded,
                                 color: AppColors.warning, size: 32),
                             const SizedBox(height: 12),
-                            const Text("Couldn't load these photos",
-                                style: TextStyle(
+                            Text(
+                                AppLocalizations.of(context)!
+                                    .progressPhotoCompareLoadError,
+                                style: const TextStyle(
                                     color: AppColors.textPrimary,
                                     fontWeight: FontWeight.w700)),
                             const SizedBox(height: 12),
                             TextButton(
                               onPressed: () => Navigator.pop(context),
-                              child: const Text('Go back'),
+                              child: Text(AppLocalizations.of(context)!
+                                  .progressPhotoCompareGoBack),
                             ),
                           ],
                         ),
@@ -108,8 +112,12 @@ class _ProgressPhotoCompareScreenState
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _dateLabel('Before', before.date),
-                  _dateLabel('After', after.date),
+                  _dateLabel(
+                      AppLocalizations.of(context)!.progressPhotoCompareBefore,
+                      before.date),
+                  _dateLabel(
+                      AppLocalizations.of(context)!.progressPhotoCompareAfter,
+                      after.date),
                 ],
               ),
             ],

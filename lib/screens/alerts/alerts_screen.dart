@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:bodyx_app/l10n/gen/app_localizations.dart';
 import '../../models/models.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_colors.dart';
@@ -36,9 +37,9 @@ class AlertsScreen extends StatelessWidget {
               delegate: SliverChildListDelegate([
                 Row(
                   children: [
-                    const Expanded(
-                      child: Text('Alerts',
-                          style: TextStyle(
+                    Expanded(
+                      child: Text(AppLocalizations.of(context)!.alertsTitle,
+                          style: const TextStyle(
                               fontSize: 26,
                               fontWeight: FontWeight.w800,
                               color: AppColors.textPrimary)),
@@ -47,13 +48,15 @@ class AlertsScreen extends StatelessWidget {
                       TextButton(
                         onPressed: () =>
                             context.read<AppState>().markAllAlertsRead(),
-                        child: const Text('Mark all read'),
+                        child:
+                            Text(AppLocalizations.of(context)!.alertsMarkAllRead),
                       ),
                   ],
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${state.unreadAlertCount} unread notifications',
+                  AppLocalizations.of(context)!.alertsUnreadCount(
+                      state.unreadAlertCount.toString()),
                   style: const TextStyle(color: AppColors.textMuted),
                 ),
                 const SizedBox(height: 20),

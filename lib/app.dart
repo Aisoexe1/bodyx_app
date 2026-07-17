@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:bodyx_app/l10n/gen/app_localizations.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'screens/auth/body_data_screen.dart';
+import 'screens/auth/forgot_password_screen.dart';
+import 'screens/auth/reset_password_screen.dart';
 import 'screens/auth/sign_in_screen.dart';
 import 'screens/auth/sign_up_screen.dart';
 import 'screens/auth/username_screen.dart';
@@ -18,13 +22,26 @@ class BodyXApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider<AppState>.value(
       value: appState,
-      child: MaterialApp(
-        title: 'BodyX',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.dark,
-        darkTheme: AppTheme.dark,
-        themeMode: ThemeMode.dark,
-        home: const _AuthGate(),
+      child: Builder(
+        builder: (context) {
+          final locale = context.select<AppState, Locale?>((s) => s.locale);
+          return MaterialApp(
+            title: 'BodyX',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.dark,
+            darkTheme: AppTheme.dark,
+            themeMode: ThemeMode.dark,
+            locale: locale,
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const _AuthGate(),
+          );
+        },
       ),
     );
   }
@@ -58,6 +75,12 @@ class _AuthGate extends StatelessWidget {
         break;
       case AuthStage.done:
         child = const MainShell();
+        break;
+      case AuthStage.forgotPassword:
+        child = const ForgotPasswordScreen();
+        break;
+      case AuthStage.resetPassword:
+        child = const ResetPasswordScreen();
         break;
     }
 

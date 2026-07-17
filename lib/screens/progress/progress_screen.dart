@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:bodyx_app/l10n/gen/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../logic/health_insights.dart';
 import '../../models/models.dart';
@@ -45,14 +46,14 @@ class _ProgressScreenState extends State<ProgressScreen> {
                 AppSpacing.lg, AppSpacing.md, AppSpacing.lg, 140),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-                const Text('Progress',
-                    style: TextStyle(
+                Text(AppLocalizations.of(context)!.progressTitle,
+                    style: const TextStyle(
                         fontSize: 26,
                         fontWeight: FontWeight.w800,
                         color: AppColors.textPrimary)),
                 const SizedBox(height: 4),
-                const Text('Track how your metrics evolve over time',
-                    style: TextStyle(color: AppColors.textMuted)),
+                Text(AppLocalizations.of(context)!.progressSubtitle,
+                    style: const TextStyle(color: AppColors.textMuted)),
                 const SizedBox(height: 18),
                 _RangeSelector(
                   index: _rangeIndex,
@@ -65,15 +66,16 @@ class _ProgressScreenState extends State<ProgressScreen> {
                     children: [
                       Row(
                         children: [
-                          const Text('Weight',
-                              style: TextStyle(
+                          Text(AppLocalizations.of(context)!.progressWeightLabel,
+                              style: const TextStyle(
                                   color: AppColors.textPrimary,
                                   fontWeight: FontWeight.w800,
                                   fontSize: 16)),
                           const Spacer(),
                           StatChip(
-                            label:
-                                '${delta <= 0 ? '' : '+'}${delta.toStringAsFixed(1)} kg',
+                            label: AppLocalizations.of(context)!
+                                .progressWeightDelta(
+                                    '${delta <= 0 ? '' : '+'}${delta.toStringAsFixed(1)}'),
                             color: delta <= 0
                                 ? AppColors.success
                                 : AppColors.warning,
@@ -84,7 +86,9 @@ class _ProgressScreenState extends State<ProgressScreen> {
                         ],
                       ),
                       const SizedBox(height: 4),
-                      Text('${last.kg.round()} kg',
+                      Text(
+                          AppLocalizations.of(context)!
+                              .progressWeightValue('${last.kg.round()}'),
                           style: const TextStyle(
                               color: AppColors.textPrimary,
                               fontWeight: FontWeight.w800,
@@ -103,8 +107,9 @@ class _ProgressScreenState extends State<ProgressScreen> {
                   children: [
                     Expanded(
                       child: _RingStatCard(
-                        label: 'Body fat',
-                        value: '${last.bodyFatPct.toStringAsFixed(1)}%',
+                        label: AppLocalizations.of(context)!.progressBodyFatLabel,
+                        value: AppLocalizations.of(context)!.progressBodyFatValue(
+                            last.bodyFatPct.toStringAsFixed(1)),
                         progress: (last.bodyFatPct / 30).clamp(0, 1),
                         color: AppColors.warning,
                       ),
@@ -112,7 +117,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: _RingStatCard(
-                        label: 'BMI',
+                        label: AppLocalizations.of(context)!.progressBmiLabel,
                         value: (state.user?.bmi ?? 22.5).toStringAsFixed(1),
                         progress: (((state.user?.bmi ?? 22.5) - 15) / 20)
                             .clamp(0, 1),
@@ -123,8 +128,9 @@ class _ProgressScreenState extends State<ProgressScreen> {
                 ),
                 const SizedBox(height: 24),
                 SectionHeader(
-                    title: 'Activity',
-                    subtitle: '${windowed.length}-day step history'),
+                    title: AppLocalizations.of(context)!.progressActivityTitle,
+                    subtitle: AppLocalizations.of(context)!
+                        .progressActivitySubtitle('${windowed.length}')),
                 const SizedBox(height: 12),
                 GlowCard(
                   child: AnimatedSwitcher(
@@ -148,13 +154,15 @@ class _ProgressScreenState extends State<ProgressScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                const SectionHeader(
-                    title: 'Calories', subtitle: 'Surplus for muscle gain'),
+                SectionHeader(
+                    title: AppLocalizations.of(context)!.progressCaloriesTitle,
+                    subtitle:
+                        AppLocalizations.of(context)!.progressCaloriesSubtitle),
                 const SizedBox(height: 12),
                 _CaloriesCard(state: state),
                 const SizedBox(height: 24),
                 SectionHeader(
-                  title: 'Sleep',
+                  title: AppLocalizations.of(context)!.progressSleepTitle,
                   subtitle: todayStats.sleepStagesSynced
                       ? "Today's breakdown · synced from Health"
                       : "Today's breakdown · estimated (enable Health sync in Settings for real stages)",
@@ -276,7 +284,9 @@ class _CaloriesCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('${state.todayCaloriesEaten} kcal',
+              Text(
+                  AppLocalizations.of(context)!.progressCaloriesEaten(
+                      '${state.todayCaloriesEaten}'),
                   style: const TextStyle(
                       color: AppColors.textPrimary,
                       fontWeight: FontWeight.w800,
@@ -287,7 +297,9 @@ class _CaloriesCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'Норма ~${state.tdee.round()} ккал · Профицит ${surplus >= 0 ? '+' : ''}$surplus',
+            AppLocalizations.of(context)!.progressCaloriesSummary(
+                '${state.tdee.round()}',
+                '${surplus >= 0 ? '+' : ''}$surplus'),
             style: const TextStyle(color: AppColors.textMuted, fontSize: 12.5),
           ),
           const SizedBox(height: 20),

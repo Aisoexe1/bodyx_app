@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:bodyx_app/l10n/gen/app_localizations.dart';
+import '../../logic/social_auth.dart';
 import '../../network/api_client.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_colors.dart';
@@ -40,13 +42,30 @@ class _SignInScreenState extends State<SignInScreen> {
     }
   }
 
-  void _socialSignIn(String email, String provider) {
-    context.read<AppState>().signIn(email, provider).catchError((Object e) {
+  Future<void> _signInWithGoogle() async {
+    try {
+      final idToken = await SocialAuth.signInWithGoogle();
+      if (idToken == null || !mounted) return; // user cancelled
+      await context.read<AppState>().signInWithGoogle(idToken);
+    } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text(describeApiError(e))));
       }
-    });
+    }
+  }
+
+  Future<void> _signInWithApple() async {
+    try {
+      final identityToken = await SocialAuth.signInWithApple();
+      if (identityToken == null || !mounted) return; // user cancelled
+      await context.read<AppState>().signInWithApple(identityToken);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(describeApiError(e))));
+      }
+    }
   }
 
   @override
@@ -61,24 +80,25 @@ class _SignInScreenState extends State<SignInScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 24),
-              const Text('Welcome back',
-                  style: TextStyle(
+              Text(AppLocalizations.of(context)!.signInWelcomeBack,
+                  style: const TextStyle(
                       fontSize: 30,
                       fontWeight: FontWeight.w800,
                       color: AppColors.textPrimary)),
               const SizedBox(height: 8),
-              const Text('Stay consistent',
-                  style: TextStyle(color: AppColors.textMuted, fontSize: 15)),
+              Text(AppLocalizations.of(context)!.signInStayConsistent,
+                  style: const TextStyle(
+                      color: AppColors.textMuted, fontSize: 15)),
               const SizedBox(height: 36),
               PrimaryTextField(
-                label: 'Email',
+                label: AppLocalizations.of(context)!.signInEmailLabel,
                 controller: _email,
                 keyboardType: TextInputType.emailAddress,
                 prefixIcon: Icons.mail_outline_rounded,
               ),
               const SizedBox(height: 14),
               PrimaryTextField(
-                label: 'Password',
+                label: AppLocalizations.of(context)!.signInPasswordLabel,
                 controller: _password,
                 obscureText: _obscure,
                 prefixIcon: Icons.lock_outline_rounded,
@@ -89,62 +109,68 @@ class _SignInScreenState extends State<SignInScreen> {
               ),
               const SizedBox(height: 16),
               PrimaryButton(
-                  label: 'Sign in',
+                  label: AppLocalizations.of(context)!.signInSignInButton,
                   light: true,
                   onPressed: _submit,
                   loading: _loading),
               const SizedBox(height: 16),
               Center(
                 child: TextButton(
-                  onPressed: () {},
-                  child: const Text('Forgot password?'),
+                  onPressed: () => context.read<AppState>().goToForgotPassword(),
+                  child: Text(AppLocalizations.of(context)!.signInForgotPassword),
                 ),
               ),
-              const SizedBox(height: 20),
-              const Row(
-                children: [
-                  Expanded(child: Divider(color: AppColors.divider)),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 12),
-                    child: Text('or continue with',
-                        style: TextStyle(
-                            color: AppColors.textMuted, fontSize: 12)),
-                  ),
-                  Expanded(child: Divider(color: AppColors.divider)),
-                ],
-              ),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  Expanded(
-                    child: SocialAuthButton(
-                      label: 'Google',
-                      icon: Icons.g_mobiledata_rounded,
-                      light: true,
-                      onTap: () => _socialSignIn('alex@gmail.com', 'google-oauth'),
+              // google_sign_in targets mobile/web and sign_in_with_apple has
+              // no Windows support — hidden outside Android/iOS rather than
+              // shown and silently failing every tap.
+              if (SocialAuth.isSupported) ...[
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    const Expanded(child: Divider(color: AppColors.divider)),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Text(
+                          AppLocalizations.of(context)!.signInOrContinueWith,
+                          style: const TextStyle(
+                              color: AppColors.textMuted, fontSize: 12)),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: SocialAuthButton(
-                      label: 'Apple',
-                      icon: Icons.apple_rounded,
-                      light: true,
-                      onTap: () => _socialSignIn('alex@icloud.com', 'apple-oauth'),
+                    const Expanded(child: Divider(color: AppColors.divider)),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(
+                      child: SocialAuthButton(
+                        label: AppLocalizations.of(context)!.signInGoogleLabel,
+                        icon: Icons.g_mobiledata_rounded,
+                        light: true,
+                        onTap: _signInWithGoogle,
+                      ),
                     ),
-                  ),
-                ],
-              ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: SocialAuthButton(
+                        label: AppLocalizations.of(context)!.signInAppleLabel,
+                        icon: Icons.apple_rounded,
+                        light: true,
+                        onTap: _signInWithApple,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
               const SizedBox(height: 32),
               Center(
                 child: Wrap(
                   children: [
-                    const Text("Don't have an account? ",
-                        style: TextStyle(color: AppColors.textMuted)),
+                    Text(AppLocalizations.of(context)!.signInNoAccount,
+                        style: const TextStyle(color: AppColors.textMuted)),
                     GestureDetector(
                       onTap: () => context.read<AppState>().goToSignUp(),
-                      child: const Text('Sign up',
-                          style: TextStyle(
+                      child: Text(AppLocalizations.of(context)!.signInSignUp,
+                          style: const TextStyle(
                               color: AppColors.primaryBright,
                               fontWeight: FontWeight.w700)),
                     ),

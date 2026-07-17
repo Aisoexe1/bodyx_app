@@ -5,6 +5,7 @@ import '../../logic/support_assistant.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/scale_tap.dart';
+import 'package:bodyx_app/l10n/gen/app_localizations.dart';
 
 class _ChatMessage {
   _ChatMessage(this.text, this.fromUser);
@@ -107,17 +108,19 @@ class _ContactSupportScreenState extends State<ContactSupportScreen> {
                         color: Colors.white, size: 18),
                   ),
                   const SizedBox(width: 10),
-                  const Expanded(
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('BodyX Assistant',
-                            style: TextStyle(
+                        Text(AppLocalizations.of(context)!.contactSupportTitle,
+                            style: const TextStyle(
                                 color: AppColors.textPrimary,
                                 fontWeight: FontWeight.w800,
                                 fontSize: 15)),
-                        Text('Powered by ${SupportAssistant.modelName}',
-                            style: TextStyle(
+                        Text(
+                            AppLocalizations.of(context)!.contactSupportPoweredBy(
+                                SupportAssistant.modelName),
+                            style: const TextStyle(
                                 color: AppColors.textMuted, fontSize: 11.5)),
                       ],
                     ),
@@ -177,7 +180,7 @@ class _ContactSupportScreenState extends State<ContactSupportScreen> {
                       controller: _controller,
                       style: const TextStyle(color: AppColors.textPrimary),
                       decoration: InputDecoration(
-                        hintText: 'Ask a question…',
+                        hintText: AppLocalizations.of(context)!.contactSupportAskHint,
                         filled: true,
                         fillColor: AppColors.surfaceElevated,
                         border: OutlineInputBorder(

@@ -18,6 +18,31 @@ abstract class AuthRepository {
 
   Future<UserProfile> login({required String email, required String password});
 
+  /// Requests a password-reset code for [email]. Always succeeds (the
+  /// backend never reveals whether the email is registered) — returns the
+  /// raw code only in backend dev-mode (no SMTP configured yet), so the
+  /// flow is testable without an inbox; `null` once real email is wired up.
+  Future<String?> forgotPassword(String email);
+
+  /// Verifies the emailed [code] and sets [newPassword], logging the user
+  /// in immediately on success (same as [login]). Throws [ApiException] on
+  /// an invalid/expired/reused code or a password that fails strength rules.
+  Future<UserProfile> resetPassword({
+    required String email,
+    required String code,
+    required String newPassword,
+  });
+
+  /// Verifies a Google ID token server-side and logs in, creating the
+  /// account on first sign-in. Throws [ApiException] (401 invalid token,
+  /// 501 if the backend's Google client ID isn't configured yet).
+  Future<UserProfile> loginWithGoogle(String idToken);
+
+  /// Verifies an Apple identity token server-side and logs in, creating the
+  /// account on first sign-in. Throws [ApiException] (401 invalid token,
+  /// 501 if the backend's Apple client ID isn't configured yet).
+  Future<UserProfile> loginWithApple(String identityToken);
+
   /// Returns the restored profile if a stored session is still valid, or
   /// `null` if there's no session, the token expired/was rejected, or the
   /// server couldn't be reached. Never throws — callers always have a safe
@@ -56,6 +81,44 @@ class ApiAuthRepository implements AuthRepository {
       'email': email,
       'password': password,
     }) as Map<String, dynamic>;
+    await _tokenStorage.saveToken(json['accessToken'] as String);
+    return UserProfile.fromJson(json['user'] as Map<String, dynamic>);
+  }
+
+  @override
+  Future<String?> forgotPassword(String email) async {
+    final json = await _client.post('/auth/forgot-password', {'email': email})
+        as Map<String, dynamic>;
+    return json['devCode'] as String?;
+  }
+
+  @override
+  Future<UserProfile> resetPassword({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) async {
+    final json = await _client.post('/auth/reset-password', {
+      'email': email,
+      'code': code,
+      'newPassword': newPassword,
+    }) as Map<String, dynamic>;
+    await _tokenStorage.saveToken(json['accessToken'] as String);
+    return UserProfile.fromJson(json['user'] as Map<String, dynamic>);
+  }
+
+  @override
+  Future<UserProfile> loginWithGoogle(String idToken) async {
+    final json = await _client.post('/auth/oauth/google', {'idToken': idToken})
+        as Map<String, dynamic>;
+    await _tokenStorage.saveToken(json['accessToken'] as String);
+    return UserProfile.fromJson(json['user'] as Map<String, dynamic>);
+  }
+
+  @override
+  Future<UserProfile> loginWithApple(String identityToken) async {
+    final json = await _client.post('/auth/oauth/apple', {'identityToken': identityToken})
+        as Map<String, dynamic>;
     await _tokenStorage.saveToken(json['accessToken'] as String);
     return UserProfile.fromJson(json['user'] as Map<String, dynamic>);
   }

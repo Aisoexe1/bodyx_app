@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:bodyx_app/l10n/gen/app_localizations.dart';
 import '../../models/models.dart';
 import '../../state/app_state.dart';
 import '../../state/progress_photo_storage.dart';
@@ -47,8 +48,8 @@ class _AddProgressPhotoSheetState extends State<AddProgressPhotoSheet> {
       if (!mounted) return;
       setState(() => _busySource = null);
       final message = source == ImageSource.camera
-          ? "Camera access is off — enable it in Settings to take a photo."
-          : "Photo library access is off — enable it in Settings to choose a photo.";
+          ? AppLocalizations.of(context)!.addProgressPhotoCameraAccessOff
+          : AppLocalizations.of(context)!.addProgressPhotoLibraryAccessOff;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           backgroundColor: AppColors.surfaceElevated,
@@ -59,9 +60,9 @@ class _AddProgressPhotoSheetState extends State<AddProgressPhotoSheet> {
       if (!mounted) return;
       setState(() => _busySource = null);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           backgroundColor: AppColors.surfaceElevated,
-          content: Text("Couldn't add that photo — try again."),
+          content: Text(AppLocalizations.of(context)!.addProgressPhotoAddFailed),
         ),
       );
     }
@@ -91,25 +92,25 @@ class _AddProgressPhotoSheetState extends State<AddProgressPhotoSheet> {
               ),
             ),
           ),
-          const Text('Add Progress Photo',
-              style: TextStyle(
+          Text(AppLocalizations.of(context)!.addProgressPhotoTitle,
+              style: const TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.w800,
                   color: AppColors.textPrimary)),
           const SizedBox(height: 4),
-          const Text('Take a new photo or pick one from your library.',
-              style: TextStyle(color: AppColors.textMuted, fontSize: 12.5)),
+          Text(AppLocalizations.of(context)!.addProgressPhotoSubtitle,
+              style: const TextStyle(color: AppColors.textMuted, fontSize: 12.5)),
           const SizedBox(height: 20),
           _OptionRow(
             icon: Icons.camera_alt_rounded,
-            label: 'Take Photo',
+            label: AppLocalizations.of(context)!.addProgressPhotoTakePhoto,
             busy: _busySource == ImageSource.camera,
             onTap: _busySource == null ? () => _pick(ImageSource.camera) : null,
           ),
           const SizedBox(height: 10),
           _OptionRow(
             icon: Icons.photo_library_rounded,
-            label: 'Choose from Gallery',
+            label: AppLocalizations.of(context)!.addProgressPhotoChooseFromGallery,
             busy: _busySource == ImageSource.gallery,
             onTap:
                 _busySource == null ? () => _pick(ImageSource.gallery) : null,

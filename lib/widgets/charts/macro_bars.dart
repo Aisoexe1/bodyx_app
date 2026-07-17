@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:bodyx_app/l10n/gen/app_localizations.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
 
@@ -26,7 +27,7 @@ class MacroBars extends StatelessWidget {
       children: [
         Expanded(
           child: _MacroBar(
-            label: 'Protein',
+            label: AppLocalizations.of(context)!.macroBarsProteinLabel,
             value: proteinG,
             goal: proteinGoal,
             color: AppColors.primary,
@@ -35,7 +36,7 @@ class MacroBars extends StatelessWidget {
         const SizedBox(width: AppSpacing.sm),
         Expanded(
           child: _MacroBar(
-            label: 'Carbs',
+            label: AppLocalizations.of(context)!.macroBarsCarbsLabel,
             value: carbsG,
             goal: carbsGoal,
             color: AppColors.info,
@@ -44,7 +45,7 @@ class MacroBars extends StatelessWidget {
         const SizedBox(width: AppSpacing.sm),
         Expanded(
           child: _MacroBar(
-            label: 'Fat',
+            label: AppLocalizations.of(context)!.macroBarsFatLabel,
             value: fatG,
             goal: fatGoal,
             color: AppColors.warning,
@@ -74,7 +75,7 @@ class _MacroBar extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('${value}g',
+        Text(AppLocalizations.of(context)!.macroBarsGramsValue(value.toString()),
             style: const TextStyle(
                 fontWeight: FontWeight.w800,
                 fontSize: 15,

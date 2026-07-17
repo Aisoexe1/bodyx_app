@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:bodyx_app/l10n/gen/app_localizations.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
@@ -25,8 +26,8 @@ class ProfileScreen extends StatelessWidget {
                 AppSpacing.lg, AppSpacing.md, AppSpacing.lg, 140),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-                const Text('Profile',
-                    style: TextStyle(
+                Text(AppLocalizations.of(context)!.profileTitle,
+                    style: const TextStyle(
                         fontSize: 26,
                         fontWeight: FontWeight.w800,
                         color: AppColors.textPrimary)),
@@ -52,7 +53,8 @@ class ProfileScreen extends StatelessWidget {
                           child: Text(
                             (user?.name.isNotEmpty ?? false)
                                 ? user!.name[0].toUpperCase()
-                                : 'A',
+                                : AppLocalizations.of(context)!
+                                    .profileDefaultAvatarInitial,
                             style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w800,
@@ -61,12 +63,16 @@ class ProfileScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      Text(user?.name ?? 'Athlete',
+                      Text(
+                          user?.name ??
+                              AppLocalizations.of(context)!.profileDefaultName,
                           style: const TextStyle(
                               color: AppColors.textPrimary,
                               fontWeight: FontWeight.w800,
                               fontSize: 18)),
-                      Text('@${user?.username ?? 'athlete'}',
+                      Text(
+                          AppLocalizations.of(context)!.profileUsernameHandle(
+                              user?.username ?? 'athlete'),
                           style: const TextStyle(
                               color: AppColors.textMuted, fontSize: 12.5)),
                       const SizedBox(height: 16),
@@ -74,17 +80,24 @@ class ProfileScreen extends StatelessWidget {
                         children: [
                           Expanded(
                               child: _StatPill(
-                                  label: 'Height',
-                                  value:
-                                      '${user?.heightCm.toStringAsFixed(0) ?? '--'} cm')),
+                                  label: AppLocalizations.of(context)!
+                                      .profileHeightLabel,
+                                  value: AppLocalizations.of(context)!
+                                      .profileHeightValue(user?.heightCm
+                                              .toStringAsFixed(0) ??
+                                          '--'))),
                           Expanded(
                               child: _StatPill(
-                                  label: 'Weight',
-                                  value:
-                                      '${user?.weightKg.toStringAsFixed(0) ?? '--'} kg')),
+                                  label: AppLocalizations.of(context)!
+                                      .profileWeightLabel,
+                                  value: AppLocalizations.of(context)!
+                                      .profileWeightValue(user?.weightKg
+                                              .toStringAsFixed(0) ??
+                                          '--'))),
                           Expanded(
                               child: _StatPill(
-                                  label: 'Age',
+                                  label: AppLocalizations.of(context)!
+                                      .profileAgeLabel,
                                   value: '${user?.age ?? '--'}')),
                         ],
                       ),
@@ -105,8 +118,10 @@ class ProfileScreen extends StatelessWidget {
                               borderRadius: BorderRadius.circular(AppRadius.sm),
                               border: Border.all(color: AppColors.cardBorder),
                             ),
-                            child: const Text('Edit profile',
-                                style: TextStyle(
+                            child: Text(
+                                AppLocalizations.of(context)!
+                                    .profileEditProfile,
+                                style: const TextStyle(
                                     color: AppColors.textPrimary,
                                     fontWeight: FontWeight.w700)),
                           ),
@@ -116,33 +131,63 @@ class ProfileScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 24),
-                const _GroupLabel('ACCOUNT'),
+                _GroupLabel(
+                    AppLocalizations.of(context)!.profileAccountGroupLabel),
                 _SettingsGroup(rows: [
-                  _RowSpec(Icons.badge_outlined, 'Personal data', '',
+                  _RowSpec(
+                      Icons.badge_outlined,
+                      AppLocalizations.of(context)!.profilePersonalData,
+                      '',
                       (ctx) => const PersonalDataScreen()),
-                  _RowSpec(Icons.accessibility_new_rounded, 'Body metrics', '',
+                  _RowSpec(
+                      Icons.accessibility_new_rounded,
+                      AppLocalizations.of(context)!.profileBodyMetrics,
+                      '',
                       (ctx) => const BodyMetricsScreen()),
-                  _RowSpec(Icons.flag_rounded, 'Goal', user?.goal ?? '—',
+                  _RowSpec(
+                      Icons.flag_rounded,
+                      AppLocalizations.of(context)!.profileGoal,
+                      user?.goal ?? '—',
                       (ctx) => const GoalScreen()),
                 ]),
                 const SizedBox(height: 20),
-                const _GroupLabel('PREFERENCES'),
+                _GroupLabel(AppLocalizations.of(context)!
+                    .profilePreferencesGroupLabel),
                 _SettingsGroup(rows: [
-                  _RowSpec(Icons.notifications_outlined, 'Notifications', '',
+                  _RowSpec(
+                      Icons.notifications_outlined,
+                      AppLocalizations.of(context)!.profileNotifications,
+                      '',
                       (ctx) => const NotificationsScreen()),
-                  _RowSpec(Icons.favorite_border_rounded, 'Health sync', '',
+                  _RowSpec(
+                      Icons.favorite_border_rounded,
+                      AppLocalizations.of(context)!.profileHealthSync,
+                      '',
                       (ctx) => const HealthSyncScreen()),
-                  _RowSpec(Icons.language_rounded, 'Units & language', '',
+                  _RowSpec(
+                      Icons.language_rounded,
+                      AppLocalizations.of(context)!.profileUnitsLanguage,
+                      '',
                       (ctx) => const UnitsLanguageScreen()),
                 ]),
                 const SizedBox(height: 20),
-                const _GroupLabel('SUPPORT'),
+                _GroupLabel(
+                    AppLocalizations.of(context)!.profileSupportGroupLabel),
                 _SettingsGroup(rows: [
-                  _RowSpec(Icons.privacy_tip_outlined, 'Privacy', '',
+                  _RowSpec(
+                      Icons.privacy_tip_outlined,
+                      AppLocalizations.of(context)!.profilePrivacy,
+                      '',
                       (ctx) => const PrivacyScreen()),
-                  _RowSpec(Icons.help_outline_rounded, 'Help & support', '',
+                  _RowSpec(
+                      Icons.help_outline_rounded,
+                      AppLocalizations.of(context)!.profileHelpSupport,
+                      '',
                       (ctx) => const HelpSupportScreen()),
-                  _RowSpec(Icons.info_outline_rounded, 'About', '',
+                  _RowSpec(
+                      Icons.info_outline_rounded,
+                      AppLocalizations.of(context)!.profileAbout,
+                      '',
                       (ctx) => const AboutScreen()),
                 ]),
                 const SizedBox(height: 20),
@@ -151,14 +196,15 @@ class ProfileScreen extends StatelessWidget {
                     context,
                     MaterialPageRoute(builder: (_) => const LogoutScreen()),
                   ),
-                  child: const GlowCard(
+                  child: GlowCard(
                     borderColor: AppColors.warningDeep,
                     child: Row(
                       children: [
-                        Icon(Icons.logout_rounded, color: AppColors.warningDeep),
-                        SizedBox(width: 12),
-                        Text('Log out',
-                            style: TextStyle(
+                        const Icon(Icons.logout_rounded,
+                            color: AppColors.warningDeep),
+                        const SizedBox(width: 12),
+                        Text(AppLocalizations.of(context)!.profileLogOut,
+                            style: const TextStyle(
                                 color: AppColors.warningDeep,
                                 fontWeight: FontWeight.w700)),
                       ],

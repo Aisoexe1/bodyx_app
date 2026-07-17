@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:bodyx_app/l10n/gen/app_localizations.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../state/app_state.dart';
@@ -53,8 +54,8 @@ class WaterLogSheet extends StatelessWidget {
           ),
           Row(
             children: [
-              const Text('Вода',
-                  style: TextStyle(
+              Text(AppLocalizations.of(context)!.waterLogTitle,
+                  style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
                       color: AppColors.textPrimary)),
@@ -63,7 +64,11 @@ class WaterLogSheet extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 4),
-          Text('${(consumed / 1000).toStringAsFixed(1)} Л из ${(goal / 1000).toStringAsFixed(1)} Л',
+          Text(
+              AppLocalizations.of(context)!.waterLogConsumedOfGoal(
+                (consumed / 1000).toStringAsFixed(1),
+                (goal / 1000).toStringAsFixed(1),
+              ),
               style: const TextStyle(color: AppColors.textMuted, fontSize: 12.5)),
           const SizedBox(height: 20),
           Row(
@@ -76,8 +81,8 @@ class WaterLogSheet extends StatelessWidget {
           ),
           if (state.todayWaterLog.isNotEmpty) ...[
             const SizedBox(height: 20),
-            const Text('Сегодня',
-                style: TextStyle(color: AppColors.textMuted, fontSize: 12.5)),
+            Text(AppLocalizations.of(context)!.waterLogToday,
+                style: const TextStyle(color: AppColors.textMuted, fontSize: 12.5)),
             const SizedBox(height: 8),
             ...state.todayWaterLog.reversed.take(6).map((e) => Padding(
                   padding: const EdgeInsets.only(bottom: 6),
@@ -90,7 +95,9 @@ class WaterLogSheet extends StatelessWidget {
                           style: const TextStyle(
                               color: AppColors.textSecondary, fontSize: 12.5)),
                       const Spacer(),
-                      Text('+${e.ml} мл',
+                      Text(
+                          AppLocalizations.of(context)!
+                              .waterLogAmountAdded(e.ml.toString()),
                           style: const TextStyle(
                               color: AppColors.textPrimary,
                               fontWeight: FontWeight.w600,

@@ -155,6 +155,117 @@ void main() {
       expect(state.user!.username, 'offlinelifter');
       expect(state.user!.email, 'newoffline@bodyx.app');
     });
+
+    test('goToForgotPassword switches to the forgotPassword stage', () async {
+      final state = newTestAppState();
+      await state.hydrate();
+
+      state.goToForgotPassword();
+      expect(state.authStage, AuthStage.forgotPassword);
+    });
+
+    test('signInWithGoogle logs the user in on success', () async {
+      final state = newTestAppState();
+      await state.hydrate();
+
+      await state.signInWithGoogle('fake-id-token');
+
+      expect(state.authStage, AuthStage.done);
+      expect(state.user, isNotNull);
+      expect(state.user!.email, 'google-user@bodyx.app');
+    });
+
+    test('signInWithApple logs the user in on success', () async {
+      final state = newTestAppState();
+      await state.hydrate();
+
+      await state.signInWithApple('fake-identity-token');
+
+      expect(state.authStage, AuthStage.done);
+      expect(state.user, isNotNull);
+      expect(state.user!.email, 'apple-user@bodyx.app');
+    });
+
+    test('signInWithGoogle surfaces a rejected token and stays put', () async {
+      final authRepo = FakeAuthRepository()..googleLoginThrows = Exception('invalid token');
+      final state = AppState(
+        authRepository: authRepo,
+        profileRepository: FakeProfileRepository(),
+        weightRepository: FakeWeightRepository(),
+        measurementRepository: FakeMeasurementRepository(),
+      );
+      await state.hydrate();
+
+      await expectLater(
+        () => state.signInWithGoogle('bad-token'),
+        throwsA(isA<Exception>()),
+      );
+      expect(state.authStage, AuthStage.splash,
+          reason: 'a failed OAuth login must not silently advance the auth flow');
+      expect(state.user, isNull);
+    });
+
+    test('requestPasswordReset advances to resetPassword and exposes the dev code',
+        () async {
+      final authRepo = FakeAuthRepository();
+      final state = AppState(
+        authRepository: authRepo,
+        profileRepository: FakeProfileRepository(),
+        weightRepository: FakeWeightRepository(),
+        measurementRepository: FakeMeasurementRepository(),
+      );
+      await state.hydrate();
+
+      await state.requestPasswordReset('reset@bodyx.app');
+
+      expect(state.authStage, AuthStage.resetPassword);
+      expect(state.pendingResetEmail, 'reset@bodyx.app');
+      expect(state.devResetCode, '123456');
+    });
+
+    test('confirmPasswordReset logs the user in and clears the dev code',
+        () async {
+      final authRepo = FakeAuthRepository();
+      final state = AppState(
+        authRepository: authRepo,
+        profileRepository: FakeProfileRepository(),
+        weightRepository: FakeWeightRepository(),
+        measurementRepository: FakeMeasurementRepository(),
+      );
+      await state.hydrate();
+      await state.requestPasswordReset('reset@bodyx.app');
+
+      await state.confirmPasswordReset('123456', 'newpass1');
+
+      expect(state.authStage, AuthStage.done);
+      expect(state.user, isNotNull);
+      expect(state.user!.email, 'reset@bodyx.app');
+      expect(state.devResetCode, isNull);
+      expect(authRepo.lastResetCode, '123456');
+      expect(authRepo.lastResetPassword, 'newpass1');
+    });
+
+    test('confirmPasswordReset surfaces a rejected code and stays put',
+        () async {
+      final authRepo = FakeAuthRepository()
+        ..resetPasswordThrows = Exception('invalid or expired code');
+      final state = AppState(
+        authRepository: authRepo,
+        profileRepository: FakeProfileRepository(),
+        weightRepository: FakeWeightRepository(),
+        measurementRepository: FakeMeasurementRepository(),
+      );
+      await state.hydrate();
+      await state.requestPasswordReset('reset@bodyx.app');
+
+      await expectLater(
+        () => state.confirmPasswordReset('000000', 'newpass1'),
+        throwsA(isA<Exception>()),
+      );
+      expect(state.authStage, AuthStage.resetPassword,
+          reason: 'a failed reset must not silently advance the auth flow');
+      expect(state.user, isNull);
+    });
   });
 
   group('persistence round-trip (simulated app restart)', () {
