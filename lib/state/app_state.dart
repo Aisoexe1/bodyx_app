@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../data/mock_data.dart';
+import '../l10n/gen/app_localizations.dart';
 import '../logic/health_insights.dart';
 import '../models/models.dart';
 import '../network/api_client.dart';
@@ -10,9 +11,11 @@ import '../network/measurement_repository.dart';
 import '../network/profile_repository.dart';
 import '../network/weight_repository.dart';
 import 'health_service.dart';
+import 'live_activity_service.dart';
 import 'notification_service.dart';
 import 'persistence_service.dart';
 import 'progress_photo_storage.dart';
+import 'widget_overview_service.dart';
 
 enum AuthStage {
   splash,
@@ -155,7 +158,13 @@ class AppState extends ChangeNotifier {
     }
 
     await _restoreServerSession();
+    _pushWidgetOverview();
   }
+
+  /// Mirrors today's numbers into the Home Screen widget — call after any
+  /// mutation that changes what the dashboard's Daily overview card shows.
+  void _pushWidgetOverview() =>
+      unawaited(WidgetOverviewService.instance.push(dailyStats.last));
 
   /// Best-effort: if a JWT is still stored, re-validate it against the
   /// server and refresh the profile/weight/measurements from there. Any
@@ -480,9 +489,16 @@ class AppState extends ChangeNotifier {
     bodyMeasurements = MockData.emptyBodyMeasurements(Gender.male);
     meals = [];
     todayWorkoutSets = [];
+    _workoutAccumulatedSeconds = 0;
+    _workoutTimerStartedAt = null;
     todayMobilityActivities = [];
+    _mobilityCountdownTimer?.cancel();
+    _mobilityCountdownTimer = null;
+    activeMobilityCountdownIndex = null;
+    _mobilityCountdownEndsAt = null;
     todayWaterLog = [];
     dailyStats = MockData.emptyDailyStats();
+    unawaited(LiveActivityService.instance.end('workout'));
     notifyListeners();
   }
 
@@ -593,6 +609,12 @@ class AppState extends ChangeNotifier {
     }
     unawaited(_persistence.saveTodayWorkoutTimer(
         _workoutAccumulatedSeconds, _workoutTimerStartedAt));
+    _syncTimerLiveActivity(
+      'workout',
+      lookupAppLocalizations(_effectiveLocale).planTodaysWorkoutTitle,
+      _workoutAccumulatedSeconds,
+      _workoutTimerStartedAt,
+    );
     notifyListeners();
   }
 
@@ -604,7 +626,21 @@ class AppState extends ChangeNotifier {
     _workoutTimerStartedAt = null;
     unawaited(_persistence.saveTodayWorkoutTimer(
         _workoutAccumulatedSeconds, _workoutTimerStartedAt));
+    unawaited(LiveActivityService.instance.end('workout'));
     notifyListeners();
+  }
+
+  /// Starts/updates a Lock Screen Live Activity mirroring a session timer
+  /// — best-effort, iOS-only, and never blocks the actual timer state
+  /// (see [LiveActivityService]).
+  void _syncTimerLiveActivity(
+      String kind, String title, int accumulatedSeconds, DateTime? startedAt) {
+    unawaited(LiveActivityService.instance.startOrUpdate(
+      kind: kind,
+      title: title,
+      accumulatedSeconds: accumulatedSeconds,
+      startedAt: startedAt,
+    ));
   }
 
   // ---- Mobility / stretch (also fully user-defined) ------------------------
@@ -612,6 +648,67 @@ class AppState extends ChangeNotifier {
   // Same "no fixed template" shape as the workout — starts empty every
   // day, the user adds their own activities.
   late List<MobilityActivity> todayMobilityActivities;
+
+  // ---- Per-activity countdown: completion is earned, not self-declared —
+  // tapping an activity starts a countdown of its planned minutes, and only
+  // the countdown finishing marks it done (with sound), so "done" always
+  // means the time was actually spent.
+  int? activeMobilityCountdownIndex;
+  DateTime? _mobilityCountdownEndsAt;
+  Timer? _mobilityCountdownTimer;
+
+  Duration? get mobilityCountdownRemaining {
+    final endsAt = _mobilityCountdownEndsAt;
+    if (endsAt == null) return null;
+    final left = endsAt.difference(DateTime.now());
+    return left.isNegative ? Duration.zero : left;
+  }
+
+  /// Starts the countdown for [index]; tapping the already-running one
+  /// cancels it instead (nothing gets marked done).
+  void startMobilityCountdown(int index) {
+    if (activeMobilityCountdownIndex == index) {
+      cancelMobilityCountdown();
+      return;
+    }
+    HapticFeedback.mediumImpact();
+    _mobilityCountdownTimer?.cancel();
+    activeMobilityCountdownIndex = index;
+    final duration =
+        Duration(minutes: todayMobilityActivities[index].minutes);
+    _mobilityCountdownEndsAt = DateTime.now().add(duration);
+    _mobilityCountdownTimer = Timer(duration, _completeMobilityCountdown);
+    notifyListeners();
+  }
+
+  void cancelMobilityCountdown() {
+    _mobilityCountdownTimer?.cancel();
+    _mobilityCountdownTimer = null;
+    activeMobilityCountdownIndex = null;
+    _mobilityCountdownEndsAt = null;
+    notifyListeners();
+  }
+
+  void _completeMobilityCountdown() {
+    final index = activeMobilityCountdownIndex;
+    _mobilityCountdownTimer = null;
+    activeMobilityCountdownIndex = null;
+    _mobilityCountdownEndsAt = null;
+    if (index == null || index >= todayMobilityActivities.length) {
+      notifyListeners();
+      return;
+    }
+    final activity = todayMobilityActivities[index];
+    activity.done = true;
+    HapticFeedback.heavyImpact();
+    _persistMobilityActivities();
+    final l10n = lookupAppLocalizations(_effectiveLocale);
+    unawaited(NotificationService.instance.showActivityCompleted(
+      l10n.mobilityActivityCompletedTitle,
+      l10n.mobilityActivityCompletedBody(activity.name),
+    ));
+    notifyListeners();
+  }
 
   int get todayMobilityCompletedCount =>
       todayMobilityActivities.where((a) => a.done).length;
@@ -631,6 +728,9 @@ class AppState extends ChangeNotifier {
   }
 
   void removeMobilityActivity(String name) {
+    // Indices shift after removal, so any running countdown would complete
+    // the wrong activity — cancel it rather than guess.
+    if (activeMobilityCountdownIndex != null) cancelMobilityCountdown();
     todayMobilityActivities =
         todayMobilityActivities.where((a) => a.name != name).toList();
     _persistMobilityActivities();
@@ -786,6 +886,7 @@ class AppState extends ChangeNotifier {
       sleepStagesSynced: today.sleepStagesSynced,
     );
     dailyStats = updated;
+    _pushWidgetOverview();
   }
 
   // ---- Meals --------------------------------------------------------------
@@ -1055,6 +1156,7 @@ class AppState extends ChangeNotifier {
         _persistWeight();
       }
 
+      _pushWidgetOverview();
       notifyListeners();
     } catch (e) {
       debugPrint('Health sync failed: $e');

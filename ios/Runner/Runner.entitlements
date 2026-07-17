@@ -4,6 +4,10 @@
 <dict>
 	<key>com.apple.developer.healthkit</key>
 	<true/>
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>group.com.bodyx.bodyxApp</string>
+	</array>
 	<!-- com.apple.developer.applesignin is temporarily removed: personal/free
 	     Apple Developer teams cannot get this capability at all, which blocks
 	     every local build and deploy. Re-add it once the app is signed with a

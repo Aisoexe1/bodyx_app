@@ -195,6 +195,7 @@
   "logMealProteinLabel": "Protein (g)",
   "logMealCarbsLabel": "Carbs (g)",
   "logMealFatLabel": "Fat (g)",
+  "logMealGramsLabel": "Grams",
   "logMealAddButton": "Add",
   "logMealTodayLabel": "Today",
   "logMealTimeKcal": "{time} · {kcal} kcal",
@@ -594,6 +595,13 @@
   "mobilityChecklistEmptyTitle": "No mobility activities yet",
   "mobilityChecklistEmptyDescription": "Add a stretch, foam roll, or yoga flow — name + minutes.",
   "mobilityChecklistAddActivityButton": "Add activity",
+  "mobilityActivityCompletedTitle": "Activity complete 🧘",
+  "mobilityActivityCompletedBody": "{name} — done. Nice work!",
+  "@mobilityActivityCompletedBody": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "dailySummarySleepSynced": "Synced from Health for this day",
   "dailySummarySleepEstimated": "Estimated — enable Health sync in Settings for real stages",
   "addExerciseTitle": "Add Exercise",

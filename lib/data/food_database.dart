@@ -1,78 +1,154 @@
 import 'package:flutter/material.dart';
 
-/// One typical serving of a food, with its macros — used to power quick,
-/// searchable meal logging without a real barcode/food-API integration
-/// (which would need a third-party service this prototype doesn't have).
-/// Values are per common serving, not per 100g, so logging stays one tap.
+/// Food category for grouping the search/browse list — matches how people
+/// actually think about groceries, not a macro-nutrient bucket.
+enum FoodCategory {
+  meat,
+  cheese,
+  fruits,
+  vegetables,
+  dairy,
+  nuts,
+  grains,
+  other,
+}
+
+extension FoodCategoryX on FoodCategory {
+  String get label {
+    switch (this) {
+      case FoodCategory.meat:
+        return 'Мясо и рыба';
+      case FoodCategory.cheese:
+        return 'Сыр';
+      case FoodCategory.fruits:
+        return 'Фрукты';
+      case FoodCategory.vegetables:
+        return 'Овощи';
+      case FoodCategory.dairy:
+        return 'Молочные продукты';
+      case FoodCategory.nuts:
+        return 'Орехи';
+      case FoodCategory.grains:
+        return 'Крупы и злаки';
+      case FoodCategory.other:
+        return 'Другое';
+    }
+  }
+
+  IconData get icon {
+    switch (this) {
+      case FoodCategory.meat:
+        return Icons.set_meal_rounded;
+      case FoodCategory.cheese:
+        return Icons.icecream_rounded;
+      case FoodCategory.fruits:
+        return Icons.eco_rounded;
+      case FoodCategory.vegetables:
+        return Icons.grass_rounded;
+      case FoodCategory.dairy:
+        return Icons.local_drink_rounded;
+      case FoodCategory.nuts:
+        return Icons.spa_rounded;
+      case FoodCategory.grains:
+        return Icons.rice_bowl_rounded;
+      case FoodCategory.other:
+        return Icons.restaurant_rounded;
+    }
+  }
+}
+
+/// Macros are stored per 100g so any gram amount the user picks can be
+/// scaled exactly, rather than being locked to one fixed serving size.
+/// [defaultGrams] is just the amount the gram picker opens with — a
+/// realistic "typical portion" for that food, not a hard limit.
 class FoodItem {
   const FoodItem({
     required this.name,
-    required this.serving,
-    required this.kcal,
-    required this.proteinG,
-    required this.carbsG,
-    required this.fatG,
+    required this.category,
+    required this.kcalPer100g,
+    required this.proteinPer100g,
+    required this.carbsPer100g,
+    required this.fatPer100g,
+    required this.defaultGrams,
     required this.icon,
   });
 
   final String name;
-  final String serving;
-  final int kcal;
-  final int proteinG;
-  final int carbsG;
-  final int fatG;
+  final FoodCategory category;
+  final double kcalPer100g;
+  final double proteinPer100g;
+  final double carbsPer100g;
+  final double fatPer100g;
+  final int defaultGrams;
   final IconData icon;
+
+  int kcalFor(int grams) => (kcalPer100g * grams / 100).round();
+  int proteinFor(int grams) => (proteinPer100g * grams / 100).round();
+  int carbsFor(int grams) => (carbsPer100g * grams / 100).round();
+  int fatFor(int grams) => (fatPer100g * grams / 100).round();
 }
 
-/// A small local database of common foods, grouped so the log-meal sheet
-/// can show them without a search term too.
+/// A small local database of common foods — no external barcode/food-API
+/// service is available in this app, so this stays a fixed local list.
 class FoodDatabase {
   FoodDatabase._();
 
-  static const List<FoodItem> protein = [
-    FoodItem(name: 'Куриная грудка', serving: '150 г', kcal: 248, proteinG: 46, carbsG: 0, fatG: 5, icon: Icons.set_meal_rounded),
-    FoodItem(name: 'Яйца (2 шт)', serving: '2 шт', kcal: 156, proteinG: 13, carbsG: 1, fatG: 11, icon: Icons.egg_rounded),
-    FoodItem(name: 'Творог 5%', serving: '200 г', kcal: 220, proteinG: 36, carbsG: 6, fatG: 5, icon: Icons.icecream_rounded),
-    FoodItem(name: 'Лосось', serving: '150 г', kcal: 280, proteinG: 34, carbsG: 0, fatG: 15, icon: Icons.set_meal_rounded),
-    FoodItem(name: 'Говядина', serving: '150 г', kcal: 330, proteinG: 39, carbsG: 0, fatG: 18, icon: Icons.kebab_dining_rounded),
-    FoodItem(name: 'Протеиновый шейк', serving: '1 порция', kcal: 220, proteinG: 32, carbsG: 14, fatG: 4, icon: Icons.local_cafe_rounded),
-    FoodItem(name: 'Тунец консерв.', serving: '150 г', kcal: 165, proteinG: 36, carbsG: 0, fatG: 1, icon: Icons.set_meal_rounded),
-    FoodItem(name: 'Тофу', serving: '150 г', kcal: 120, proteinG: 13, carbsG: 3, fatG: 7, icon: Icons.rice_bowl_rounded),
+  static const List<FoodItem> _items = [
+    FoodItem(name: 'Куриная грудка', category: FoodCategory.meat, kcalPer100g: 165, proteinPer100g: 31, carbsPer100g: 0, fatPer100g: 3.6, defaultGrams: 150, icon: Icons.set_meal_rounded),
+    FoodItem(name: 'Лосось', category: FoodCategory.meat, kcalPer100g: 187, proteinPer100g: 23, carbsPer100g: 0, fatPer100g: 10, defaultGrams: 150, icon: Icons.set_meal_rounded),
+    FoodItem(name: 'Говядина', category: FoodCategory.meat, kcalPer100g: 220, proteinPer100g: 26, carbsPer100g: 0, fatPer100g: 12, defaultGrams: 150, icon: Icons.kebab_dining_rounded),
+    FoodItem(name: 'Тунец консерв.', category: FoodCategory.meat, kcalPer100g: 110, proteinPer100g: 24, carbsPer100g: 0, fatPer100g: 0.7, defaultGrams: 150, icon: Icons.set_meal_rounded),
+
+    FoodItem(name: 'Сыр твёрдый', category: FoodCategory.cheese, kcalPer100g: 400, proteinPer100g: 25, carbsPer100g: 2.5, fatPer100g: 32.5, defaultGrams: 40, icon: Icons.icecream_rounded),
+
+    FoodItem(name: 'Банан', category: FoodCategory.fruits, kcalPer100g: 89, proteinPer100g: 1.1, carbsPer100g: 22.8, fatPer100g: 0.3, defaultGrams: 118, icon: Icons.eco_rounded),
+    FoodItem(name: 'Яблоко', category: FoodCategory.fruits, kcalPer100g: 52, proteinPer100g: 0.3, carbsPer100g: 13.8, fatPer100g: 0.2, defaultGrams: 182, icon: Icons.eco_rounded),
+    FoodItem(name: 'Ягоды смешанные', category: FoodCategory.fruits, kcalPer100g: 57, proteinPer100g: 0.7, carbsPer100g: 13.3, fatPer100g: 0.3, defaultGrams: 150, icon: Icons.eco_rounded),
+    FoodItem(name: 'Авокадо', category: FoodCategory.fruits, kcalPer100g: 160, proteinPer100g: 2, carbsPer100g: 8.5, fatPer100g: 14.7, defaultGrams: 100, icon: Icons.eco_rounded),
+
+    FoodItem(name: 'Салат овощной', category: FoodCategory.vegetables, kcalPer100g: 36, proteinPer100g: 1.2, carbsPer100g: 4.8, fatPer100g: 1.6, defaultGrams: 250, icon: Icons.grass_rounded),
+    FoodItem(name: 'Брокколи на пару', category: FoodCategory.vegetables, kcalPer100g: 35, proteinPer100g: 3, carbsPer100g: 6, fatPer100g: 0.5, defaultGrams: 200, icon: Icons.grass_rounded),
+
+    FoodItem(name: 'Творог 5%', category: FoodCategory.dairy, kcalPer100g: 110, proteinPer100g: 18, carbsPer100g: 3, fatPer100g: 2.5, defaultGrams: 200, icon: Icons.icecream_rounded),
+    FoodItem(name: 'Греческий йогурт', category: FoodCategory.dairy, kcalPer100g: 73, proteinPer100g: 10, carbsPer100g: 4, fatPer100g: 2, defaultGrams: 200, icon: Icons.icecream_rounded),
+    FoodItem(name: 'Молоко 2.5%', category: FoodCategory.dairy, kcalPer100g: 52, proteinPer100g: 3.2, carbsPer100g: 4.8, fatPer100g: 2, defaultGrams: 250, icon: Icons.local_drink_rounded),
+
+    FoodItem(name: 'Орехи миндаль', category: FoodCategory.nuts, kcalPer100g: 583, proteinPer100g: 21, carbsPer100g: 22, fatPer100g: 50, defaultGrams: 30, icon: Icons.spa_rounded),
+    FoodItem(name: 'Арахисовая паста', category: FoodCategory.nuts, kcalPer100g: 594, proteinPer100g: 25, carbsPer100g: 19, fatPer100g: 50, defaultGrams: 32, icon: Icons.spa_rounded),
+
+    FoodItem(name: 'Рис отварной', category: FoodCategory.grains, kcalPer100g: 130, proteinPer100g: 2.5, carbsPer100g: 28, fatPer100g: 0.5, defaultGrams: 200, icon: Icons.rice_bowl_rounded),
+    FoodItem(name: 'Овсянка', category: FoodCategory.grains, kcalPer100g: 375, proteinPer100g: 12.5, carbsPer100g: 67.5, fatPer100g: 7.5, defaultGrams: 80, icon: Icons.breakfast_dining_rounded),
+    FoodItem(name: 'Гречка отварная', category: FoodCategory.grains, kcalPer100g: 123, proteinPer100g: 4, carbsPer100g: 25, fatPer100g: 1, defaultGrams: 200, icon: Icons.rice_bowl_rounded),
+    FoodItem(name: 'Картофель запечёный', category: FoodCategory.grains, kcalPer100g: 86, proteinPer100g: 2, carbsPer100g: 20, fatPer100g: 0, defaultGrams: 250, icon: Icons.lunch_dining_rounded),
+    FoodItem(name: 'Хлеб цельнозерновой', category: FoodCategory.grains, kcalPer100g: 267, proteinPer100g: 10, carbsPer100g: 46.7, fatPer100g: 3.3, defaultGrams: 60, icon: Icons.bakery_dining_rounded),
+    FoodItem(name: 'Макароны', category: FoodCategory.grains, kcalPer100g: 140, proteinPer100g: 5, carbsPer100g: 28, fatPer100g: 1, defaultGrams: 200, icon: Icons.ramen_dining_rounded),
+    FoodItem(name: 'Батат', category: FoodCategory.grains, kcalPer100g: 86, proteinPer100g: 1.6, carbsPer100g: 20, fatPer100g: 0, defaultGrams: 250, icon: Icons.lunch_dining_rounded),
+
+    FoodItem(name: 'Яйца', category: FoodCategory.other, kcalPer100g: 156, proteinPer100g: 13, carbsPer100g: 1, fatPer100g: 11, defaultGrams: 100, icon: Icons.egg_rounded),
+    FoodItem(name: 'Протеиновый шейк', category: FoodCategory.other, kcalPer100g: 220, proteinPer100g: 32, carbsPer100g: 14, fatPer100g: 4, defaultGrams: 100, icon: Icons.local_cafe_rounded),
+    FoodItem(name: 'Тофу', category: FoodCategory.other, kcalPer100g: 80, proteinPer100g: 8.7, carbsPer100g: 2, fatPer100g: 4.7, defaultGrams: 150, icon: Icons.rice_bowl_rounded),
+    FoodItem(name: 'Оливковое масло', category: FoodCategory.other, kcalPer100g: 857, proteinPer100g: 0, carbsPer100g: 0, fatPer100g: 100, defaultGrams: 14, icon: Icons.opacity_rounded),
   ];
 
-  static const List<FoodItem> carbs = [
-    FoodItem(name: 'Рис отварной', serving: '200 г', kcal: 260, proteinG: 5, carbsG: 56, fatG: 1, icon: Icons.rice_bowl_rounded),
-    FoodItem(name: 'Овсянка', serving: '80 г сух.', kcal: 300, proteinG: 10, carbsG: 54, fatG: 6, icon: Icons.breakfast_dining_rounded),
-    FoodItem(name: 'Гречка отварная', serving: '200 г', kcal: 246, proteinG: 8, carbsG: 50, fatG: 2, icon: Icons.rice_bowl_rounded),
-    FoodItem(name: 'Картофель запечёный', serving: '250 г', kcal: 215, proteinG: 5, carbsG: 50, fatG: 0, icon: Icons.lunch_dining_rounded),
-    FoodItem(name: 'Хлеб цельнозерновой', serving: '2 ломтика', kcal: 160, proteinG: 6, carbsG: 28, fatG: 2, icon: Icons.bakery_dining_rounded),
-    FoodItem(name: 'Макароны', serving: '200 г', kcal: 280, proteinG: 10, carbsG: 56, fatG: 2, icon: Icons.ramen_dining_rounded),
-    FoodItem(name: 'Батат', serving: '250 г', kcal: 215, proteinG: 4, carbsG: 50, fatG: 0, icon: Icons.lunch_dining_rounded),
-  ];
-
-  static const List<FoodItem> fruitVeg = [
-    FoodItem(name: 'Банан', serving: '1 шт', kcal: 105, proteinG: 1, carbsG: 27, fatG: 0, icon: Icons.eco_rounded),
-    FoodItem(name: 'Яблоко', serving: '1 шт', kcal: 95, proteinG: 0, carbsG: 25, fatG: 0, icon: Icons.eco_rounded),
-    FoodItem(name: 'Ягоды смешанные', serving: '150 г', kcal: 85, proteinG: 1, carbsG: 20, fatG: 0, icon: Icons.eco_rounded),
-    FoodItem(name: 'Салат овощной', serving: '250 г', kcal: 90, proteinG: 3, carbsG: 12, fatG: 4, icon: Icons.eco_rounded),
-    FoodItem(name: 'Брокколи на пару', serving: '200 г', kcal: 70, proteinG: 6, carbsG: 12, fatG: 1, icon: Icons.eco_rounded),
-    FoodItem(name: 'Авокадо', serving: '1/2 шт', kcal: 120, proteinG: 1, carbsG: 6, fatG: 11, icon: Icons.eco_rounded),
-  ];
-
-  static const List<FoodItem> dairyFats = [
-    FoodItem(name: 'Греческий йогурт', serving: '200 г', kcal: 146, proteinG: 20, carbsG: 8, fatG: 4, icon: Icons.icecream_rounded),
-    FoodItem(name: 'Молоко 2.5%', serving: '250 мл', kcal: 130, proteinG: 8, carbsG: 12, fatG: 5, icon: Icons.local_drink_rounded),
-    FoodItem(name: 'Сыр твёрдый', serving: '40 г', kcal: 160, proteinG: 10, carbsG: 1, fatG: 13, icon: Icons.icecream_rounded),
-    FoodItem(name: 'Орехи миндаль', serving: '30 г', kcal: 175, proteinG: 6, carbsG: 6, fatG: 15, icon: Icons.grass_rounded),
-    FoodItem(name: 'Арахисовая паста', serving: '2 ст.л.', kcal: 190, proteinG: 8, carbsG: 6, fatG: 16, icon: Icons.grass_rounded),
-    FoodItem(name: 'Оливковое масло', serving: '1 ст.л.', kcal: 120, proteinG: 0, carbsG: 0, fatG: 14, icon: Icons.opacity_rounded),
-  ];
-
-  static List<FoodItem> get all => [...protein, ...carbs, ...fruitVeg, ...dairyFats];
+  static List<FoodItem> get all => _items;
 
   static List<FoodItem> search(String query) {
-    if (query.trim().isEmpty) return all;
+    if (query.trim().isEmpty) return _items;
     final q = query.trim().toLowerCase();
-    return all.where((f) => f.name.toLowerCase().contains(q)).toList();
+    return _items.where((f) => f.name.toLowerCase().contains(q)).toList();
+  }
+
+  /// Groups [items] by category in a fixed, stable display order —
+  /// used to render the browse list under section headers.
+  static List<MapEntry<FoodCategory, List<FoodItem>>> grouped(
+      List<FoodItem> items) {
+    final byCategory = <FoodCategory, List<FoodItem>>{};
+    for (final item in items) {
+      byCategory.putIfAbsent(item.category, () => []).add(item);
+    }
+    return FoodCategory.values
+        .where(byCategory.containsKey)
+        .map((c) => MapEntry(c, byCategory[c]!))
+        .toList();
   }
 }

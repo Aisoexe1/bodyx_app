@@ -15,6 +15,7 @@ class NotificationService {
 
   static const _workoutReminderId = 1001;
   static const _hydrationReminderId = 1002;
+  static const _activityDoneId = 1003;
 
   final _plugin = FlutterLocalNotificationsPlugin();
   bool _initialized = false;
@@ -123,5 +124,31 @@ class NotificationService {
   Future<void> cancelHydrationReminder() async {
     await init();
     await _plugin.cancel(_hydrationReminderId);
+  }
+
+  /// Fires immediately with sound — used when a mobility activity's
+  /// countdown finishes, so the "done" moment is audible even with the
+  /// phone locked or the app in the background.
+  Future<void> showActivityCompleted(String title, String body) async {
+    await init();
+    await _plugin.show(
+      _activityDoneId,
+      title,
+      body,
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'bodyx_activity_done',
+          'BodyX activity completion',
+          channelDescription: 'Plays when a timed activity finishes',
+          importance: Importance.high,
+          priority: Priority.high,
+        ),
+        iOS: DarwinNotificationDetails(
+          presentAlert: true,
+          presentBanner: true,
+          presentSound: true,
+        ),
+      ),
+    );
   }
 }

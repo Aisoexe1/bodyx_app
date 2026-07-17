@@ -195,6 +195,7 @@
   "logMealProteinLabel": "Белки (г)",
   "logMealCarbsLabel": "Углеводы (г)",
   "logMealFatLabel": "Жиры (г)",
+  "logMealGramsLabel": "Граммы",
   "logMealAddButton": "Добавить",
   "logMealTodayLabel": "Сегодня",
   "logMealTimeKcal": "{time} · {kcal} ккал",
@@ -594,6 +595,13 @@
   "mobilityChecklistEmptyTitle": "Активностей по мобильности пока нет",
   "mobilityChecklistEmptyDescription": "Добавьте растяжку, раскатку или йогу — название и минуты.",
   "mobilityChecklistAddActivityButton": "Добавить активность",
+  "mobilityActivityCompletedTitle": "Активность выполнена 🧘",
+  "mobilityActivityCompletedBody": "{name} — готово. Отличная работа!",
+  "@mobilityActivityCompletedBody": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "dailySummarySleepSynced": "Синхронизировано с Health за этот день",
   "dailySummarySleepEstimated": "Оценочно — включите синхронизацию Health в настройках для реальных данных",
   "addExerciseTitle": "Добавить упражнение",

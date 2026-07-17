@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:bodyx_app/l10n/gen/app_localizations.dart';
@@ -13,8 +15,42 @@ import 'add_mobility_activity_sheet.dart';
 /// fixed "15 min recovery" template. Mirrors [WorkoutChecklistSheet]'s
 /// shape without the per-exercise set grouping, since each activity here
 /// is a single checkable unit (measured in minutes, not sets × reps).
-class MobilityChecklistSheet extends StatelessWidget {
+/// Completion is earned per-activity via a countdown (see
+/// [AppState.startMobilityCountdown]), not a separate session-wide timer —
+/// a session timer here would just duplicate that with no real purpose.
+class MobilityChecklistSheet extends StatefulWidget {
   const MobilityChecklistSheet({super.key});
+
+  @override
+  State<MobilityChecklistSheet> createState() =>
+      _MobilityChecklistSheetState();
+}
+
+class _MobilityChecklistSheetState extends State<MobilityChecklistSheet> {
+  // Same eager-init pattern as WorkoutChecklistSheet's ticker — a `late`
+  // field initialized by this expression would only run on first *read*,
+  // which here would be inside dispose(), never actually ticking.
+  late final Timer _ticker;
+
+  @override
+  void initState() {
+    super.initState();
+    _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _ticker.cancel();
+    super.dispose();
+  }
+
+  String _formatRemaining(Duration d) {
+    final m = d.inMinutes;
+    final s = d.inSeconds.remainder(60);
+    return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+  }
 
   void _openAddActivity(BuildContext context) {
     showModalBottomSheet(
@@ -144,27 +180,45 @@ class MobilityChecklistSheet extends StatelessWidget {
                     ...activities.asMap().entries.map((entry) {
                       final i = entry.key;
                       final activity = entry.value;
+                      final counting =
+                          state.activeMobilityCountdownIndex == i;
+                      final remaining =
+                          counting ? state.mobilityCountdownRemaining : null;
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 10),
                         child: ScaleTap(
-                          onTap: () => context
-                              .read<AppState>()
-                              .toggleMobilityActivity(i),
+                          // Completion is earned via the countdown, not
+                          // tapped in by hand: tapping an unfinished
+                          // activity starts (or cancels) its countdown;
+                          // tapping a finished one un-checks it.
+                          onTap: activity.done
+                              ? () => context
+                                  .read<AppState>()
+                                  .toggleMobilityActivity(i)
+                              : () => context
+                                  .read<AppState>()
+                                  .startMobilityCountdown(i),
                           child: GlowCard(
+                            borderColor:
+                                counting ? AppColors.success : null,
                             child: Row(
                               children: [
                                 Icon(
                                   activity.done
                                       ? Icons.check_circle_rounded
-                                      : Icons.radio_button_unchecked_rounded,
-                                  color: activity.done
+                                      : counting
+                                          ? Icons.timer_rounded
+                                          : Icons.play_circle_outline_rounded,
+                                  color: activity.done || counting
                                       ? AppColors.success
                                       : AppColors.textMuted,
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Text(
-                                      '${activity.name} · ${activity.minutes} min',
+                                      counting
+                                          ? activity.name
+                                          : '${activity.name} · ${activity.minutes} min',
                                       style: TextStyle(
                                         color: AppColors.textPrimary,
                                         fontWeight: FontWeight.w700,
@@ -174,6 +228,16 @@ class MobilityChecklistSheet extends StatelessWidget {
                                         decorationColor: AppColors.textMuted,
                                       )),
                                 ),
+                                if (counting && remaining != null) ...[
+                                  Text(_formatRemaining(remaining),
+                                      style: const TextStyle(
+                                          color: AppColors.success,
+                                          fontWeight: FontWeight.w800,
+                                          fontFeatures: [
+                                            FontFeature.tabularFigures()
+                                          ])),
+                                  const SizedBox(width: 12),
+                                ],
                                 ScaleTap(
                                   onTap: () =>
                                       _confirmRemove(context, activity.name),

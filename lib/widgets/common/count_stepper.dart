@@ -15,12 +15,14 @@ class CountStepper extends StatelessWidget {
     required this.min,
     required this.max,
     required this.onChanged,
+    this.step = 1,
   });
 
   final String label;
   final int value;
   final int min;
   final int max;
+  final int step;
   final ValueChanged<int> onChanged;
 
   @override
@@ -43,7 +45,9 @@ class CountStepper extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               ScaleTap(
-                onTap: value > min ? () => onChanged(value - 1) : null,
+                onTap: value > min
+                    ? () => onChanged((value - step).clamp(min, max))
+                    : null,
                 child: Icon(Icons.remove_circle_outline_rounded,
                     color: value > min
                         ? AppColors.textMuted
@@ -55,7 +59,9 @@ class CountStepper extends StatelessWidget {
                       fontWeight: FontWeight.w800,
                       fontSize: 18)),
               ScaleTap(
-                onTap: value < max ? () => onChanged(value + 1) : null,
+                onTap: value < max
+                    ? () => onChanged((value + step).clamp(min, max))
+                    : null,
                 child: Icon(Icons.add_circle_outline_rounded,
                     color: value < max
                         ? AppColors.primaryBright

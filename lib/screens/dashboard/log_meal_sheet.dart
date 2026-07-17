@@ -8,6 +8,7 @@ import '../../state/app_state.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
 import '../../theme/status_colors.dart';
+import '../../widgets/common/count_stepper.dart';
 import '../../widgets/common/glow_card.dart';
 import '../../widgets/common/inputs_buttons.dart';
 import '../../widgets/common/scale_tap.dart';
@@ -46,15 +47,23 @@ class _LogMealSheetState extends State<LogMealSheet> {
     return '$h:$m';
   }
 
-  void _addFood(FoodItem food) {
+  Future<void> _openGramPicker(FoodItem food) async {
+    HapticFeedback.selectionClick();
+    final grams = await showModalBottomSheet<int>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => _GramPickerSheet(food: food),
+    );
+    if (grams == null || !mounted) return;
     HapticFeedback.mediumImpact();
     context.read<AppState>().logMeal(MealEntry(
           name: food.name,
           time: _timeLabel,
-          kcal: food.kcal,
-          proteinG: food.proteinG,
-          carbsG: food.carbsG,
-          fatG: food.fatG,
+          kcal: food.kcalFor(grams),
+          proteinG: food.proteinFor(grams),
+          carbsG: food.carbsFor(grams),
+          fatG: food.fatFor(grams),
           icon: food.icon,
         ));
   }
@@ -168,39 +177,63 @@ class _LogMealSheetState extends State<LogMealSheet> {
                         style: const TextStyle(color: AppColors.textMuted)),
                   )
                 else
-                  ...results.map((f) => Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: ScaleTap(
-                          onTap: () => _addFood(f),
-                          child: GlowCard(
-                            child: Row(
-                              children: [
-                                GlowIconBadge(icon: f.icon, size: 34),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                  ...FoodDatabase.grouped(results).expand((group) => [
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(2, 10, 2, 6),
+                          child: Row(
+                            children: [
+                              Icon(group.key.icon,
+                                  size: 14, color: AppColors.textMuted),
+                              const SizedBox(width: 6),
+                              Text(group.key.label,
+                                  style: const TextStyle(
+                                      color: AppColors.textMuted,
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 0.3)),
+                            ],
+                          ),
+                        ),
+                        ...group.value.map((f) => Padding(
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: ScaleTap(
+                                onTap: () => _openGramPicker(f),
+                                child: GlowCard(
+                                  child: Row(
                                     children: [
-                                      Text(f.name,
-                                          style: const TextStyle(
-                                              color: AppColors.textPrimary,
-                                              fontWeight: FontWeight.w700,
-                                              fontSize: 13.5)),
-                                      Text(
-                                          '${f.serving} · ${f.kcal} ккал · ${f.proteinG}Б/${f.carbsG}У/${f.fatG}Ж',
-                                          style: const TextStyle(
-                                              color: AppColors.textMuted,
-                                              fontSize: 11)),
+                                      GlowIconBadge(icon: f.icon, size: 34),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(f.name,
+                                                style: const TextStyle(
+                                                    color:
+                                                        AppColors.textPrimary,
+                                                    fontWeight:
+                                                        FontWeight.w700,
+                                                    fontSize: 13.5)),
+                                            Text(
+                                                '${f.defaultGrams} г · ${f.kcalFor(f.defaultGrams)} ккал · '
+                                                '${f.proteinFor(f.defaultGrams)}Б/${f.carbsFor(f.defaultGrams)}У/${f.fatFor(f.defaultGrams)}Ж',
+                                                style: const TextStyle(
+                                                    color:
+                                                        AppColors.textMuted,
+                                                    fontSize: 11)),
+                                          ],
+                                        ),
+                                      ),
+                                      const Icon(Icons.add_circle_rounded,
+                                          color: AppColors.primaryBright,
+                                          size: 22),
                                     ],
                                   ),
                                 ),
-                                const Icon(Icons.add_circle_rounded,
-                                    color: AppColors.primaryBright, size: 22),
-                              ],
-                            ),
-                          ),
-                        ),
-                      )),
+                              ),
+                            )),
+                      ]),
               ] else ...[
                 TextField(
                   controller: _nameController,
@@ -331,6 +364,112 @@ class _LogMealSheetState extends State<LogMealSheet> {
           icon: const Icon(Icons.add_circle_outline_rounded,
               color: AppColors.primaryBright, size: 20),
         ),
+      ],
+    );
+  }
+}
+
+/// Lets the user dial in exactly how much of a food they actually ate
+/// before logging it — macros are computed live from the food's per-100g
+/// values, so the numbers stay accurate at any amount instead of being
+/// locked to one fixed serving size.
+class _GramPickerSheet extends StatefulWidget {
+  const _GramPickerSheet({required this.food});
+  final FoodItem food;
+
+  @override
+  State<_GramPickerSheet> createState() => _GramPickerSheetState();
+}
+
+class _GramPickerSheetState extends State<_GramPickerSheet> {
+  late int _grams = widget.food.defaultGrams;
+
+  @override
+  Widget build(BuildContext context) {
+    final food = widget.food;
+    return Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      child: Container(
+        decoration: const BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
+        ),
+        padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.lg),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 18),
+                decoration: BoxDecoration(
+                  color: AppColors.cardBorder,
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
+                ),
+              ),
+            ),
+            Row(
+              children: [
+                GlowIconBadge(icon: food.icon, size: 40),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(food.name,
+                      style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 18),
+            CountStepper(
+              label:
+                  AppLocalizations.of(context)!.logMealGramsLabel,
+              value: _grams,
+              min: 10,
+              max: 1000,
+              step: 10,
+              onChanged: (v) => setState(() => _grams = v),
+            ),
+            const SizedBox(height: 18),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _macroPreview(AppLocalizations.of(context)!.logMealCaloriesLabel,
+                    '${food.kcalFor(_grams)}'),
+                _macroPreview(AppLocalizations.of(context)!.logMealProteinLabel,
+                    '${food.proteinFor(_grams)}г'),
+                _macroPreview(AppLocalizations.of(context)!.logMealCarbsLabel,
+                    '${food.carbsFor(_grams)}г'),
+                _macroPreview(AppLocalizations.of(context)!.logMealFatLabel,
+                    '${food.fatFor(_grams)}г'),
+              ],
+            ),
+            const SizedBox(height: 20),
+            PrimaryButton(
+              label: AppLocalizations.of(context)!.logMealAddButton,
+              onPressed: () => Navigator.pop(context, _grams),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _macroPreview(String label, String value) {
+    return Column(
+      children: [
+        Text(value,
+            style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w800,
+                fontSize: 15)),
+        const SizedBox(height: 2),
+        Text(label,
+            style: const TextStyle(color: AppColors.textMuted, fontSize: 10.5)),
       ],
     );
   }
