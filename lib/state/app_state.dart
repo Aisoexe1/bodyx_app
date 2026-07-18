@@ -56,7 +56,6 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     dailyStats = MockData.emptyDailyStats();
     weightHistory = [];
     bodyMeasurements = MockData.emptyBodyMeasurements(Gender.male);
-    alerts = MockData.alerts;
     planTasks = MockData.todayPlan;
     todayWorkoutSets = [];
     todayMobilityActivities = [];
@@ -143,11 +142,11 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       }
     }
 
-    final savedAlertsRead = await _persistence.loadAlertRead();
-    if (savedAlertsRead != null && savedAlertsRead.length == alerts.length) {
-      for (var i = 0; i < alerts.length; i++) {
-        alerts[i].read = savedAlertsRead[i];
-      }
+    final savedReadIds = await _persistence.loadReadAlertIds();
+    if (savedReadIds != null) {
+      _readAlertIds
+        ..clear()
+        ..addAll(savedReadIds);
     }
 
     notificationsEnabled =
@@ -244,8 +243,8 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   void _persistPlanTasks() => unawaited(
       _persistence.savePlanTaskDone(planTasks.map((t) => t.done).toList()));
 
-  void _persistAlerts() => unawaited(
-      _persistence.saveAlertRead(alerts.map((a) => a.read).toList()));
+  void _persistAlerts() =>
+      unawaited(_persistence.saveReadAlertIds(_readAlertIds));
 
   void _persistWeight() =>
       unawaited(_persistence.saveWeightHistory(weightHistory));
@@ -538,6 +537,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     _mobilityCountdownEndsAt = null;
     todayWaterLog = [];
     dailyStats = MockData.emptyDailyStats();
+    _readAlertIds.clear();
     unawaited(LiveActivityService.instance.end('workout'));
     unawaited(LiveActivityService.instance.end('mobility'));
     notifyListeners();
@@ -1000,22 +1000,113 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   // ---- Alerts -----------------------------------------------------------
-  late List<AlertItem> alerts;
+  // Every alert here is derived live from a real, currently-true condition
+  // in the user's own data — there is no fixed/fabricated list, and no
+  // stored field to keep in sync: [alerts] recomputes on every access, so
+  // it's always consistent with whatever water/health/photo state changed
+  // most recently. Read state survives across rebuilds via the condition's
+  // stable id in [_readAlertIds].
+  final Set<String> _readAlertIds = {};
+
+  List<AlertItem> get alerts => _buildAlerts();
 
   int get unreadAlertCount => alerts.where((a) => !a.read).length;
 
-  void markAlertRead(int index) {
-    alerts[index].read = true;
+  void markAlertRead(String id) {
+    _readAlertIds.add(id);
     _persistAlerts();
     notifyListeners();
   }
 
   void markAllAlertsRead() {
     for (final a in alerts) {
-      a.read = true;
+      _readAlertIds.add(a.id);
     }
     _persistAlerts();
     notifyListeners();
+  }
+
+  List<AlertItem> _buildAlerts() {
+    final l10n = lookupAppLocalizations(_effectiveLocale);
+    final now = DateTime.now();
+    final today = dailyStats.last;
+    final items = <AlertItem>[];
+
+    if (now.hour >= 15 &&
+        today.waterGoalMl > 0 &&
+        today.waterMl < today.waterGoalMl * 0.5) {
+      final behindLiters = (today.waterGoalMl - today.waterMl) / 1000;
+      items.add(AlertItem(
+        id: 'low_water',
+        title: l10n.alertLowWaterTitle,
+        subtitle: l10n.alertLowWaterSubtitle(behindLiters.toStringAsFixed(1)),
+        icon: Icons.water_drop_rounded,
+        severity: AlertSeverity.warning,
+      ));
+    }
+
+    // Steps/sleep alerts need real history, which only exists once Health
+    // sync has actually pulled it in — otherwise every day in [dailyStats]
+    // is still the zeroed mock seed and any comparison would be fabricated.
+    if (healthSyncEnabled) {
+      final sleptDays = dailyStats.where((d) => d.sleepMinutes > 0).toList();
+      if (sleptDays.length >= 3) {
+        final avgMinutes =
+            sleptDays.map((d) => d.sleepMinutes).reduce((a, b) => a + b) /
+                sleptDays.length;
+        if (avgMinutes < sleptDays.last.sleepGoalMinutes * 0.85) {
+          items.add(AlertItem(
+            id: 'sleep_debt',
+            title: l10n.alertSleepDebtTitle,
+            subtitle:
+                l10n.alertSleepDebtSubtitle((avgMinutes / 60).toStringAsFixed(1)),
+            icon: Icons.bedtime_rounded,
+            severity: AlertSeverity.warning,
+          ));
+        }
+      }
+
+      final today0 = DateTime(now.year, now.month, now.day);
+      final yesterday = today0.subtract(const Duration(days: 1));
+      final pastDaysWithSteps = dailyStats
+          .where((d) => d.date.isBefore(today0) && d.steps > 0)
+          .toList()
+        ..sort((a, b) => a.steps.compareTo(b.steps));
+      if (pastDaysWithSteps.isNotEmpty) {
+        final best = pastDaysWithSteps.last;
+        final secondBest = pastDaysWithSteps.length > 1
+            ? pastDaysWithSteps[pastDaysWithSteps.length - 2].steps
+            : -1;
+        if (best.date == yesterday && best.steps > secondBest) {
+          items.add(AlertItem(
+            id: 'steps_personal_best',
+            title: l10n.alertStepsBestTitle,
+            subtitle: l10n.alertStepsBestSubtitle(best.steps.toString()),
+            icon: Icons.emoji_events_rounded,
+            severity: AlertSeverity.success,
+          ));
+        }
+      }
+    }
+
+    final lastPhotoDate =
+        progressPhotos.isEmpty ? null : progressPhotos.first.date;
+    final daysSincePhoto =
+        lastPhotoDate == null ? null : now.difference(lastPhotoDate).inDays;
+    if (daysSincePhoto == null || daysSincePhoto >= 7) {
+      items.add(AlertItem(
+        id: 'body_scan_reminder',
+        title: l10n.alertBodyScanTitle,
+        subtitle: l10n.alertBodyScanSubtitle,
+        icon: Icons.camera_alt_rounded,
+        severity: AlertSeverity.info,
+      ));
+    }
+
+    for (final item in items) {
+      item.read = _readAlertIds.contains(item.id);
+    }
+    return items;
   }
 
   // ---- Profile / settings -------------------------------------------------

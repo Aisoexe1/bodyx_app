@@ -1,5 +1,4 @@
 import 'dart:math';
-import 'package:flutter/material.dart';
 import '../models/models.dart';
 
 /// Deterministic mock-data generators. A fixed seed keeps numbers stable
@@ -155,46 +154,6 @@ class MockData {
     }
     return result;
   }
-
-  static List<AlertItem> get alerts => [
-        AlertItem(
-          title: 'Low water intake',
-          subtitle: "You're 900ml behind today's hydration goal.",
-          icon: Icons.water_drop_rounded,
-          time: '2h ago',
-          severity: AlertSeverity.warning,
-        ),
-        AlertItem(
-          title: 'New personal best',
-          subtitle: 'You hit 12,480 steps yesterday — your best this month.',
-          icon: Icons.emoji_events_rounded,
-          time: '1d ago',
-          severity: AlertSeverity.success,
-          read: true,
-        ),
-        AlertItem(
-          title: 'Body scan reminder',
-          subtitle: 'Weekly progress scan is due today.',
-          icon: Icons.camera_alt_rounded,
-          time: '3h ago',
-          severity: AlertSeverity.info,
-        ),
-        AlertItem(
-          title: 'Sleep debt building up',
-          subtitle: 'Average sleep dropped to 6h 10m this week.',
-          icon: Icons.bedtime_rounded,
-          time: '1d ago',
-          severity: AlertSeverity.warning,
-        ),
-        AlertItem(
-          title: 'Plan updated',
-          subtitle: 'Your coach adjusted next week\'s leg volume.',
-          icon: Icons.fitness_center_rounded,
-          time: '2d ago',
-          severity: AlertSeverity.info,
-          read: true,
-        ),
-      ];
 
   /// Self-reported checklist items only — currently none. "Log body
   /// weight" is driven off real weight-history data (see `AppState.

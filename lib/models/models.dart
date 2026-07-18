@@ -386,18 +386,21 @@ enum AlertSeverity { info, warning, success }
 
 class AlertItem {
   AlertItem({
+    required this.id,
     required this.title,
     required this.subtitle,
     required this.icon,
-    required this.time,
     required this.severity,
     this.read = false,
   });
 
+  /// Stable key (e.g. `'low_water'`) identifying which real condition this
+  /// alert represents — used to carry the read/unread flag across rebuilds,
+  /// since the list itself is recomputed from live data rather than fixed.
+  final String id;
   final String title;
   final String subtitle;
   final IconData icon;
-  final String time;
   final AlertSeverity severity;
   bool read;
 }

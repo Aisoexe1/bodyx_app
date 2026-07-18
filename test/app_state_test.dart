@@ -649,10 +649,17 @@ void main() {
       final state = newTestAppState();
       await state.hydrate();
 
-      final before = state.unreadAlertCount;
-      state.markAlertRead(0);
+      // A fresh account has no progress photos, which always produces a
+      // real "body scan reminder" alert regardless of time of day or
+      // health-sync state — a stable condition to exercise this against.
+      expect(state.alerts.any((a) => a.id == 'body_scan_reminder'), isTrue);
 
-      expect(state.alerts[0].read, isTrue);
+      final before = state.unreadAlertCount;
+      state.markAlertRead('body_scan_reminder');
+
+      final alert =
+          state.alerts.firstWhere((a) => a.id == 'body_scan_reminder');
+      expect(alert.read, isTrue);
       expect(state.unreadAlertCount, before - 1);
     });
 

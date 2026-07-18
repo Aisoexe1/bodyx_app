@@ -8,6 +8,31 @@
       "count": {}
     }
   },
+  "alertsEmptyTitle": "Нічого відзначити",
+  "alertsEmptySubtitle": "Ми повідомимо, якщо з'явиться щось важливе",
+  "alertLowWaterTitle": "Мало води",
+  "alertLowWaterSubtitle": "Ви відстаєте від цілі по воді на {liters} л",
+  "@alertLowWaterSubtitle": {
+    "placeholders": {
+      "liters": {}
+    }
+  },
+  "alertSleepDebtTitle": "Накопичився недосип",
+  "alertSleepDebtSubtitle": "Середній сон за тиждень — {hours} год, нижче вашої цілі",
+  "@alertSleepDebtSubtitle": {
+    "placeholders": {
+      "hours": {}
+    }
+  },
+  "alertBodyScanTitle": "Час зробити скан тіла",
+  "alertBodyScanSubtitle": "Минув тиждень з останнього фото прогресу",
+  "alertStepsBestTitle": "Новий особистий рекорд",
+  "alertStepsBestSubtitle": "Вчора ви пройшли {steps} кроків — найкращий результат за два тижні",
+  "@alertStepsBestSubtitle": {
+    "placeholders": {
+      "steps": {}
+    }
+  },
   "bodyDataTitle": "Дані про ваше тіло",
   "bodyDataSubtitle": "Це допоможе нам скласти ваш план\nта персоналізувати досвід",
   "bodyDataMale": "Чоловіча",

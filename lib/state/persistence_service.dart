@@ -113,14 +113,17 @@ class PersistenceService {
   Future<void> savePlanTaskDone(List<bool> done) async =>
       (await _prefs).setString(_kPlanTaskDone, jsonEncode(done));
 
-  Future<List<bool>?> loadAlertRead() async {
+  /// Ids of alerts the user has already read — alerts are derived live from
+  /// real data (see `AppState._buildAlerts`) rather than stored as a fixed
+  /// list, so read state is tracked by stable id, not position.
+  Future<List<String>?> loadReadAlertIds() async {
     final raw = (await _prefs).getString(_kAlertRead);
     if (raw == null) return null;
-    return (jsonDecode(raw) as List).cast<bool>();
+    return (jsonDecode(raw) as List).cast<String>();
   }
 
-  Future<void> saveAlertRead(List<bool> read) async =>
-      (await _prefs).setString(_kAlertRead, jsonEncode(read));
+  Future<void> saveReadAlertIds(Iterable<String> ids) async =>
+      (await _prefs).setString(_kAlertRead, jsonEncode(ids.toList()));
 
   Future<bool?> loadNotificationsEnabled() async =>
       (await _prefs).getBool(_kNotificationsEnabled);

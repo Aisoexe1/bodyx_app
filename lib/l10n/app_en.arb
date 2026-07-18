@@ -8,6 +8,31 @@
       "count": {}
     }
   },
+  "alertsEmptyTitle": "Nothing to flag",
+  "alertsEmptySubtitle": "We'll let you know if something needs your attention",
+  "alertLowWaterTitle": "Low water intake",
+  "alertLowWaterSubtitle": "You're {liters} L behind today's hydration goal",
+  "@alertLowWaterSubtitle": {
+    "placeholders": {
+      "liters": {}
+    }
+  },
+  "alertSleepDebtTitle": "Sleep debt building up",
+  "alertSleepDebtSubtitle": "Average sleep this week is {hours}h, below your goal",
+  "@alertSleepDebtSubtitle": {
+    "placeholders": {
+      "hours": {}
+    }
+  },
+  "alertBodyScanTitle": "Body scan reminder",
+  "alertBodyScanSubtitle": "It's been a week since your last progress photo",
+  "alertStepsBestTitle": "New personal best",
+  "alertStepsBestSubtitle": "You hit {steps} steps yesterday — your best in two weeks",
+  "@alertStepsBestSubtitle": {
+    "placeholders": {
+      "steps": {}
+    }
+  },
   "bodyDataTitle": "Your body data",
   "bodyDataSubtitle": "We use this to calculate your plan\nand personalize your experience",
   "bodyDataMale": "Male",
