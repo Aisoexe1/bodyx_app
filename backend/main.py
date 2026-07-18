@@ -402,6 +402,121 @@ def patch_zone(zone: str, body: ZonePatchBody, user_id: int = Depends(current_us
     return {}
 
 
+# ---- support tickets -------------------------------------------------------
+# Shapes match the client's SupportTicket/TicketMessage models exactly:
+# sender is 'user' | 'admin', status is 'open' | 'closed', ids are strings.
+
+
+class CreateTicketBody(BaseModel):
+    subject: str = Field(min_length=1)
+    message: str = Field(min_length=1)
+
+
+class TicketMessageBody(BaseModel):
+    text: str = Field(min_length=1)
+
+
+def _init_support_tables() -> None:
+    with db() as c:
+        c.executescript(
+            """
+            CREATE TABLE IF NOT EXISTS tickets (
+                id INTEGER PRIMARY KEY,
+                user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                subject TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT 'open',
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS ticket_messages (
+                id INTEGER PRIMARY KEY,
+                ticket_id INTEGER NOT NULL REFERENCES tickets(id) ON DELETE CASCADE,
+                sender TEXT NOT NULL,
+                text TEXT NOT NULL,
+                created_at TEXT NOT NULL
+            );
+            """
+        )
+
+
+_init_support_tables()
+
+
+def _now_iso() -> str:
+    return time.strftime("%Y-%m-%dT%H:%M:%S")
+
+
+def _ticket_json(c: sqlite3.Connection, ticket: sqlite3.Row) -> dict:
+    messages = c.execute(
+        "SELECT sender, text, created_at FROM ticket_messages WHERE ticket_id = ? ORDER BY id",
+        (ticket["id"],),
+    ).fetchall()
+    return {
+        "id": str(ticket["id"]),
+        "subject": ticket["subject"],
+        "status": ticket["status"],
+        "createdAt": ticket["created_at"],
+        "updatedAt": ticket["updated_at"],
+        "messages": [
+            {"sender": m["sender"], "text": m["text"], "createdAt": m["created_at"]} for m in messages
+        ],
+    }
+
+
+def _owned_ticket(c: sqlite3.Connection, ticket_id: str, user_id: int) -> sqlite3.Row:
+    row = c.execute(
+        "SELECT * FROM tickets WHERE id = ? AND user_id = ?", (ticket_id, user_id)
+    ).fetchone()
+    if row is None:
+        raise HTTPException(404, "Ticket not found")
+    return row
+
+
+@app.get("/api/v1/support/tickets")
+def list_tickets(user_id: int = Depends(current_user_id)):
+    with db() as c:
+        rows = c.execute(
+            "SELECT * FROM tickets WHERE user_id = ? ORDER BY updated_at DESC", (user_id,)
+        ).fetchall()
+        return [_ticket_json(c, r) for r in rows]
+
+
+@app.get("/api/v1/support/tickets/{ticket_id}")
+def get_ticket(ticket_id: str, user_id: int = Depends(current_user_id)):
+    with db() as c:
+        return _ticket_json(c, _owned_ticket(c, ticket_id, user_id))
+
+
+@app.post("/api/v1/support/tickets")
+def create_ticket(body: CreateTicketBody, user_id: int = Depends(current_user_id)):
+    now = _now_iso()
+    with db() as c:
+        cur = c.execute(
+            "INSERT INTO tickets (user_id, subject, status, created_at, updated_at) VALUES (?, ?, 'open', ?, ?)",
+            (user_id, body.subject.strip(), now, now),
+        )
+        c.execute(
+            "INSERT INTO ticket_messages (ticket_id, sender, text, created_at) VALUES (?, 'user', ?, ?)",
+            (cur.lastrowid, body.message.strip(), now),
+        )
+        return _ticket_json(c, _owned_ticket(c, str(cur.lastrowid), user_id))
+
+
+@app.post("/api/v1/support/tickets/{ticket_id}/messages")
+def add_ticket_message(ticket_id: str, body: TicketMessageBody, user_id: int = Depends(current_user_id)):
+    now = _now_iso()
+    with db() as c:
+        ticket = _owned_ticket(c, ticket_id, user_id)
+        if ticket["status"] == "closed":
+            raise HTTPException(409, "This ticket is closed")
+        c.execute(
+            "INSERT INTO ticket_messages (ticket_id, sender, text, created_at) VALUES (?, 'user', ?, ?)",
+            (ticket["id"], body.text.strip(), now),
+        )
+        c.execute("UPDATE tickets SET updated_at = ? WHERE id = ?", (now, ticket["id"]))
+        return _ticket_json(c, _owned_ticket(c, ticket_id, user_id))
+
+
 # ---- health check ----------------------------------------------------------
 
 
