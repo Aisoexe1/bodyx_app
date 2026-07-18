@@ -1,0 +1,24 @@
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - ./app:/app/app
+      - ./scripts:/app/scripts
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  # Optional local MongoDB, for anyone who'd rather not use Atlas.
+  # To use it: uncomment, and in .env set
+  #   MONGO_URI=mongodb://mongo:27017
+  # mongo:
+  #   image: mongo:7
+  #   ports:
+  #     - "27017:27017"
+  #   volumes:
+  #     - mongo_data:/data/db
+
+# volumes:
+#   mongo_data:
