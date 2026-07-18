@@ -382,3 +382,57 @@ class PlanTask {
   final IconData icon;
   bool done;
 }
+
+enum TicketMessageSender { user, admin }
+
+class TicketMessage {
+  const TicketMessage({
+    required this.sender,
+    required this.text,
+    required this.createdAt,
+  });
+
+  final TicketMessageSender sender;
+  final String text;
+  final DateTime createdAt;
+
+  factory TicketMessage.fromJson(Map<String, dynamic> json) => TicketMessage(
+        sender: TicketMessageSender.values.byName(json['sender'] as String),
+        text: json['text'] as String,
+        createdAt: DateTime.parse(json['createdAt'] as String),
+      );
+}
+
+enum TicketStatus { open, closed }
+
+/// A support ticket the user opened from the Contact support screen — a
+/// real, admin-answerable thread, distinct from the local [SupportAssistant]
+/// keyword chat which never leaves the device.
+class SupportTicket {
+  const SupportTicket({
+    required this.id,
+    required this.subject,
+    required this.status,
+    required this.messages,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  final String id;
+  final String subject;
+  final TicketStatus status;
+  final List<TicketMessage> messages;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  factory SupportTicket.fromJson(Map<String, dynamic> json) => SupportTicket(
+        id: json['id'] as String,
+        subject: json['subject'] as String,
+        status: TicketStatus.values.byName(json['status'] as String),
+        messages: (json['messages'] as List)
+            .map((e) => TicketMessage.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        createdAt: DateTime.parse(json['createdAt'] as String),
+        updatedAt: DateTime.parse(json['updatedAt'] as String),
+      );
+}

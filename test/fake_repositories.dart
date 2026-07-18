@@ -2,6 +2,7 @@ import 'package:bodyx_app/models/models.dart';
 import 'package:bodyx_app/network/auth_repository.dart';
 import 'package:bodyx_app/network/measurement_repository.dart';
 import 'package:bodyx_app/network/profile_repository.dart';
+import 'package:bodyx_app/network/support_repository.dart';
 import 'package:bodyx_app/network/weight_repository.dart';
 import 'package:bodyx_app/state/app_state.dart';
 import 'package:bodyx_app/state/persistence_service.dart';
@@ -113,6 +114,61 @@ class FakeMeasurementRepository implements MeasurementRepository {
   Future<void> updateZone(MuscleZone zone, double valueCm) async {}
 }
 
+class FakeSupportRepository implements SupportRepository {
+  List<SupportTicket> tickets = [];
+  Object? createThrows;
+  Object? addMessageThrows;
+  int _nextId = 1;
+
+  @override
+  Future<List<SupportTicket>> listTickets() async => tickets;
+
+  @override
+  Future<SupportTicket> getTicket(String ticketId) async =>
+      tickets.firstWhere((t) => t.id == ticketId);
+
+  @override
+  Future<SupportTicket> createTicket(String subject, String message) async {
+    if (createThrows != null) throw createThrows!;
+    final now = DateTime.now();
+    final ticket = SupportTicket(
+      id: 'ticket-${_nextId++}',
+      subject: subject,
+      status: TicketStatus.open,
+      messages: [
+        TicketMessage(
+            sender: TicketMessageSender.user, text: message, createdAt: now),
+      ],
+      createdAt: now,
+      updatedAt: now,
+    );
+    tickets = [ticket, ...tickets];
+    return ticket;
+  }
+
+  @override
+  Future<SupportTicket> addMessage(String ticketId, String text) async {
+    if (addMessageThrows != null) throw addMessageThrows!;
+    final existing = tickets.firstWhere((t) => t.id == ticketId);
+    final updated = SupportTicket(
+      id: existing.id,
+      subject: existing.subject,
+      status: TicketStatus.open,
+      messages: [
+        ...existing.messages,
+        TicketMessage(
+            sender: TicketMessageSender.user,
+            text: text,
+            createdAt: DateTime.now()),
+      ],
+      createdAt: existing.createdAt,
+      updatedAt: DateTime.now(),
+    );
+    tickets = tickets.map((t) => t.id == ticketId ? updated : t).toList();
+    return updated;
+  }
+}
+
 /// Builds an [AppState] wired to fakes for every network dependency, so
 /// tests exercise the same code paths as production without touching HTTP
 /// or the keychain. [persistence] is left real (backed by the
@@ -124,4 +180,5 @@ AppState newTestAppState({PersistenceService? persistence}) => AppState(
       profileRepository: FakeProfileRepository(),
       weightRepository: FakeWeightRepository(),
       measurementRepository: FakeMeasurementRepository(),
+      supportRepository: FakeSupportRepository(),
     );
