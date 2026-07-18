@@ -38,6 +38,14 @@
   "navPlan": "План",
   "navAlerts": "Уведомления",
   "navProfile": "Профиль",
+  "foodCategoryMeat": "Мясо и рыба",
+  "foodCategoryCheese": "Сыр",
+  "foodCategoryFruits": "Фрукты",
+  "foodCategoryVegetables": "Овощи",
+  "foodCategoryDairy": "Молочные продукты",
+  "foodCategoryNuts": "Орехи",
+  "foodCategoryGrains": "Крупы и злаки",
+  "foodCategoryOther": "Другое",
   "bodyDataTitle": "Ваши данные о теле",
   "bodyDataSubtitle": "Мы используем это, чтобы рассчитать ваш план\nи персонализировать ваш опыт",
   "bodyDataMale": "Мужской",
@@ -235,6 +243,16 @@
     "placeholders": {
       "time": {},
       "kcal": {}
+    }
+  },
+  "logMealItemSummary": "{grams} г · {kcal} ккал · {protein}Б/{carbs}У/{fat}Ж",
+  "@logMealItemSummary": {
+    "placeholders": {
+      "grams": {},
+      "kcal": {},
+      "protein": {},
+      "carbs": {},
+      "fat": {}
     }
   },
   "waterLogTitle": "Вода",

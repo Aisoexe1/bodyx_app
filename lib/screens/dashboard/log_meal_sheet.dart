@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:bodyx_app/l10n/gen/app_localizations.dart';
 import '../../data/food_database.dart';
+import '../../logic/food_labels.dart';
 import '../../models/models.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_colors.dart';
@@ -78,7 +79,7 @@ class _LogMealSheetState extends State<LogMealSheet> {
     if (grams == null || !mounted) return;
     HapticFeedback.mediumImpact();
     context.read<AppState>().logMeal(MealEntry(
-          name: food.name,
+          name: food.displayName(Localizations.localeOf(context)),
           time: _timeLabel,
           kcal: food.kcalFor(grams),
           proteinG: food.proteinFor(grams),
@@ -242,7 +243,7 @@ class _LogMealSheetState extends State<LogMealSheet> {
                                     Icon(group.key.icon,
                                         size: 14, color: AppColors.textMuted),
                                     const SizedBox(width: 6),
-                                    Text(group.key.label,
+                                    Text(foodCategoryLabel(context, group.key),
                                         style: const TextStyle(
                                             color: AppColors.textMuted,
                                             fontSize: 11.5,
@@ -266,7 +267,11 @@ class _LogMealSheetState extends State<LogMealSheet> {
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.start,
                                                 children: [
-                                                  Text(f.name,
+                                                  Text(
+                                                      f.displayName(
+                                                          Localizations
+                                                              .localeOf(
+                                                                  context)),
                                                       style: const TextStyle(
                                                           color: AppColors
                                                               .textPrimary,
@@ -274,8 +279,28 @@ class _LogMealSheetState extends State<LogMealSheet> {
                                                               FontWeight.w700,
                                                           fontSize: 13.5)),
                                                   Text(
-                                                      '${f.defaultGrams} г · ${f.kcalFor(f.defaultGrams)} ккал · '
-                                                      '${f.proteinFor(f.defaultGrams)}Б/${f.carbsFor(f.defaultGrams)}У/${f.fatFor(f.defaultGrams)}Ж',
+                                                      AppLocalizations.of(
+                                                              context)!
+                                                          .logMealItemSummary(
+                                                        f.defaultGrams
+                                                            .toString(),
+                                                        f
+                                                            .kcalFor(f
+                                                                .defaultGrams)
+                                                            .toString(),
+                                                        f
+                                                            .proteinFor(f
+                                                                .defaultGrams)
+                                                            .toString(),
+                                                        f
+                                                            .carbsFor(f
+                                                                .defaultGrams)
+                                                            .toString(),
+                                                        f
+                                                            .fatFor(f
+                                                                .defaultGrams)
+                                                            .toString(),
+                                                      ),
                                                       style: const TextStyle(
                                                           color: AppColors
                                                               .textMuted,
@@ -509,7 +534,7 @@ class _CategoryChipsHeaderDelegate extends SliverPersistentHeaderDelegate {
                   children: [
                     Icon(category.icon, size: 13, color: AppColors.textMuted),
                     const SizedBox(width: 6),
-                    Text(category.label,
+                    Text(foodCategoryLabel(context, category),
                         style: const TextStyle(
                             color: AppColors.textSecondary,
                             fontSize: 12,
@@ -576,7 +601,8 @@ class _GramPickerSheetState extends State<_GramPickerSheet> {
                 GlowIconBadge(icon: food.icon, size: 40),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Text(food.name,
+                  child: Text(
+                      food.displayName(Localizations.localeOf(context)),
                       style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w800,
@@ -601,11 +627,11 @@ class _GramPickerSheetState extends State<_GramPickerSheet> {
                 _macroPreview(AppLocalizations.of(context)!.logMealCaloriesLabel,
                     '${food.kcalFor(_grams)}'),
                 _macroPreview(AppLocalizations.of(context)!.logMealProteinLabel,
-                    '${food.proteinFor(_grams)}г'),
+                    '${food.proteinFor(_grams)}'),
                 _macroPreview(AppLocalizations.of(context)!.logMealCarbsLabel,
-                    '${food.carbsFor(_grams)}г'),
+                    '${food.carbsFor(_grams)}'),
                 _macroPreview(AppLocalizations.of(context)!.logMealFatLabel,
-                    '${food.fatFor(_grams)}г'),
+                    '${food.fatFor(_grams)}'),
               ],
             ),
             const SizedBox(height: 20),

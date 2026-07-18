@@ -38,6 +38,14 @@
   "navPlan": "Plan",
   "navAlerts": "Alerts",
   "navProfile": "Profile",
+  "foodCategoryMeat": "Meat & fish",
+  "foodCategoryCheese": "Cheese",
+  "foodCategoryFruits": "Fruits",
+  "foodCategoryVegetables": "Vegetables",
+  "foodCategoryDairy": "Dairy",
+  "foodCategoryNuts": "Nuts & seeds",
+  "foodCategoryGrains": "Grains",
+  "foodCategoryOther": "Other",
   "bodyDataTitle": "Your body data",
   "bodyDataSubtitle": "We use this to calculate your plan\nand personalize your experience",
   "bodyDataMale": "Male",
@@ -235,6 +243,16 @@
     "placeholders": {
       "time": {},
       "kcal": {}
+    }
+  },
+  "logMealItemSummary": "{grams} g · {kcal} kcal · {protein}P/{carbs}C/{fat}F",
+  "@logMealItemSummary": {
+    "placeholders": {
+      "grams": {},
+      "kcal": {},
+      "protein": {},
+      "carbs": {},
+      "fat": {}
     }
   },
   "waterLogTitle": "Water",

@@ -38,6 +38,14 @@
   "navPlan": "План",
   "navAlerts": "Сповіщення",
   "navProfile": "Профіль",
+  "foodCategoryMeat": "М'ясо та риба",
+  "foodCategoryCheese": "Сир",
+  "foodCategoryFruits": "Фрукти",
+  "foodCategoryVegetables": "Овочі",
+  "foodCategoryDairy": "Молочні продукти",
+  "foodCategoryNuts": "Горіхи",
+  "foodCategoryGrains": "Крупи та злаки",
+  "foodCategoryOther": "Інше",
   "bodyDataTitle": "Дані про ваше тіло",
   "bodyDataSubtitle": "Це допоможе нам скласти ваш план\nта персоналізувати досвід",
   "bodyDataMale": "Чоловіча",
@@ -235,6 +243,16 @@
     "placeholders": {
       "time": {},
       "kcal": {}
+    }
+  },
+  "logMealItemSummary": "{grams} г · {kcal} ккал · {protein}Б/{carbs}В/{fat}Ж",
+  "@logMealItemSummary": {
+    "placeholders": {
+      "grams": {},
+      "kcal": {},
+      "protein": {},
+      "carbs": {},
+      "fat": {}
     }
   },
   "waterLogTitle": "Вода",
