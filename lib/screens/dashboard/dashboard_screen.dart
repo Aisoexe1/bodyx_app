@@ -527,9 +527,13 @@ class _DailyOverviewCard extends StatelessWidget {
       children: [
         Icon(icon, size: 15, color: color),
         const SizedBox(width: 8),
-        Text(label,
-            style: const TextStyle(color: AppColors.textMuted, fontSize: 12.5)),
-        const Spacer(),
+        Expanded(
+          child: Text(label,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                  color: AppColors.textMuted, fontSize: 12.5)),
+        ),
+        const SizedBox(width: 6),
         value,
       ],
     );
