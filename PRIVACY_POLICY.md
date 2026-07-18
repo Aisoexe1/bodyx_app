@@ -1,6 +1,6 @@
 # Privacy Policy for BodyX
 
-**Last updated:** [DATE]
+**Last updated:** July 18, 2026
 
 BodyX ("we," "our," or "the app") is a fitness and body-composition tracking app. This Privacy Policy explains what information the app collects, how it's used, and the choices you have.
 
@@ -83,7 +83,7 @@ Questions about this policy or your data can be sent to **[REPLACE WITH REAL CON
 This policy was drafted from a direct audit of the current BodyX codebase (commit `fe3e35e` on `aisodev`), not from a template — every claim above matches what the code actually does today, with two exceptions that need to become true before the policy is accurate for real users:
 
 1. **"Transmitted over an encrypted (HTTPS) connection"** — today `API_BASE_URL` defaults to `http://10.0.2.2:8000/api/v1` (a local dev placeholder, plain HTTP), and no production backend is deployed at all yet (task: stand up a real hosted backend). This policy assumes that whatever backend eventually goes live serves HTTPS. Don't submit to the App Store, and don't point real users at this policy, until that's true.
-2. **Account deletion "We send a request to delete your account and associated data from our servers"** — the client code (`AppState.deleteAccount()`) does send `DELETE /users/me`, and it's honest that this is what's promised here. But right now that call has no real backend to hit, its failure is silently swallowed, and there's no retry/queue if it fails. Once a real backend exists, worth confirming server-side deletion is reliable (or surfacing a failure to the user) so this promise holds in practice.
+2. **Account deletion "We send a request to delete your account and associated data from our servers"** — the client sends `DELETE /users/me`, and since commit `c37d54d` a failed attempt is persisted and automatically retried on later launches (the session is never restored for a deleted account). Once a real backend exists, verify server-side deletion actually completes end to end so this promise holds in practice.
 
 Also worth knowing when filling out **App Store Connect's separate "App Privacy" (nutrition label) questionnaire** (a structured form, distinct from this document) — based on the same audit:
 - Health & Fitness data: collected (steps, calories, sleep, water, weight, body-fat %), used for App Functionality, not linked to advertising, not used for tracking.
