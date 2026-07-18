@@ -1,6 +1,9 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
+
+import '../l10n/gen/app_localizations.dart';
 
 /// Thin wrapper around `flutter_local_notifications` — schedules the two
 /// daily reminders the Settings screen's toggles promise ("Workout
@@ -12,6 +15,7 @@ class NotificationService {
 
   static const _workoutReminderId = 1001;
   static const _hydrationReminderId = 1002;
+  static const _activityDoneId = 1003;
 
   final _plugin = FlutterLocalNotificationsPlugin();
   bool _initialized = false;
@@ -80,12 +84,13 @@ class NotificationService {
     return scheduled;
   }
 
-  Future<void> scheduleWorkoutReminder() async {
+  Future<void> scheduleWorkoutReminder(Locale locale) async {
     await init();
+    final l10n = lookupAppLocalizations(locale);
     await _plugin.zonedSchedule(
       _workoutReminderId,
-      "Today's workout is waiting",
-      "Check your plan and get moving — you've got this.",
+      l10n.notificationWorkoutReminderTitle,
+      l10n.notificationWorkoutReminderBody,
       _nextInstanceOfTime(18, 0),
       _dailyDetails,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
@@ -100,12 +105,13 @@ class NotificationService {
     await _plugin.cancel(_workoutReminderId);
   }
 
-  Future<void> scheduleHydrationReminder() async {
+  Future<void> scheduleHydrationReminder(Locale locale) async {
     await init();
+    final l10n = lookupAppLocalizations(locale);
     await _plugin.zonedSchedule(
       _hydrationReminderId,
-      'Hydration check',
-      "Have you hit your water goal today?",
+      l10n.notificationHydrationReminderTitle,
+      l10n.notificationHydrationReminderBody,
       _nextInstanceOfTime(14, 0),
       _dailyDetails,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
@@ -118,5 +124,45 @@ class NotificationService {
   Future<void> cancelHydrationReminder() async {
     await init();
     await _plugin.cancel(_hydrationReminderId);
+  }
+
+  /// Fires immediately with sound — used when a mobility activity's
+  /// countdown finishes, so the "done" moment is audible even with the
+  /// phone locked or the app in the background.
+  Future<void> showActivityCompleted(String title, String body) async {
+    await init();
+    // Best-effort: if permission (incl. sound) was never granted — the user
+    // never touched a Notifications toggle — request it now rather than
+    // silently presenting nothing. A no-op if already decided either way.
+    try {
+      await requestPermission();
+    } catch (e) {
+      debugPrint('Activity-completed permission request failed: $e');
+    }
+    await _plugin.show(
+      _activityDoneId,
+      title,
+      body,
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'bodyx_activity_done',
+          'BodyX activity completion',
+          channelDescription: 'Plays when a timed activity finishes',
+          importance: Importance.high,
+          priority: Priority.high,
+          playSound: true,
+        ),
+        // `sound` must be set explicitly — on iOS, presentSound only
+        // controls whether a foreground notification is *allowed* to play
+        // whatever sound is attached; without a `sound` it plays nothing
+        // (which is why this used to feel like "vibration but no sound").
+        iOS: DarwinNotificationDetails(
+          presentAlert: true,
+          presentBanner: true,
+          presentSound: true,
+          sound: 'default',
+        ),
+      ),
+    );
   }
 }

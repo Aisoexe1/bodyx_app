@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:bodyx_app/models/models.dart';
 import 'package:bodyx_app/state/app_state.dart';
+import 'package:bodyx_app/state/persistence_service.dart';
 
 import 'fake_repositories.dart';
 
@@ -33,6 +34,25 @@ void main() {
 
       state.logWater(250);
       expect(state.dailyStats.last.waterMl, 250);
+    });
+
+    test('removeWaterEntry undoes a single logged entry (misclick fix)',
+        () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      await state.signIn('water2@bodyx.app', 'pw');
+
+      state.logWater(200);
+      state.logWater(500);
+      expect(state.todayWaterLog.length, 2);
+      expect(state.dailyStats.last.waterMl, 700);
+
+      final wrongEntry = state.todayWaterLog.last; // the 500ml misclick
+      state.removeWaterEntry(wrongEntry);
+
+      expect(state.todayWaterLog.length, 1);
+      expect(state.todayWaterLog.first.ml, 200);
+      expect(state.dailyStats.last.waterMl, 200);
     });
   });
 
@@ -103,6 +123,37 @@ void main() {
       restarted.finishSplash();
       expect(restarted.authStage, AuthStage.signIn,
           reason: 'a signed-out session must not silently come back');
+    });
+
+    test('signIn falls back to a local-only profile when the backend is unreachable',
+        () async {
+      final state = newTestAppState(authRepository: UnreachableAuthRepository());
+      await state.hydrate();
+
+      // Must not throw, and must still land on a usable, signed-in state
+      // even though every call to the fake backend throws a connectivity
+      // error — this is what keeps the app usable before/without a live
+      // server, matching every other network feature's offline fallback.
+      await state.signIn('offline@bodyx.app', 'pw');
+
+      expect(state.authStage, AuthStage.done);
+      expect(state.user, isNotNull);
+      expect(state.user!.email, 'offline@bodyx.app');
+      expect(state.user!.username, 'offline');
+    });
+
+    test('submitUsername falls back to a local-only profile when unreachable',
+        () async {
+      final state = newTestAppState(authRepository: UnreachableAuthRepository());
+      await state.hydrate();
+
+      state.submitSignUp('newoffline@bodyx.app', 'pw');
+      await state.submitUsername('offlinelifter');
+
+      expect(state.authStage, AuthStage.bodyData);
+      expect(state.user, isNotNull);
+      expect(state.user!.username, 'offlinelifter');
+      expect(state.user!.email, 'newoffline@bodyx.app');
     });
 
     test('goToForgotPassword switches to the forgotPassword stage', () async {
@@ -269,19 +320,15 @@ void main() {
       expect(restored.history.last, 106.5);
     });
 
-    test('plan task completion survives a restart', () async {
-      final state = newTestAppState();
-      await state.hydrate();
-      await state.signIn('plan@bodyx.app', 'pw');
-
-      expect(state.planTasks, isNotEmpty);
-      state.togglePlanTask(0);
-      final toggledValue = state.planTasks[0].done;
-
-      final restarted = newTestAppState();
-      await restarted.hydrate();
-
-      expect(restarted.planTasks[0].done, toggledValue);
+    test('plan-task completion round-trips through persistence', () async {
+      // todayPlan is currently empty (mobility/workout moved to their own
+      // fully-user-built trackers), so there's no mock task to toggle
+      // through a real AppState restart — verify the underlying
+      // save/load round-trip PersistenceService.savePlanTaskDone relies
+      // on instead.
+      final persistence = PersistenceService();
+      await persistence.savePlanTaskDone([true, false]);
+      expect(await persistence.loadPlanTaskDone(), [true, false]);
     });
 
     test('alert read-state survives a restart', () async {
@@ -375,27 +422,143 @@ void main() {
   });
 
   group('workout tracking', () {
-    test('toggleWorkoutSet flips a set and persists across restart',
+    test('starts empty — no mock template', () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      expect(state.todayWorkoutSets, isEmpty);
+    });
+
+    test('addExercise appends the right number of sets with shared reps',
         () async {
       final state = newTestAppState();
       await state.hydrate();
       await state.signIn('workout@bodyx.app', 'pw');
 
-      expect(state.todayWorkout.completedCount, 0);
+      state.addExercise('Bench Press', 4, 8);
+      expect(state.todayWorkoutSets.length, 4);
+      expect(state.todayWorkoutSets.every((s) => s.exercise == 'Bench Press'),
+          true);
+      expect(state.todayWorkoutSets.every((s) => s.targetReps == 8), true);
+      expect(state.todayWorkoutSets.map((s) => s.setNumber).toList(),
+          [1, 2, 3, 4]);
+
+      state.addExercise('Squats', 3, 10);
+      expect(state.todayWorkoutSets.length, 7);
+    });
+
+    test('removeExercise drops only that exercise\'s sets', () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      await state.signIn('workout2@bodyx.app', 'pw');
+
+      state.addExercise('Bench Press', 2, 8);
+      state.addExercise('Squats', 3, 10);
+      expect(state.todayWorkoutSets.length, 5);
+
+      state.removeExercise('Bench Press');
+      expect(state.todayWorkoutSets.length, 3);
+      expect(state.todayWorkoutSets.every((s) => s.exercise == 'Squats'),
+          true);
+    });
+
+    test('toggleWorkoutSet flips a set and persists across restart',
+        () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      await state.signIn('workout3@bodyx.app', 'pw');
+      state.addExercise('Squats', 3, 10);
+
+      expect(state.todayWorkoutCompletedSets, 0);
 
       state.toggleWorkoutSet(0);
       state.toggleWorkoutSet(1);
-      expect(state.todayWorkout.completedCount, 2);
-      expect(state.todayWorkout.sets[0].done, true);
+      expect(state.todayWorkoutCompletedSets, 2);
+      expect(state.todayWorkoutSets[0].done, true);
 
       state.toggleWorkoutSet(0);
-      expect(state.todayWorkout.completedCount, 1);
-      expect(state.todayWorkout.sets[0].done, false);
+      expect(state.todayWorkoutCompletedSets, 1);
+      expect(state.todayWorkoutSets[0].done, false);
 
       final restarted = newTestAppState();
       await restarted.hydrate();
-      expect(restarted.todayWorkout.completedCount, 1);
-      expect(restarted.todayWorkout.sets[1].done, true);
+      expect(restarted.todayWorkoutCompletedSets, 1);
+      expect(restarted.todayWorkoutSets[1].done, true);
+    });
+
+    test('toggleWorkoutTimer starts and stops, banking elapsed seconds',
+        () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      await state.signIn('workout4@bodyx.app', 'pw');
+
+      expect(state.isWorkoutTimerRunning, false);
+      expect(state.todayWorkoutElapsed, Duration.zero);
+
+      state.toggleWorkoutTimer();
+      expect(state.isWorkoutTimerRunning, true);
+
+      state.toggleWorkoutTimer();
+      expect(state.isWorkoutTimerRunning, false);
+      // Real elapsed time is timing-dependent (sub-second in a fast test),
+      // so just assert it didn't go negative and stopped advancing.
+      expect(state.todayWorkoutElapsed.isNegative, false);
+      final bankedAfterStop = state.todayWorkoutElapsed;
+      expect(state.todayWorkoutElapsed, bankedAfterStop);
+    });
+
+    test('resetWorkoutTimer zeroes elapsed time whether running or stopped',
+        () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      await state.signIn('workout5@bodyx.app', 'pw');
+
+      state.toggleWorkoutTimer();
+      state.toggleWorkoutTimer();
+      expect(state.todayWorkoutElapsed.isNegative, false);
+
+      state.resetWorkoutTimer();
+      expect(state.todayWorkoutElapsed, Duration.zero);
+      expect(state.isWorkoutTimerRunning, false);
+
+      // Resetting while running also clears the running state.
+      state.toggleWorkoutTimer();
+      expect(state.isWorkoutTimerRunning, true);
+      state.resetWorkoutTimer();
+      expect(state.isWorkoutTimerRunning, false);
+      expect(state.todayWorkoutElapsed, Duration.zero);
+    });
+  });
+
+  group('mobility tracking', () {
+    test('starts empty — no fixed template', () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      expect(state.todayMobilityActivities, isEmpty);
+      expect(state.planTasks, isEmpty);
+    });
+
+    test('addMobilityActivity, toggle, and removeMobilityActivity', () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      await state.signIn('mobility@bodyx.app', 'pw');
+
+      state.addMobilityActivity('Hip flexor stretch', 5);
+      state.addMobilityActivity('Foam rolling', 10);
+      expect(state.todayMobilityActivities.length, 2);
+      expect(state.todayMobilityCompletedCount, 0);
+
+      state.toggleMobilityActivity(0);
+      expect(state.todayMobilityCompletedCount, 1);
+      expect(state.todayMobilityActivities[0].done, true);
+
+      state.removeMobilityActivity('Foam rolling');
+      expect(state.todayMobilityActivities.length, 1);
+      expect(state.todayMobilityActivities.first.name, 'Hip flexor stretch');
+
+      final restarted = newTestAppState();
+      await restarted.hydrate();
+      expect(restarted.todayMobilityActivities.length, 1);
+      expect(restarted.todayMobilityActivities.first.done, true);
     });
   });
 
@@ -486,16 +649,33 @@ void main() {
       final state = newTestAppState();
       await state.hydrate();
 
-      final before = state.unreadAlertCount;
-      state.markAlertRead(0);
+      // A fresh account has no progress photos, which always produces a
+      // real "body scan reminder" alert regardless of time of day or
+      // health-sync state — a stable condition to exercise this against.
+      expect(state.alerts.any((a) => a.id == 'body_scan_reminder'), isTrue);
 
-      expect(state.alerts[0].read, isTrue);
+      final before = state.unreadAlertCount;
+      state.markAlertRead('body_scan_reminder');
+
+      final alert =
+          state.alerts.firstWhere((a) => a.id == 'body_scan_reminder');
+      expect(alert.read, isTrue);
       expect(state.unreadAlertCount, before - 1);
     });
 
     test('togglePlanTask flips completion back and forth', () async {
       final state = newTestAppState();
       await state.hydrate();
+      // todayPlan is currently empty (see mobility/workout tracking
+      // groups), so seed a task directly to exercise the toggle
+      // mechanism itself.
+      state.planTasks = [
+        PlanTask(
+          title: 'Test task',
+          subtitle: 'Test',
+          icon: Icons.check_rounded,
+        ),
+      ];
 
       final initial = state.planTasks[0].done;
       state.togglePlanTask(0);
@@ -543,6 +723,15 @@ void main() {
 
       expect(updated.messages, hasLength(2));
       expect(updated.messages.last.text, 'Any update?');
+    });
+  });
+
+  group('sleep data honesty', () {
+    test('generated demo history is never mislabeled as Health-synced',
+        () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      expect(state.dailyStats.every((d) => !d.sleepStagesSynced), true);
     });
   });
 

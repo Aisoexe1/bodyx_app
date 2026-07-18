@@ -8,6 +8,44 @@
       "count": {}
     }
   },
+  "alertsEmptyTitle": "Нечего отметить",
+  "alertsEmptySubtitle": "Мы сообщим, если появится что-то важное",
+  "alertLowWaterTitle": "Мало воды",
+  "alertLowWaterSubtitle": "Вы отстаёте от цели по воде на {liters} л",
+  "@alertLowWaterSubtitle": {
+    "placeholders": {
+      "liters": {}
+    }
+  },
+  "alertSleepDebtTitle": "Накопился недосып",
+  "alertSleepDebtSubtitle": "Средний сон за неделю — {hours} ч, ниже вашей цели",
+  "@alertSleepDebtSubtitle": {
+    "placeholders": {
+      "hours": {}
+    }
+  },
+  "alertBodyScanTitle": "Пора сделать скан тела",
+  "alertBodyScanSubtitle": "Прошла неделя с последнего фото прогресса",
+  "alertStepsBestTitle": "Новый личный рекорд",
+  "alertStepsBestSubtitle": "Вчера вы прошли {steps} шагов — лучший результат за две недели",
+  "@alertStepsBestSubtitle": {
+    "placeholders": {
+      "steps": {}
+    }
+  },
+  "navHome": "Главная",
+  "navProgress": "Прогресс",
+  "navPlan": "План",
+  "navAlerts": "Уведомления",
+  "navProfile": "Профиль",
+  "foodCategoryMeat": "Мясо и рыба",
+  "foodCategoryCheese": "Сыр",
+  "foodCategoryFruits": "Фрукты",
+  "foodCategoryVegetables": "Овощи",
+  "foodCategoryDairy": "Молочные продукты",
+  "foodCategoryNuts": "Орехи",
+  "foodCategoryGrains": "Крупы и злаки",
+  "foodCategoryOther": "Другое",
   "bodyDataTitle": "Ваши данные о теле",
   "bodyDataSubtitle": "Мы используем это, чтобы рассчитать ваш план\nи персонализировать ваш опыт",
   "bodyDataMale": "Мужской",
@@ -53,6 +91,7 @@
   "signInStayConsistent": "Сохраняйте регулярность",
   "signInEmailLabel": "Email",
   "signInPasswordLabel": "Пароль",
+  "signInFieldsRequired": "Введите email и пароль, чтобы продолжить.",
   "signInSignInButton": "Войти",
   "signInForgotPassword": "Забыли пароль?",
   "signInOrContinueWith": "или продолжить через",
@@ -177,6 +216,8 @@
       "bodyFatPercent": {}
     }
   },
+  "dashboardBodyScanEmptyTitle": "Пока нет отметок",
+  "dashboardBodyScanEmptySubtitle": "Нажмите, чтобы записать первый вес",
   "logMealTitle": "Приём пищи",
   "logMealCaloriesToday": "{eaten} / {tdee} ккал сегодня",
   "@logMealCaloriesToday": {
@@ -194,6 +235,7 @@
   "logMealProteinLabel": "Белки (г)",
   "logMealCarbsLabel": "Углеводы (г)",
   "logMealFatLabel": "Жиры (г)",
+  "logMealGramsLabel": "Граммы",
   "logMealAddButton": "Добавить",
   "logMealTodayLabel": "Сегодня",
   "logMealTimeKcal": "{time} · {kcal} ккал",
@@ -201,6 +243,16 @@
     "placeholders": {
       "time": {},
       "kcal": {}
+    }
+  },
+  "logMealItemSummary": "{grams} г · {kcal} ккал · {protein}Б/{carbs}У/{fat}Ж",
+  "@logMealItemSummary": {
+    "placeholders": {
+      "grams": {},
+      "kcal": {},
+      "protein": {},
+      "carbs": {},
+      "fat": {}
     }
   },
   "waterLogTitle": "Вода",
@@ -349,6 +401,8 @@
       "weight": {}
     }
   },
+  "progressWeightEmptyTitle": "Пока нет отметок веса",
+  "progressWeightEmptySubtitle": "Запишите вес, чтобы начать отслеживать динамику",
   "progressBodyFatLabel": "Процент жира",
   "progressBodyFatValue": "{value}%",
   "@progressBodyFatValue": {
@@ -444,6 +498,7 @@
       "platform": {}
     }
   },
+  "settingsNotificationsAccessDenied": "Уведомления не разрешены, напоминания не будут срабатывать. Включите их в настройках iOS.",
   "settingsSyncedWithPlatform": "Синхронизировано с {platform}.",
   "@settingsSyncedWithPlatform": {
     "placeholders": {
@@ -467,7 +522,8 @@
   "settingsShareAnonDataLabel": "Делиться анонимными данными об использовании",
   "settingsDeleteAccountLabel": "Удалить аккаунт",
   "settingsDeleteAccountDialogTitle": "Удалить аккаунт?",
-  "settingsDeleteAccountDialogContent": "Это прототип — данные фактически не будут удалены.",
+  "settingsDeleteAccountDialogContent": "Это навсегда удалит ваш аккаунт и все данные с устройства. Это действие нельзя отменить.",
+  "settingsDeleteAccountConfirmButton": "Удалить",
   "settingsCancelButton": "Отмена",
   "settingsHelpSupportTitle": "Помощь и поддержка",
   "settingsContactSupportLabel": "Связаться с поддержкой",
@@ -555,5 +611,84 @@
   "newTicketMessageHint": "Опишите вашу проблему...",
   "newTicketSubmitButton": "Отправить тикет",
   "ticketDetailReplyHint": "Написать ответ...",
-  "ticketDetailClosedBanner": "Этот тикет закрыт. Отправка сообщения снова его откроет."
+  "ticketDetailClosedBanner": "Этот тикет закрыт. Отправка сообщения снова его откроет.",
+  "planTodaysWorkoutTitle": "Сегодняшняя тренировка",
+  "planMobilityStretchTitle": "Мобильность и растяжка",
+  "planInProgressLabel": "В процессе",
+  "planNoExercisesAddedYet": "Упражнения ещё не добавлены — нажмите, чтобы составить тренировку на сегодня.",
+  "planNoActivitiesAddedYet": "Активности ещё не добавлены — нажмите, чтобы спланировать мобильность на сегодня.",
+  "planMobilityCompletion": "Прогресс мобильности",
+  "planMobilityProgress": "{completed} / {total} выполнено",
+  "@planMobilityProgress": {
+    "placeholders": {
+      "completed": {},
+      "total": {}
+    }
+  },
+  "dashboardNoExercisesYet": "Упражнений пока нет — нажмите, чтобы добавить",
+  "dashboardWorkoutSetsProgress": "{completed} / {total} подходов",
+  "@dashboardWorkoutSetsProgress": {
+    "placeholders": {
+      "completed": {},
+      "total": {}
+    }
+  },
+  "dashboardNoActivitiesYet": "Активностей пока нет — нажмите, чтобы добавить",
+  "workoutChecklistRemoveExerciseTitle": "Удалить {exercise}?",
+  "@workoutChecklistRemoveExerciseTitle": {
+    "placeholders": {
+      "exercise": {}
+    }
+  },
+  "workoutChecklistRemoveExerciseContent": "Это удалит все подходы этого упражнения за сегодня.",
+  "workoutChecklistRemoveButton": "Удалить",
+  "workoutChecklistAddAnotherExercise": "+ Добавить ещё упражнение",
+  "workoutChecklistStartButton": "Старт",
+  "workoutChecklistStopButton": "Стоп",
+  "workoutChecklistEmptyTitle": "Упражнений пока нет",
+  "workoutChecklistEmptyDescription": "Добавьте, что тренируете сегодня — название, подходы, повторения.",
+  "workoutChecklistAddExerciseButton": "Добавить упражнение",
+  "settingsGoalLoseWeight": "Похудеть",
+  "settingsGoalBuildMuscle": "Набрать мышечную массу",
+  "settingsGoalMaintainWeight": "Поддерживать вес",
+  "settingsGoalImproveEndurance": "Улучшить выносливость",
+  "notificationWorkoutReminderTitle": "Сегодняшняя тренировка ждёт",
+  "notificationWorkoutReminderBody": "Загляните в план и приступайте — у вас всё получится.",
+  "notificationHydrationReminderTitle": "Проверка гидратации",
+  "notificationHydrationReminderBody": "Вы уже выполнили норму воды на сегодня?",
+  "mobilityChecklistAddAnotherActivity": "+ Добавить ещё активность",
+  "mobilityChecklistCompleteBanner": "Мобильность выполнена 🧘",
+  "mobilityChecklistEmptyTitle": "Активностей по мобильности пока нет",
+  "mobilityChecklistEmptyDescription": "Добавьте растяжку, раскатку или йогу — название и минуты.",
+  "mobilityChecklistAddActivityButton": "Добавить активность",
+  "mobilityActivityCompletedTitle": "Активность выполнена 🧘",
+  "mobilityActivityCompletedBody": "{name} — готово. Отличная работа!",
+  "@mobilityActivityCompletedBody": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "dailySummarySleepSynced": "Синхронизировано с Health за этот день",
+  "dailySummarySleepEstimated": "Оценочно — включите синхронизацию Health в настройках для реальных данных",
+  "addExerciseTitle": "Добавить упражнение",
+  "addExerciseNameHint": "Название упражнения (напр. жим лёжа)",
+  "addExerciseSetsLabel": "Подходы",
+  "addExerciseRepsLabel": "Повторения",
+  "addExerciseSubmitButton": "Добавить {sets} × {reps} в тренировку на сегодня",
+  "@addExerciseSubmitButton": {
+    "placeholders": {
+      "sets": {},
+      "reps": {}
+    }
+  },
+  "addMobilityActivityTitle": "Добавить активность мобильности",
+  "addMobilityActivityHint": "Напр. растяжка тазобедренных, раскатка, йога.",
+  "addMobilityActivityNameHint": "Название активности (напр. растяжка тазобедренных)",
+  "addMobilityActivityMinutesLabel": "Минуты",
+  "addMobilityActivitySubmitButton": "Добавить {minutes} мин в план на сегодня",
+  "@addMobilityActivitySubmitButton": {
+    "placeholders": {
+      "minutes": {}
+    }
+  }
 }

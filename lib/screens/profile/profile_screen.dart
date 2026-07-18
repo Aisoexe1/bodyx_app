@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:bodyx_app/l10n/gen/app_localizations.dart';
+import '../../logic/goal_labels.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
@@ -147,7 +148,7 @@ class ProfileScreen extends StatelessWidget {
                   _RowSpec(
                       Icons.flag_rounded,
                       AppLocalizations.of(context)!.profileGoal,
-                      user?.goal ?? '—',
+                      user == null ? '—' : goalLabel(context, user.goal),
                       (ctx) => const GoalScreen()),
                 ]),
                 const SizedBox(height: 20),

@@ -1,15 +1,11 @@
 /// A small local, keyword-matching FAQ assistant for the in-app support
-/// chat. This is NOT a live LLM call — the prototype has no backend or API
-/// key to call one safely, and pretending otherwise would be dishonest. In
-/// production this is designed to be swapped for a real model without
-/// changing the chat UI at all, and [modelName] names the one that fits:
-/// Claude Haiku 4.5 is fast and inexpensive enough for high-volume,
-/// low-latency support triage like this, reserving escalation to a larger
-/// model for anything the keyword rules below can't resolve.
+/// chat. This is NOT an AI/LLM call — everything happens on-device with no
+/// network request, so [modelName] must never claim to be a real AI model;
+/// doing so would be a false capability claim shown directly to users.
 class SupportAssistant {
   SupportAssistant._();
 
-  static const String modelName = 'Claude Haiku 4.5';
+  static const String modelName = 'On-device FAQ';
 
   static String reply(String message) {
     final q = message.toLowerCase();
@@ -60,10 +56,9 @@ class SupportAssistant {
           "instead of just watching the scale number.";
     }
     if (has(['sleep'])) {
-      return "Sleep is pulled from Apple Health or Health Connect if "
+      return "Sleep is pulled from Apple Health or Health Connect once "
           "you've enabled sync in Settings. Without a synced wearable, "
-          "recent days show sample data so the dashboard stays populated "
-          "for the demo.";
+          "there's no way to log sleep by hand yet, so it stays at zero.";
     }
     if (has([
       'sync',
@@ -74,14 +69,15 @@ class SupportAssistant {
       'device'
     ])) {
       return 'Go to Settings → toggle "Sync with Health". Once enabled, '
-          'BodyX pulls steps, active calories burned, sleep and heart '
-          "rate from Apple Health or Health Connect automatically. No "
-          "wearable? Everything still works with data you log by hand.";
+          'BodyX pulls steps, active calories burned, and sleep from '
+          "Apple Health or Health Connect automatically. No wearable? "
+          "Everything still works with data you log by hand.";
     }
     if (has(['export', 'download', 'backup', 'data', 'privacy'])) {
-      return "There's no export yet — it's on the roadmap. Everything you "
-          "log (weight, meals, workouts) is stored locally on this device "
-          "only; nothing is uploaded to a server.";
+      return "There's no export yet — it's on the roadmap. Your profile, "
+          "weight and body measurements sync to your account when you're "
+          "signed in and a server is reachable; progress photos, meals, "
+          "and workouts stay on this device only.";
     }
     if (has(['goal', 'target'])) {
       return 'Step and calorie goals are derived from your profile in '
@@ -103,8 +99,9 @@ class SupportAssistant {
       'login'
     ])) {
       return 'Account and sign-out controls live in Profile → Settings. '
-          "This prototype stores everything on-device, so there's no "
-          'password-reset flow to worry about.';
+          'Forgot your password? Use "Forgot password" on the sign-in '
+          'screen. You can also permanently delete your account and all '
+          'its data from Settings → Privacy → Delete account.';
     }
     if (has(['thank', 'thanks', 'спасибо'])) {
       return "You're welcome! Anything else I can help with?";

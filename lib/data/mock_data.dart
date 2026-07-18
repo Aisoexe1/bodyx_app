@@ -1,5 +1,4 @@
 import 'dart:math';
-import 'package:flutter/material.dart';
 import '../models/models.dart';
 
 /// Deterministic mock-data generators. A fixed seed keeps numbers stable
@@ -22,7 +21,6 @@ class MockData {
       final rem = (sleep * (0.15 + _rng.nextDouble() * 0.08)).round();
       final awake = 5 + _rng.nextInt(20);
       final light = sleep - deep - rem;
-      final heartRate = 58 + _rng.nextInt(20);
       final isToday = i == days - 1;
       return DailyStats(
         date: date,
@@ -43,7 +41,37 @@ class MockData {
         deepSleepMinutes: deep,
         remSleepMinutes: rem,
         awakeMinutes: awake,
-        heartRateBpm: heartRate,
+      );
+    });
+  }
+
+  /// Real starting state for a brand-new account — every metric is an
+  /// honest zero rather than a fabricated reading, so a fresh install never
+  /// shows history the user never produced. Kept the same 14-day shape as
+  /// [generateDailyStats] so chart code that indexes by day offset still
+  /// works; [AppState.syncHealthData] overlays real values per-field once
+  /// Health sync is enabled, and today's entry updates as the user logs
+  /// water/meals/etc.
+  static List<DailyStats> emptyDailyStats({int days = 14}) {
+    final now = DateTime.now();
+    return List.generate(days, (i) {
+      final date = DateTime(now.year, now.month, now.day)
+          .subtract(Duration(days: days - 1 - i));
+      return DailyStats(
+        date: date,
+        steps: 0,
+        stepGoal: 10000,
+        calories: 0,
+        calorieGoal: 2200,
+        sleepMinutes: 0,
+        sleepGoalMinutes: 480,
+        waterMl: 0,
+        waterGoalMl: 2500,
+        lightSleepMinutes: 0,
+        deepSleepMinutes: 0,
+        remSleepMinutes: 0,
+        awakeMinutes: 0,
+        sleepStagesSynced: false,
       );
     });
   }
@@ -95,70 +123,43 @@ class MockData {
     return result;
   }
 
-  static List<AlertItem> get alerts => [
-        AlertItem(
-          title: 'Low water intake',
-          subtitle: "You're 900ml behind today's hydration goal.",
-          icon: Icons.water_drop_rounded,
-          time: '2h ago',
-          severity: AlertSeverity.warning,
-        ),
-        AlertItem(
-          title: 'New personal best',
-          subtitle: 'You hit 12,480 steps yesterday — your best this month.',
-          icon: Icons.emoji_events_rounded,
-          time: '1d ago',
-          severity: AlertSeverity.success,
-          read: true,
-        ),
-        AlertItem(
-          title: 'Body scan reminder',
-          subtitle: 'Weekly progress scan is due today.',
-          icon: Icons.camera_alt_rounded,
-          time: '3h ago',
-          severity: AlertSeverity.info,
-        ),
-        AlertItem(
-          title: 'Sleep debt building up',
-          subtitle: 'Average sleep dropped to 6h 10m this week.',
-          icon: Icons.bedtime_rounded,
-          time: '1d ago',
-          severity: AlertSeverity.warning,
-        ),
-        AlertItem(
-          title: 'Plan updated',
-          subtitle: 'Your coach adjusted next week\'s leg volume.',
-          icon: Icons.fitness_center_rounded,
-          time: '2d ago',
-          severity: AlertSeverity.info,
-          read: true,
-        ),
-      ];
-
-  /// Self-reported checklist items only. The workout has its own dedicated,
-  /// progress-tracked card (see [todayWorkout]), and "log body weight" is
-  /// driven off real weight-history data (see `AppState.loggedWeightToday`)
-  /// rather than a togglable checkbox — neither is duplicated here.
-  static List<PlanTask> get todayPlan => [
-        PlanTask(
-          title: 'Mobility & stretch',
-          subtitle: '15 min · Recovery',
-          icon: Icons.self_improvement_rounded,
-        ),
-      ];
-
-  /// Fresh (all-unchecked) template — [AppState] overlays today's saved
-  /// completion state on top of this, the same pattern as [todayPlan].
-  static Workout get todayWorkout => Workout(
-        name: 'Lower Body Strength',
-        subtitle: '2 exercises · Gym',
-        icon: Icons.fitness_center_rounded,
-        sets: [
-          WorkoutSet(exercise: 'Squats', setNumber: 1, targetReps: 10),
-          WorkoutSet(exercise: 'Squats', setNumber: 2, targetReps: 10),
-          WorkoutSet(exercise: 'Squats', setNumber: 3, targetReps: 10),
-          WorkoutSet(exercise: 'Leg Press', setNumber: 1, targetReps: 12),
-          WorkoutSet(exercise: 'Leg Press', setNumber: 2, targetReps: 12),
-        ],
+  /// Real starting state for a brand-new account: every zone gets a
+  /// suggested target (the same gender-average table [generateBodyMeasurements]
+  /// uses, which is a reasonable goal default, not a claimed measurement)
+  /// but no current value or history, since the user hasn't logged a
+  /// measurement yet.
+  static Map<MuscleZone, BodyMeasurement> emptyBodyMeasurements(
+      Gender gender) {
+    final base = <MuscleZone, double>{
+      MuscleZone.shoulders: gender == Gender.male ? 118 : 102,
+      MuscleZone.chest: gender == Gender.male ? 104 : 92,
+      MuscleZone.biceps: gender == Gender.male ? 36 : 27,
+      MuscleZone.forearms: gender == Gender.male ? 29 : 23,
+      MuscleZone.abs: gender == Gender.male ? 84 : 71,
+      MuscleZone.back: gender == Gender.male ? 112 : 96,
+      MuscleZone.quads: gender == Gender.male ? 58 : 55,
+      MuscleZone.hamstrings: gender == Gender.male ? 41 : 39,
+      MuscleZone.calves: gender == Gender.male ? 38 : 34,
+      MuscleZone.glutes: gender == Gender.male ? 98 : 101,
+    };
+    final result = <MuscleZone, BodyMeasurement>{};
+    for (final zone in MuscleZone.values) {
+      final target = base[zone]!;
+      result[zone] = BodyMeasurement(
+        zone: zone,
+        valueCm: 0,
+        history: const [],
+        targetCm: double.parse((target + 4).toStringAsFixed(1)),
       );
+    }
+    return result;
+  }
+
+  /// Self-reported checklist items only — currently none. "Log body
+  /// weight" is driven off real weight-history data (see `AppState.
+  /// loggedWeightToday`), today's workout is user-built (see `AppState.
+  /// todayWorkoutSets`), and mobility/stretch is user-built too (see
+  /// `AppState.todayMobilityActivities`) — none of them are duplicated
+  /// here as a fake togglable checkbox with no fixed template behind it.
+  static List<PlanTask> get todayPlan => [];
 }

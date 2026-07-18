@@ -8,6 +8,44 @@
       "count": {}
     }
   },
+  "alertsEmptyTitle": "Nothing to flag",
+  "alertsEmptySubtitle": "We'll let you know if something needs your attention",
+  "alertLowWaterTitle": "Low water intake",
+  "alertLowWaterSubtitle": "You're {liters} L behind today's hydration goal",
+  "@alertLowWaterSubtitle": {
+    "placeholders": {
+      "liters": {}
+    }
+  },
+  "alertSleepDebtTitle": "Sleep debt building up",
+  "alertSleepDebtSubtitle": "Average sleep this week is {hours}h, below your goal",
+  "@alertSleepDebtSubtitle": {
+    "placeholders": {
+      "hours": {}
+    }
+  },
+  "alertBodyScanTitle": "Body scan reminder",
+  "alertBodyScanSubtitle": "It's been a week since your last progress photo",
+  "alertStepsBestTitle": "New personal best",
+  "alertStepsBestSubtitle": "You hit {steps} steps yesterday — your best in two weeks",
+  "@alertStepsBestSubtitle": {
+    "placeholders": {
+      "steps": {}
+    }
+  },
+  "navHome": "Home",
+  "navProgress": "Progress",
+  "navPlan": "Plan",
+  "navAlerts": "Alerts",
+  "navProfile": "Profile",
+  "foodCategoryMeat": "Meat & fish",
+  "foodCategoryCheese": "Cheese",
+  "foodCategoryFruits": "Fruits",
+  "foodCategoryVegetables": "Vegetables",
+  "foodCategoryDairy": "Dairy",
+  "foodCategoryNuts": "Nuts & seeds",
+  "foodCategoryGrains": "Grains",
+  "foodCategoryOther": "Other",
   "bodyDataTitle": "Your body data",
   "bodyDataSubtitle": "We use this to calculate your plan\nand personalize your experience",
   "bodyDataMale": "Male",
@@ -53,6 +91,7 @@
   "signInStayConsistent": "Stay consistent",
   "signInEmailLabel": "Email",
   "signInPasswordLabel": "Password",
+  "signInFieldsRequired": "Enter your email and password to continue.",
   "signInSignInButton": "Sign in",
   "signInForgotPassword": "Forgot password?",
   "signInOrContinueWith": "or continue with",
@@ -177,6 +216,8 @@
       "bodyFatPercent": {}
     }
   },
+  "dashboardBodyScanEmptyTitle": "No check-in yet",
+  "dashboardBodyScanEmptySubtitle": "Tap to log your first weigh-in",
   "logMealTitle": "Meal",
   "logMealCaloriesToday": "{eaten} / {tdee} kcal today",
   "@logMealCaloriesToday": {
@@ -194,6 +235,7 @@
   "logMealProteinLabel": "Protein (g)",
   "logMealCarbsLabel": "Carbs (g)",
   "logMealFatLabel": "Fat (g)",
+  "logMealGramsLabel": "Grams",
   "logMealAddButton": "Add",
   "logMealTodayLabel": "Today",
   "logMealTimeKcal": "{time} · {kcal} kcal",
@@ -201,6 +243,16 @@
     "placeholders": {
       "time": {},
       "kcal": {}
+    }
+  },
+  "logMealItemSummary": "{grams} g · {kcal} kcal · {protein}P/{carbs}C/{fat}F",
+  "@logMealItemSummary": {
+    "placeholders": {
+      "grams": {},
+      "kcal": {},
+      "protein": {},
+      "carbs": {},
+      "fat": {}
     }
   },
   "waterLogTitle": "Water",
@@ -349,6 +401,8 @@
       "weight": {}
     }
   },
+  "progressWeightEmptyTitle": "No weigh-ins yet",
+  "progressWeightEmptySubtitle": "Log your weight to start tracking your trend",
   "progressBodyFatLabel": "Body fat",
   "progressBodyFatValue": "{value}%",
   "@progressBodyFatValue": {
@@ -444,6 +498,7 @@
       "platform": {}
     }
   },
+  "settingsNotificationsAccessDenied": "Notifications weren't allowed, so reminders won't fire. Enable them in iOS Settings.",
   "settingsSyncedWithPlatform": "Synced with {platform}.",
   "@settingsSyncedWithPlatform": {
     "placeholders": {
@@ -467,7 +522,8 @@
   "settingsShareAnonDataLabel": "Share anonymous usage data",
   "settingsDeleteAccountLabel": "Delete account",
   "settingsDeleteAccountDialogTitle": "Delete account?",
-  "settingsDeleteAccountDialogContent": "This is a prototype — no data will actually be deleted.",
+  "settingsDeleteAccountDialogContent": "This permanently deletes your account and all data from this device. This can't be undone.",
+  "settingsDeleteAccountConfirmButton": "Delete",
   "settingsCancelButton": "Cancel",
   "settingsHelpSupportTitle": "Help & support",
   "settingsContactSupportLabel": "Contact support",
@@ -555,5 +611,84 @@
   "newTicketMessageHint": "Describe your issue...",
   "newTicketSubmitButton": "Submit ticket",
   "ticketDetailReplyHint": "Type a reply...",
-  "ticketDetailClosedBanner": "This ticket is closed. Sending a message will reopen it."
+  "ticketDetailClosedBanner": "This ticket is closed. Sending a message will reopen it.",
+  "planTodaysWorkoutTitle": "Today's Workout",
+  "planMobilityStretchTitle": "Mobility & Stretch",
+  "planInProgressLabel": "In progress",
+  "planNoExercisesAddedYet": "No exercises added yet — tap to build today's workout.",
+  "planNoActivitiesAddedYet": "No activities added yet — tap to plan today's mobility work.",
+  "planMobilityCompletion": "Mobility completion",
+  "planMobilityProgress": "{completed} / {total} done",
+  "@planMobilityProgress": {
+    "placeholders": {
+      "completed": {},
+      "total": {}
+    }
+  },
+  "dashboardNoExercisesYet": "No exercises yet — tap to add",
+  "dashboardWorkoutSetsProgress": "{completed} / {total} sets",
+  "@dashboardWorkoutSetsProgress": {
+    "placeholders": {
+      "completed": {},
+      "total": {}
+    }
+  },
+  "dashboardNoActivitiesYet": "No activities yet — tap to add",
+  "workoutChecklistRemoveExerciseTitle": "Remove {exercise}?",
+  "@workoutChecklistRemoveExerciseTitle": {
+    "placeholders": {
+      "exercise": {}
+    }
+  },
+  "workoutChecklistRemoveExerciseContent": "This removes all of its sets from today.",
+  "workoutChecklistRemoveButton": "Remove",
+  "workoutChecklistAddAnotherExercise": "+ Add another exercise",
+  "workoutChecklistStartButton": "Start",
+  "workoutChecklistStopButton": "Stop",
+  "workoutChecklistEmptyTitle": "No exercises yet",
+  "workoutChecklistEmptyDescription": "Add what you're training today — name, sets, reps.",
+  "workoutChecklistAddExerciseButton": "Add exercise",
+  "settingsGoalLoseWeight": "Lose weight",
+  "settingsGoalBuildMuscle": "Build muscle",
+  "settingsGoalMaintainWeight": "Maintain weight",
+  "settingsGoalImproveEndurance": "Improve endurance",
+  "notificationWorkoutReminderTitle": "Today's workout is waiting",
+  "notificationWorkoutReminderBody": "Check your plan and get moving — you've got this.",
+  "notificationHydrationReminderTitle": "Hydration check",
+  "notificationHydrationReminderBody": "Have you hit your water goal today?",
+  "mobilityChecklistAddAnotherActivity": "+ Add another activity",
+  "mobilityChecklistCompleteBanner": "Mobility complete 🧘",
+  "mobilityChecklistEmptyTitle": "No mobility activities yet",
+  "mobilityChecklistEmptyDescription": "Add a stretch, foam roll, or yoga flow — name + minutes.",
+  "mobilityChecklistAddActivityButton": "Add activity",
+  "mobilityActivityCompletedTitle": "Activity complete 🧘",
+  "mobilityActivityCompletedBody": "{name} — done. Nice work!",
+  "@mobilityActivityCompletedBody": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "dailySummarySleepSynced": "Synced from Health for this day",
+  "dailySummarySleepEstimated": "Estimated — enable Health sync in Settings for real stages",
+  "addExerciseTitle": "Add Exercise",
+  "addExerciseNameHint": "Exercise name (e.g. Bench Press)",
+  "addExerciseSetsLabel": "Sets",
+  "addExerciseRepsLabel": "Reps",
+  "addExerciseSubmitButton": "Add {sets} × {reps} to today's workout",
+  "@addExerciseSubmitButton": {
+    "placeholders": {
+      "sets": {},
+      "reps": {}
+    }
+  },
+  "addMobilityActivityTitle": "Add Mobility Activity",
+  "addMobilityActivityHint": "E.g. hip flexor stretch, foam rolling, yoga flow.",
+  "addMobilityActivityNameHint": "Activity name (e.g. Hip flexor stretch)",
+  "addMobilityActivityMinutesLabel": "Minutes",
+  "addMobilityActivitySubmitButton": "Add {minutes} min to today's plan",
+  "@addMobilityActivitySubmitButton": {
+    "placeholders": {
+      "minutes": {}
+    }
+  }
 }

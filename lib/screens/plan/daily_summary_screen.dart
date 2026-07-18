@@ -76,7 +76,11 @@ class DailySummaryScreen extends StatelessWidget {
                     fontWeight: FontWeight.w700,
                     letterSpacing: 1)),
             const SizedBox(height: 4),
-            Text(AppLocalizations.of(context)!.dailySummaryChooseDateHint,
+            Text(
+                stats.sleepStagesSynced
+                    ? AppLocalizations.of(context)!.dailySummarySleepSynced
+                    : AppLocalizations.of(context)!
+                        .dailySummarySleepEstimated,
                 style: const TextStyle(
                     color: AppColors.textMuted, fontSize: 12.5)),
             const SizedBox(height: 16),

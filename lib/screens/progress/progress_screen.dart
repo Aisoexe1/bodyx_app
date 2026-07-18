@@ -7,7 +7,6 @@ import '../../state/app_state.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
 import '../../theme/status_colors.dart';
-import '../../widgets/charts/hr_zone_bar.dart';
 import '../../widgets/charts/macro_bars.dart';
 import '../../widgets/charts/sleep_donut_chart.dart';
 import '../../widgets/charts/steps_bar_chart.dart';
@@ -29,9 +28,12 @@ class _ProgressScreenState extends State<ProgressScreen> {
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
     final weightHistory = state.weightHistory;
-    final first = weightHistory.first;
-    final last = weightHistory.last;
-    final delta = last.kg - first.kg;
+    // A brand new account has no weigh-ins yet — don't assume there's
+    // always a first/last entry to diff.
+    final hasWeightHistory = weightHistory.isNotEmpty;
+    final lastWeight = hasWeightHistory ? weightHistory.last : null;
+    final delta =
+        hasWeightHistory ? lastWeight!.kg - weightHistory.first.kg : 0.0;
     final stats = state.dailyStats;
     final windowed = _rangeIndex == 0
         ? _calendarWeek(stats)
@@ -62,42 +64,74 @@ class _ProgressScreenState extends State<ProgressScreen> {
                 ),
                 const SizedBox(height: 20),
                 GlowCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(AppLocalizations.of(context)!.progressWeightLabel,
-                              style: const TextStyle(
-                                  color: AppColors.textPrimary,
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 16)),
-                          const Spacer(),
-                          StatChip(
-                            label: AppLocalizations.of(context)!
-                                .progressWeightDelta(
-                                    '${delta <= 0 ? '' : '+'}${delta.toStringAsFixed(1)}'),
-                            color: delta <= 0
-                                ? AppColors.success
-                                : AppColors.warning,
-                            icon: delta <= 0
-                                ? Icons.trending_down_rounded
-                                : Icons.trending_up_rounded,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                          AppLocalizations.of(context)!
-                              .progressWeightValue('${last.kg.round()}'),
-                          style: const TextStyle(
-                              color: AppColors.textPrimary,
-                              fontWeight: FontWeight.w800,
-                              fontSize: 28)),
-                      const SizedBox(height: 12),
-                      WeightLineChart(entries: weightHistory),
-                    ],
-                  ),
+                  child: hasWeightHistory
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                    AppLocalizations.of(context)!
+                                        .progressWeightLabel,
+                                    style: const TextStyle(
+                                        color: AppColors.textPrimary,
+                                        fontWeight: FontWeight.w800,
+                                        fontSize: 16)),
+                                const Spacer(),
+                                StatChip(
+                                  label: AppLocalizations.of(context)!
+                                      .progressWeightDelta(
+                                          '${delta <= 0 ? '' : '+'}${delta.toStringAsFixed(1)}'),
+                                  color: delta <= 0
+                                      ? AppColors.success
+                                      : AppColors.warning,
+                                  icon: delta <= 0
+                                      ? Icons.trending_down_rounded
+                                      : Icons.trending_up_rounded,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                                AppLocalizations.of(context)!
+                                    .progressWeightValue(
+                                        '${lastWeight!.kg.round()}'),
+                                style: const TextStyle(
+                                    color: AppColors.textPrimary,
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 28)),
+                            const SizedBox(height: 12),
+                            WeightLineChart(entries: weightHistory),
+                          ],
+                        )
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(Icons.monitor_weight_outlined,
+                                    color: AppColors.textMuted, size: 20),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                      AppLocalizations.of(context)!
+                                          .progressWeightEmptyTitle,
+                                      style: const TextStyle(
+                                          color: AppColors.textPrimary,
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 14)),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                                AppLocalizations.of(context)!
+                                    .progressWeightEmptySubtitle,
+                                style: const TextStyle(
+                                    color: AppColors.textMuted,
+                                    fontSize: 12.5)),
+                          ],
+                        ),
                 ),
                 if (state.user?.goal == 'Build muscle') ...[
                   const SizedBox(height: 12),
@@ -109,9 +143,14 @@ class _ProgressScreenState extends State<ProgressScreen> {
                     Expanded(
                       child: _RingStatCard(
                         label: AppLocalizations.of(context)!.progressBodyFatLabel,
-                        value: AppLocalizations.of(context)!.progressBodyFatValue(
-                            last.bodyFatPct.toStringAsFixed(1)),
-                        progress: (last.bodyFatPct / 30).clamp(0, 1),
+                        value: hasWeightHistory
+                            ? AppLocalizations.of(context)!
+                                .progressBodyFatValue(
+                                    lastWeight!.bodyFatPct.toStringAsFixed(1))
+                            : '—',
+                        progress: hasWeightHistory
+                            ? (lastWeight!.bodyFatPct / 30).clamp(0, 1)
+                            : 0.0,
                         color: AppColors.warning,
                       ),
                     ),
@@ -163,9 +202,11 @@ class _ProgressScreenState extends State<ProgressScreen> {
                 _CaloriesCard(state: state),
                 const SizedBox(height: 24),
                 SectionHeader(
-                    title: AppLocalizations.of(context)!.progressSleepTitle,
-                    subtitle:
-                        AppLocalizations.of(context)!.progressSleepSubtitle),
+                  title: AppLocalizations.of(context)!.progressSleepTitle,
+                  subtitle: todayStats.sleepStagesSynced
+                      ? "Today's breakdown · synced from Health"
+                      : "Today's breakdown · estimated (enable Health sync in Settings for real stages)",
+                ),
                 const SizedBox(height: 12),
                 GlowCard(
                   child: SleepBreakdownCard(
@@ -176,13 +217,6 @@ class _ProgressScreenState extends State<ProgressScreen> {
                     ringSize: 140,
                   ),
                 ),
-                const SizedBox(height: 24),
-                SectionHeader(
-                    title: AppLocalizations.of(context)!.progressHeartRateTitle,
-                    subtitle: AppLocalizations.of(context)!
-                        .progressHeartRateSubtitle),
-                const SizedBox(height: 12),
-                _HeartRateCard(state: state),
               ]),
             ),
           ),
@@ -314,57 +348,6 @@ class _CaloriesCard extends StatelessWidget {
             carbsG: totalCarbs,
             fatG: totalFat,
             proteinGoal: state.proteinTargetG.round(),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Zones are named by what they mean for the goal ("Стимул для роста
-/// мышц"), not "Zone 2/3" — and the resting-HR trend surfaces
-/// under-recovery before it shows up anywhere else in the app.
-class _HeartRateCard extends StatelessWidget {
-  const _HeartRateCard({required this.state});
-  final AppState state;
-
-  @override
-  Widget build(BuildContext context) {
-    final trend = state.restingHrTrend;
-    final trendColor = statusColor(trend.level);
-
-    return GlowCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text(
-                  AppLocalizations.of(context)!.progressHeartRateBpm(
-                      '${state.selectedStats.heartRateBpm}'),
-                  style: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 22)),
-              const Spacer(),
-            ],
-          ),
-          const SizedBox(height: 14),
-          HrZoneBar(
-            fraction: state.hrZoneFraction,
-            zoneLabel: state.hrZone.label,
-          ),
-          const Divider(height: 28, color: AppColors.divider),
-          Row(
-            children: [
-              Icon(Icons.monitor_heart_rounded, size: 16, color: trendColor),
-              const SizedBox(width: 8),
-              Text(AppLocalizations.of(context)!.progressRestingHeartRateLabel,
-                  style: const TextStyle(
-                      color: AppColors.textMuted, fontSize: 12.5)),
-              const Spacer(),
-              StatChip(label: trend.label, color: trendColor),
-            ],
           ),
         ],
       ),

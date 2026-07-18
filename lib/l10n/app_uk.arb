@@ -8,6 +8,44 @@
       "count": {}
     }
   },
+  "alertsEmptyTitle": "Нічого відзначити",
+  "alertsEmptySubtitle": "Ми повідомимо, якщо з'явиться щось важливе",
+  "alertLowWaterTitle": "Мало води",
+  "alertLowWaterSubtitle": "Ви відстаєте від цілі по воді на {liters} л",
+  "@alertLowWaterSubtitle": {
+    "placeholders": {
+      "liters": {}
+    }
+  },
+  "alertSleepDebtTitle": "Накопичився недосип",
+  "alertSleepDebtSubtitle": "Середній сон за тиждень — {hours} год, нижче вашої цілі",
+  "@alertSleepDebtSubtitle": {
+    "placeholders": {
+      "hours": {}
+    }
+  },
+  "alertBodyScanTitle": "Час зробити скан тіла",
+  "alertBodyScanSubtitle": "Минув тиждень з останнього фото прогресу",
+  "alertStepsBestTitle": "Новий особистий рекорд",
+  "alertStepsBestSubtitle": "Вчора ви пройшли {steps} кроків — найкращий результат за два тижні",
+  "@alertStepsBestSubtitle": {
+    "placeholders": {
+      "steps": {}
+    }
+  },
+  "navHome": "Головна",
+  "navProgress": "Прогрес",
+  "navPlan": "План",
+  "navAlerts": "Сповіщення",
+  "navProfile": "Профіль",
+  "foodCategoryMeat": "М'ясо та риба",
+  "foodCategoryCheese": "Сир",
+  "foodCategoryFruits": "Фрукти",
+  "foodCategoryVegetables": "Овочі",
+  "foodCategoryDairy": "Молочні продукти",
+  "foodCategoryNuts": "Горіхи",
+  "foodCategoryGrains": "Крупи та злаки",
+  "foodCategoryOther": "Інше",
   "bodyDataTitle": "Дані про ваше тіло",
   "bodyDataSubtitle": "Це допоможе нам скласти ваш план\nта персоналізувати досвід",
   "bodyDataMale": "Чоловіча",
@@ -53,6 +91,7 @@
   "signInStayConsistent": "Будьте послідовні",
   "signInEmailLabel": "Email",
   "signInPasswordLabel": "Пароль",
+  "signInFieldsRequired": "Введіть email і пароль, щоб продовжити.",
   "signInSignInButton": "Увійти",
   "signInForgotPassword": "Забули пароль?",
   "signInOrContinueWith": "або продовжити через",
@@ -177,6 +216,8 @@
       "bodyFatPercent": {}
     }
   },
+  "dashboardBodyScanEmptyTitle": "Поки немає відміток",
+  "dashboardBodyScanEmptySubtitle": "Натисніть, щоб записати першу вагу",
   "logMealTitle": "Прийом їжі",
   "logMealCaloriesToday": "{eaten} / {tdee} ккал сьогодні",
   "@logMealCaloriesToday": {
@@ -194,6 +235,7 @@
   "logMealProteinLabel": "Білки (г)",
   "logMealCarbsLabel": "Вуглеводи (г)",
   "logMealFatLabel": "Жири (г)",
+  "logMealGramsLabel": "Грами",
   "logMealAddButton": "Додати",
   "logMealTodayLabel": "Сьогодні",
   "logMealTimeKcal": "{time} · {kcal} ккал",
@@ -201,6 +243,16 @@
     "placeholders": {
       "time": {},
       "kcal": {}
+    }
+  },
+  "logMealItemSummary": "{grams} г · {kcal} ккал · {protein}Б/{carbs}В/{fat}Ж",
+  "@logMealItemSummary": {
+    "placeholders": {
+      "grams": {},
+      "kcal": {},
+      "protein": {},
+      "carbs": {},
+      "fat": {}
     }
   },
   "waterLogTitle": "Вода",
@@ -349,6 +401,8 @@
       "weight": {}
     }
   },
+  "progressWeightEmptyTitle": "Поки немає відміток ваги",
+  "progressWeightEmptySubtitle": "Запишіть вагу, щоб почати відстежувати динаміку",
   "progressBodyFatLabel": "Жир у тілі",
   "progressBodyFatValue": "{value}%",
   "@progressBodyFatValue": {
@@ -444,6 +498,7 @@
       "platform": {}
     }
   },
+  "settingsNotificationsAccessDenied": "Сповіщення не дозволено, нагадування не спрацюють. Увімкніть їх у налаштуваннях iOS.",
   "settingsSyncedWithPlatform": "Синхронізовано з {platform}.",
   "@settingsSyncedWithPlatform": {
     "placeholders": {
@@ -467,7 +522,8 @@
   "settingsShareAnonDataLabel": "Ділитися анонімними даними використання",
   "settingsDeleteAccountLabel": "Видалити акаунт",
   "settingsDeleteAccountDialogTitle": "Видалити акаунт?",
-  "settingsDeleteAccountDialogContent": "Це прототип — дані фактично не будуть видалені.",
+  "settingsDeleteAccountDialogContent": "Це назавжди видалить ваш акаунт і всі дані з пристрою. Цю дію не можна скасувати.",
+  "settingsDeleteAccountConfirmButton": "Видалити",
   "settingsCancelButton": "Скасувати",
   "settingsHelpSupportTitle": "Допомога та підтримка",
   "settingsContactSupportLabel": "Зв'язатися з підтримкою",
@@ -555,5 +611,84 @@
   "newTicketMessageHint": "Опишіть вашу проблему...",
   "newTicketSubmitButton": "Надіслати тікет",
   "ticketDetailReplyHint": "Написати відповідь...",
-  "ticketDetailClosedBanner": "Цей тікет закрито. Надсилання повідомлення знову його відкриє."
+  "ticketDetailClosedBanner": "Цей тікет закрито. Надсилання повідомлення знову його відкриє.",
+  "planTodaysWorkoutTitle": "Сьогоднішнє тренування",
+  "planMobilityStretchTitle": "Мобільність і розтяжка",
+  "planInProgressLabel": "У процесі",
+  "planNoExercisesAddedYet": "Вправи ще не додано — торкніться, щоб скласти тренування на сьогодні.",
+  "planNoActivitiesAddedYet": "Активності ще не додано — торкніться, щоб спланувати мобільність на сьогодні.",
+  "planMobilityCompletion": "Прогрес мобільності",
+  "planMobilityProgress": "{completed} / {total} виконано",
+  "@planMobilityProgress": {
+    "placeholders": {
+      "completed": {},
+      "total": {}
+    }
+  },
+  "dashboardNoExercisesYet": "Вправ поки немає — торкніться, щоб додати",
+  "dashboardWorkoutSetsProgress": "{completed} / {total} підходів",
+  "@dashboardWorkoutSetsProgress": {
+    "placeholders": {
+      "completed": {},
+      "total": {}
+    }
+  },
+  "dashboardNoActivitiesYet": "Активностей поки немає — торкніться, щоб додати",
+  "workoutChecklistRemoveExerciseTitle": "Видалити {exercise}?",
+  "@workoutChecklistRemoveExerciseTitle": {
+    "placeholders": {
+      "exercise": {}
+    }
+  },
+  "workoutChecklistRemoveExerciseContent": "Це видалить усі підходи цієї вправи за сьогодні.",
+  "workoutChecklistRemoveButton": "Видалити",
+  "workoutChecklistAddAnotherExercise": "+ Додати ще вправу",
+  "workoutChecklistStartButton": "Старт",
+  "workoutChecklistStopButton": "Стоп",
+  "workoutChecklistEmptyTitle": "Вправ поки немає",
+  "workoutChecklistEmptyDescription": "Додайте, що тренуєте сьогодні — назву, підходи, повторення.",
+  "workoutChecklistAddExerciseButton": "Додати вправу",
+  "settingsGoalLoseWeight": "Схуднути",
+  "settingsGoalBuildMuscle": "Набрати м'язову масу",
+  "settingsGoalMaintainWeight": "Підтримувати вагу",
+  "settingsGoalImproveEndurance": "Покращити витривалість",
+  "notificationWorkoutReminderTitle": "Сьогоднішнє тренування чекає",
+  "notificationWorkoutReminderBody": "Перегляньте план і починайте — у вас все вийде.",
+  "notificationHydrationReminderTitle": "Перевірка гідратації",
+  "notificationHydrationReminderBody": "Ви вже виконали норму води на сьогодні?",
+  "mobilityChecklistAddAnotherActivity": "+ Додати ще активність",
+  "mobilityChecklistCompleteBanner": "Мобільність виконана 🧘",
+  "mobilityChecklistEmptyTitle": "Активностей з мобільності ще немає",
+  "mobilityChecklistEmptyDescription": "Додайте розтяжку, розкатку або йогу — назву й хвилини.",
+  "mobilityChecklistAddActivityButton": "Додати активність",
+  "mobilityActivityCompletedTitle": "Активність виконана 🧘",
+  "mobilityActivityCompletedBody": "{name} — готово. Чудова робота!",
+  "@mobilityActivityCompletedBody": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "dailySummarySleepSynced": "Синхронізовано з Health за цей день",
+  "dailySummarySleepEstimated": "Орієнтовно — увімкніть синхронізацію Health у налаштуваннях для реальних даних",
+  "addExerciseTitle": "Додати вправу",
+  "addExerciseNameHint": "Назва вправи (напр. жим лежачи)",
+  "addExerciseSetsLabel": "Підходи",
+  "addExerciseRepsLabel": "Повторення",
+  "addExerciseSubmitButton": "Додати {sets} × {reps} до тренування на сьогодні",
+  "@addExerciseSubmitButton": {
+    "placeholders": {
+      "sets": {},
+      "reps": {}
+    }
+  },
+  "addMobilityActivityTitle": "Додати активність мобільності",
+  "addMobilityActivityHint": "Напр. розтяжка стегна, розкатка, йога.",
+  "addMobilityActivityNameHint": "Назва активності (напр. розтяжка стегна)",
+  "addMobilityActivityMinutesLabel": "Хвилини",
+  "addMobilityActivitySubmitButton": "Додати {minutes} хв до плану на сьогодні",
+  "@addMobilityActivitySubmitButton": {
+    "placeholders": {
+      "minutes": {}
+    }
+  }
 }

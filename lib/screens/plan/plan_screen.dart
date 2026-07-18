@@ -10,6 +10,7 @@ import '../../widgets/common/glow_card.dart';
 import '../../widgets/common/scale_tap.dart';
 import '../body_metrics/log_metrics_sheet.dart';
 import 'daily_plan_screen.dart';
+import 'mobility_checklist_sheet.dart';
 import 'workout_checklist_sheet.dart';
 
 class PlanScreen extends StatelessWidget {
@@ -84,39 +85,114 @@ class PlanScreen extends StatelessWidget {
                       children: [
                         Row(
                           children: [
-                            GlowIconBadge(icon: state.todayWorkout.icon),
+                            const GlowIconBadge(
+                                icon: Icons.fitness_center_rounded),
                             const SizedBox(width: 12),
                             Expanded(
-                              child: Text(state.todayWorkout.name,
+                              child: Text(
+                                  AppLocalizations.of(context)!
+                                      .planTodaysWorkoutTitle,
                                   style: const TextStyle(
                                       color: AppColors.textPrimary,
                                       fontWeight: FontWeight.w800,
                                       fontSize: 15)),
                             ),
-                            StatChip(
-                              label: state.todayWorkout.completedCount ==
-                                      state.todayWorkout.sets.length
-                                  ? AppLocalizations.of(context)!.planDoneLabel
-                                  : AppLocalizations.of(context)!
-                                      .planTodayLabel,
-                              color: state.todayWorkout.completedCount ==
-                                      state.todayWorkout.sets.length
-                                  ? AppColors.success
-                                  : AppColors.primary,
-                            ),
+                            if (state.todayWorkoutSets.isNotEmpty)
+                              StatChip(
+                                label: state.todayWorkoutCompletedSets ==
+                                        state.todayWorkoutSets.length
+                                    ? AppLocalizations.of(context)!
+                                        .planDoneLabel
+                                    : AppLocalizations.of(context)!
+                                        .planInProgressLabel,
+                                color: state.todayWorkoutCompletedSets ==
+                                        state.todayWorkoutSets.length
+                                    ? AppColors.success
+                                    : AppColors.primary,
+                              ),
                           ],
                         ),
                         const SizedBox(height: 14),
-                        _ProgressLine(
-                          label: AppLocalizations.of(context)!
-                              .planWorkoutCompletion,
-                          value: state.todayWorkout.progress,
-                          trailing: AppLocalizations.of(context)!
-                              .planWorkoutSetsProgress(
-                            state.todayWorkout.completedCount.toString(),
-                            state.todayWorkout.sets.length.toString(),
+                        if (state.todayWorkoutSets.isEmpty)
+                          Text(
+                              AppLocalizations.of(context)!
+                                  .planNoExercisesAddedYet,
+                              style: const TextStyle(
+                                  color: AppColors.textMuted, fontSize: 12.5))
+                        else
+                          _ProgressLine(
+                            label: AppLocalizations.of(context)!
+                                .planWorkoutCompletion,
+                            value: state.todayWorkoutProgress,
+                            trailing: AppLocalizations.of(context)!
+                                .planWorkoutSetsProgress(
+                              state.todayWorkoutCompletedSets.toString(),
+                              state.todayWorkoutSets.length.toString(),
+                            ),
                           ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ScaleTap(
+                  onTap: () => showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: Colors.transparent,
+                    builder: (_) => const MobilityChecklistSheet(),
+                  ),
+                  child: GlowCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const GlowIconBadge(
+                                icon: Icons.self_improvement_rounded),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                  AppLocalizations.of(context)!
+                                      .planMobilityStretchTitle,
+                                  style: const TextStyle(
+                                      color: AppColors.textPrimary,
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 15)),
+                            ),
+                            if (state.todayMobilityActivities.isNotEmpty)
+                              StatChip(
+                                label: state.todayMobilityCompletedCount ==
+                                        state.todayMobilityActivities.length
+                                    ? AppLocalizations.of(context)!
+                                        .planDoneLabel
+                                    : AppLocalizations.of(context)!
+                                        .planInProgressLabel,
+                                color: state.todayMobilityCompletedCount ==
+                                        state.todayMobilityActivities.length
+                                    ? AppColors.success
+                                    : AppColors.primary,
+                              ),
+                          ],
                         ),
+                        const SizedBox(height: 14),
+                        if (state.todayMobilityActivities.isEmpty)
+                          Text(
+                              AppLocalizations.of(context)!
+                                  .planNoActivitiesAddedYet,
+                              style: const TextStyle(
+                                  color: AppColors.textMuted, fontSize: 12.5))
+                        else
+                          _ProgressLine(
+                            label: AppLocalizations.of(context)!
+                                .planMobilityCompletion,
+                            value: state.todayMobilityProgress,
+                            trailing: AppLocalizations.of(context)!
+                                .planMobilityProgress(
+                              state.todayMobilityCompletedCount.toString(),
+                              state.todayMobilityActivities.length.toString(),
+                            ),
+                          ),
                       ],
                     ),
                   ),

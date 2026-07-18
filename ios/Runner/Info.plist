@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Bodyx App</string>
+	<string>BodyX</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -15,7 +15,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>bodyx_app</string>
+	<string>BodyX</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -26,8 +26,10 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
 	<key>NSHealthShareUsageDescription</key>
-	<string>BodyX reads your steps, calories, sleep, water, weight and heart rate from Health to keep your dashboard accurate.</string>
+	<string>BodyX reads your steps, calories, sleep, water, weight and body fat percentage from Health to keep your dashboard accurate.</string>
 	<key>NSHealthUpdateUsageDescription</key>
 	<string>BodyX does not write any data back to Health.</string>
 	<key>NSCameraUsageDescription</key>
@@ -49,27 +51,20 @@
 			</array>
 		</dict>
 	</array>
-	<key>UIApplicationSceneManifest</key>
-	<dict>
-		<key>UIApplicationSupportsMultipleScenes</key>
-		<false/>
-		<key>UISceneConfigurations</key>
-		<dict>
-			<key>UIWindowSceneSessionRoleApplication</key>
-			<array>
-				<dict>
-					<key>UISceneClassName</key>
-					<string>UIWindowScene</string>
-					<key>UISceneConfigurationName</key>
-					<string>flutter</string>
-					<key>UISceneDelegateClassName</key>
-					<string>$(PRODUCT_MODULE_NAME).SceneDelegate</string>
-					<key>UISceneStoryboardFile</key>
-					<string>Main</string>
-				</dict>
-			</array>
-		</dict>
-	</dict>
+	<!-- No UIApplicationSceneManifest: deliberately using the classic
+	     single-window (non-Scene) app lifecycle. The Scene-connection path
+	     (implicit engine attaching to a storyboard-instantiated
+	     FlutterViewController asynchronously during scene creation) has a
+	     known Flutter engine race on ProMotion devices when launched without
+	     a debugger attached — viewDidLoad can fire before the engine finishes
+	     attaching, leaving platformTaskRunner null and segfaulting in
+	     -[VSyncClient initWithTaskRunner:callback:] a few dozen milliseconds
+	     after launch (flutter/flutter#183900, #153971) — confirmed via real
+	     on-device crash reports, 100% reproducible from a Home Screen tap.
+	     The classic lifecycle builds the engine + window + root view
+	     controller synchronously in didFinishLaunchingWithOptions, with no
+	     such race. Revisit once the upstream engine bug is fixed — Flutter's
+	     own tooling warns Scene support will eventually be mandatory. -->
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>

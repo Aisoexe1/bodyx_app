@@ -6,6 +6,7 @@ import '../../models/models.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/common/editable_number_label.dart';
 import '../../widgets/common/inputs_buttons.dart';
 import '../../widgets/common/scale_tap.dart';
 
@@ -36,8 +37,12 @@ class _LogMetricsSheetState extends State<LogMetricsSheet> {
     final state = context.watch<AppState>();
     _measurementValue ??= state.bodyMeasurements[_zone]!.valueCm;
     if (!_initializedWeight) {
-      _weight = state.weightHistory.last.kg;
-      _bodyFat = state.weightHistory.last.bodyFatPct;
+      // A brand new account has no prior weigh-in to prefill from — the
+      // defaults above (75kg / 20%) stand in until the user has logged one.
+      if (state.weightHistory.isNotEmpty) {
+        _weight = state.weightHistory.last.kg;
+        _bodyFat = state.weightHistory.last.bodyFatPct;
+      }
       _initializedWeight = true;
     }
 
@@ -248,11 +253,17 @@ class _ValueStepper extends StatelessWidget {
                 icon: const Icon(Icons.remove_circle_outline_rounded,
                     color: AppColors.textMuted),
               ),
-              Text(value.toStringAsFixed(1),
-                  style: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 17)),
+              EditableNumberLabel(
+                value: value,
+                min: min,
+                max: max,
+                decimals: 1,
+                onChanged: onChanged,
+                style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 17),
+              ),
               IconButton(
                 onPressed: () =>
                     onChanged((value + step).clamp(min, max)),

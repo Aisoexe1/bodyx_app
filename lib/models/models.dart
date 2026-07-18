@@ -116,7 +116,7 @@ class DailyStats {
     required this.deepSleepMinutes,
     required this.remSleepMinutes,
     required this.awakeMinutes,
-    this.heartRateBpm = 68,
+    this.sleepStagesSynced = false,
   });
 
   final DateTime date;
@@ -132,7 +132,12 @@ class DailyStats {
   final int deepSleepMinutes;
   final int remSleepMinutes;
   final int awakeMinutes;
-  final int heartRateBpm;
+
+  /// True only when the light/deep/REM/awake breakdown for this day came
+  /// from a real HealthKit/Health Connect sync — false means it's the
+  /// generated demo split, which callers should disclose rather than
+  /// present as a real reading.
+  final bool sleepStagesSynced;
 
   double get stepProgress => (steps / stepGoal).clamp(0, 1);
   double get calorieProgress => (calories / calorieGoal).clamp(0, 1);
@@ -315,7 +320,12 @@ class MealEntry {
       );
 }
 
-/// One working set of one exercise — the checkable unit of a [Workout].
+/// One set of one exercise the user added to today's workout — each set is
+/// individually trackable instead of a single static "X / Y sets" label.
+/// There's no fixed "Workout" template anymore (see [AppState.
+/// todayWorkoutSets]); the user builds the day's exercise list themselves,
+/// so this is plain user data, not mock content, and needs full JSON
+/// round-tripping rather than just a completion-flag list.
 class WorkoutSet {
   WorkoutSet({
     required this.exercise,
@@ -328,43 +338,69 @@ class WorkoutSet {
   final int setNumber;
   final int targetReps;
   bool done;
+
+  Map<String, dynamic> toJson() => {
+        'exercise': exercise,
+        'setNumber': setNumber,
+        'targetReps': targetReps,
+        'done': done,
+      };
+
+  factory WorkoutSet.fromJson(Map<String, dynamic> json) => WorkoutSet(
+        exercise: json['exercise'] as String,
+        setNumber: json['setNumber'] as int,
+        targetReps: json['targetReps'] as int,
+        done: json['done'] as bool,
+      );
 }
 
-/// Today's workout as a real checklist — each set is individually
-/// trackable instead of a single static "X / Y sets" label.
-class Workout {
-  Workout({
+/// One mobility/stretch activity the user added to today's plan (e.g. "Hip
+/// flexor stretch, 5 min") — mirrors [WorkoutSet]'s "no fixed template,
+/// user builds it" shape, just measured in minutes instead of reps.
+class MobilityActivity {
+  MobilityActivity({
     required this.name,
-    required this.subtitle,
-    required this.icon,
-    required this.sets,
+    required this.minutes,
+    this.done = false,
   });
 
   final String name;
-  final String subtitle;
-  final IconData icon;
-  final List<WorkoutSet> sets;
+  final int minutes;
+  bool done;
 
-  int get completedCount => sets.where((s) => s.done).length;
-  double get progress => sets.isEmpty ? 0 : completedCount / sets.length;
+  Map<String, dynamic> toJson() => {
+        'name': name,
+        'minutes': minutes,
+        'done': done,
+      };
+
+  factory MobilityActivity.fromJson(Map<String, dynamic> json) =>
+      MobilityActivity(
+        name: json['name'] as String,
+        minutes: json['minutes'] as int,
+        done: json['done'] as bool,
+      );
 }
 
 enum AlertSeverity { info, warning, success }
 
 class AlertItem {
   AlertItem({
+    required this.id,
     required this.title,
     required this.subtitle,
     required this.icon,
-    required this.time,
     required this.severity,
     this.read = false,
   });
 
+  /// Stable key (e.g. `'low_water'`) identifying which real condition this
+  /// alert represents — used to carry the read/unread flag across rebuilds,
+  /// since the list itself is recomputed from live data rather than fixed.
+  final String id;
   final String title;
   final String subtitle;
   final IconData icon;
-  final String time;
   final AlertSeverity severity;
   bool read;
 }

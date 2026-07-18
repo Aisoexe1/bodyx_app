@@ -23,9 +23,16 @@ class PersistenceService {
   static const _kWaterLogDate = 'bodyx.water_log_date';
   static const _kMeals = 'bodyx.meals';
   static const _kMealsDate = 'bodyx.meals_date';
-  static const _kWorkoutSetsDone = 'bodyx.workout_sets_done';
+  static const _kWorkoutSets = 'bodyx.workout_sets';
   static const _kWorkoutSetsDate = 'bodyx.workout_sets_date';
+  static const _kWorkoutTimerSeconds = 'bodyx.workout_timer_seconds';
+  static const _kWorkoutTimerStartedAt = 'bodyx.workout_timer_started_at';
+  static const _kWorkoutTimerDate = 'bodyx.workout_timer_date';
+  static const _kMobilityActivities = 'bodyx.mobility_activities';
+  static const _kMobilityActivitiesDate = 'bodyx.mobility_activities_date';
   static const _kLocale = 'bodyx.locale';
+  static const _kPublicProfile = 'bodyx.public_profile';
+  static const _kShareAnonData = 'bodyx.share_anon_data';
 
   Future<SharedPreferences> get _prefs => SharedPreferences.getInstance();
 
@@ -106,14 +113,17 @@ class PersistenceService {
   Future<void> savePlanTaskDone(List<bool> done) async =>
       (await _prefs).setString(_kPlanTaskDone, jsonEncode(done));
 
-  Future<List<bool>?> loadAlertRead() async {
+  /// Ids of alerts the user has already read — alerts are derived live from
+  /// real data (see `AppState._buildAlerts`) rather than stored as a fixed
+  /// list, so read state is tracked by stable id, not position.
+  Future<List<String>?> loadReadAlertIds() async {
     final raw = (await _prefs).getString(_kAlertRead);
     if (raw == null) return null;
-    return (jsonDecode(raw) as List).cast<bool>();
+    return (jsonDecode(raw) as List).cast<String>();
   }
 
-  Future<void> saveAlertRead(List<bool> read) async =>
-      (await _prefs).setString(_kAlertRead, jsonEncode(read));
+  Future<void> saveReadAlertIds(Iterable<String> ids) async =>
+      (await _prefs).setString(_kAlertRead, jsonEncode(ids.toList()));
 
   Future<bool?> loadNotificationsEnabled() async =>
       (await _prefs).getBool(_kNotificationsEnabled);
@@ -177,19 +187,86 @@ class PersistenceService {
   /// Same day-scoped pattern again — which sets of today's workout are
   /// checked off, keyed only by index (the workout template itself is
   /// regenerated fresh each session, like [MockData.todayPlan]).
-  Future<List<bool>?> loadTodayWorkoutSetsDone() async {
+  /// The user's own exercise list for today (no fixed template — see
+  /// [AppState.todayWorkoutSets]), day-scoped like water/meals so it
+  /// starts empty again on a new day rather than carrying over.
+  Future<List<WorkoutSet>?> loadTodayWorkoutSets() async {
     final prefs = await _prefs;
     if (prefs.getString(_kWorkoutSetsDate) != _todayKey) return null;
-    final raw = prefs.getString(_kWorkoutSetsDone);
+    final raw = prefs.getString(_kWorkoutSets);
     if (raw == null) return null;
-    return (jsonDecode(raw) as List).cast<bool>();
+    return (jsonDecode(raw) as List)
+        .map((e) => WorkoutSet.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
-  Future<void> saveTodayWorkoutSetsDone(List<bool> done) async {
+  Future<void> saveTodayWorkoutSets(List<WorkoutSet> sets) async {
     final prefs = await _prefs;
     await prefs.setString(_kWorkoutSetsDate, _todayKey);
-    await prefs.setString(_kWorkoutSetsDone, jsonEncode(done));
+    await prefs.setString(
+        _kWorkoutSets, jsonEncode(sets.map((s) => s.toJson()).toList()));
   }
+
+  /// [accumulatedSeconds] is the total from all stop presses today;
+  /// [startedAt] is non-null only while the timer is actively running, so
+  /// a relaunch mid-workout can resume counting from where it left off
+  /// (including time spent with the app closed) instead of losing it.
+  Future<(int accumulatedSeconds, DateTime? startedAt)?>
+      loadTodayWorkoutTimer() async {
+    final prefs = await _prefs;
+    if (prefs.getString(_kWorkoutTimerDate) != _todayKey) return null;
+    final seconds = prefs.getInt(_kWorkoutTimerSeconds);
+    if (seconds == null) return null;
+    final startedAtRaw = prefs.getString(_kWorkoutTimerStartedAt);
+    final startedAt =
+        startedAtRaw == null ? null : DateTime.parse(startedAtRaw);
+    return (seconds, startedAt);
+  }
+
+  Future<void> saveTodayWorkoutTimer(
+      int accumulatedSeconds, DateTime? startedAt) async {
+    final prefs = await _prefs;
+    await prefs.setString(_kWorkoutTimerDate, _todayKey);
+    await prefs.setInt(_kWorkoutTimerSeconds, accumulatedSeconds);
+    if (startedAt == null) {
+      await prefs.remove(_kWorkoutTimerStartedAt);
+    } else {
+      await prefs.setString(
+          _kWorkoutTimerStartedAt, startedAt.toIso8601String());
+    }
+  }
+
+  /// Same day-scoped, user-built pattern as [loadTodayWorkoutSets] — no
+  /// fixed mobility template, so this starts empty every day too.
+  Future<List<MobilityActivity>?> loadTodayMobilityActivities() async {
+    final prefs = await _prefs;
+    if (prefs.getString(_kMobilityActivitiesDate) != _todayKey) return null;
+    final raw = prefs.getString(_kMobilityActivities);
+    if (raw == null) return null;
+    return (jsonDecode(raw) as List)
+        .map((e) => MobilityActivity.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<void> saveTodayMobilityActivities(
+      List<MobilityActivity> activities) async {
+    final prefs = await _prefs;
+    await prefs.setString(_kMobilityActivitiesDate, _todayKey);
+    await prefs.setString(_kMobilityActivities,
+        jsonEncode(activities.map((a) => a.toJson()).toList()));
+  }
+
+  Future<bool?> loadPublicProfile() async =>
+      (await _prefs).getBool(_kPublicProfile);
+
+  Future<void> savePublicProfile(bool value) async =>
+      (await _prefs).setBool(_kPublicProfile, value);
+
+  Future<bool?> loadShareAnonData() async =>
+      (await _prefs).getBool(_kShareAnonData);
+
+  Future<void> saveShareAnonData(bool value) async =>
+      (await _prefs).setBool(_kShareAnonData, value);
 
   Future<String?> loadLocaleCode() async => (await _prefs).getString(_kLocale);
 
@@ -203,9 +280,15 @@ class PersistenceService {
   }
 
   /// Signs the session out without discarding the user's logged history —
-  /// there's only ever one local "account" in this prototype, so their
+  /// there's only ever one local "account" in this app, so their
   /// weight/measurement log survives a sign-out/sign-in cycle.
   Future<void> clearSession() async {
     await (await _prefs).remove(_kOnboardingDone);
+  }
+
+  /// Wipes every locally persisted value — used for account deletion, where
+  /// (unlike [clearSession]) the logged history must not survive.
+  Future<void> clearAllData() async {
+    await (await _prefs).clear();
   }
 }

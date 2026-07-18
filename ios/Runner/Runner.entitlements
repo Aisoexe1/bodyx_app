@@ -4,9 +4,18 @@
 <dict>
 	<key>com.apple.developer.healthkit</key>
 	<true/>
-	<key>com.apple.developer.applesignin</key>
+	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>Default</string>
+		<string>group.com.bodyx.bodyxApp</string>
 	</array>
+	<!-- com.apple.developer.applesignin is temporarily removed: personal/free
+	     Apple Developer teams cannot get this capability at all, which blocks
+	     every local build and deploy. Re-add it once the app is signed with a
+	     paid Apple Developer Program account (required for Sign In with Apple
+	     and for App Store submission in general):
+	     <key>com.apple.developer.applesignin</key>
+	     <array>
+	       <string>Default</string>
+	     </array> -->
 </dict>
 </plist>

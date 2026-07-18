@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:bodyx_app/models/models.dart';
 import 'package:bodyx_app/network/auth_repository.dart';
 import 'package:bodyx_app/network/measurement_repository.dart';
@@ -84,6 +86,61 @@ class FakeAuthRepository implements AuthRepository {
 
   @override
   Future<void> signOut() async {}
+
+  bool deleteAccountCalled = false;
+
+  @override
+  Future<void> deleteAccount() async {
+    deleteAccountCalled = true;
+  }
+}
+
+/// Simulates a completely unreachable backend (no server deployed, offline,
+/// timeout) — every call throws a plain connectivity-style error, as
+/// opposed to [ApiException] which represents a server that *did* respond,
+/// just with a rejection.
+class UnreachableAuthRepository implements AuthRepository {
+  @override
+  Future<UserProfile> register({
+    required String email,
+    required String username,
+    required String password,
+  }) =>
+      throw const SocketException('Network is unreachable');
+
+  @override
+  Future<UserProfile> login({required String email, required String password}) =>
+      throw const SocketException('Network is unreachable');
+
+  @override
+  Future<String?> forgotPassword(String email) =>
+      throw const SocketException('Network is unreachable');
+
+  @override
+  Future<UserProfile> resetPassword({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) =>
+      throw const SocketException('Network is unreachable');
+
+  @override
+  Future<UserProfile> loginWithGoogle(String idToken) =>
+      throw const SocketException('Network is unreachable');
+
+  @override
+  Future<UserProfile> loginWithApple(String identityToken) =>
+      throw const SocketException('Network is unreachable');
+
+  @override
+  Future<UserProfile?> restoreSession() async => null;
+
+  @override
+  Future<void> signOut() async {}
+
+  @override
+  Future<void> deleteAccount() =>
+      throw const SocketException('Network is unreachable');
 }
 
 class FakeProfileRepository implements ProfileRepository {
@@ -174,9 +231,13 @@ class FakeSupportRepository implements SupportRepository {
 /// or the keychain. [persistence] is left real (backed by the
 /// `shared_preferences` mock set up in `setUp`) since that's what these
 /// tests are actually verifying round-trips against.
-AppState newTestAppState({PersistenceService? persistence}) => AppState(
+AppState newTestAppState({
+  PersistenceService? persistence,
+  AuthRepository? authRepository,
+}) =>
+    AppState(
       persistence: persistence,
-      authRepository: FakeAuthRepository(),
+      authRepository: authRepository ?? FakeAuthRepository(),
       profileRepository: FakeProfileRepository(),
       weightRepository: FakeWeightRepository(),
       measurementRepository: FakeMeasurementRepository(),

@@ -13,6 +13,7 @@ import '../../widgets/common/scale_tap.dart';
 import '../body_metrics/body_metrics_screen.dart';
 import '../body_metrics/log_metrics_sheet.dart';
 import '../plan/daily_plan_screen.dart';
+import '../plan/mobility_checklist_sheet.dart';
 import '../plan/workout_checklist_sheet.dart';
 import 'log_meal_sheet.dart';
 import 'water_log_sheet.dart';
@@ -124,14 +125,19 @@ class _TodayChecklistCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final workout = state.todayWorkout;
-    final workoutDone = workout.completedCount == workout.sets.length;
+    final workoutSets = state.todayWorkoutSets;
+    final workoutDone = workoutSets.isNotEmpty &&
+        state.todayWorkoutCompletedSets == workoutSets.length;
+    final mobilityActivities = state.todayMobilityActivities;
+    final mobilityDone = mobilityActivities.isNotEmpty &&
+        state.todayMobilityCompletedCount == mobilityActivities.length;
     final weightDone = state.loggedWeightToday;
     final simpleTasks = state.planTasks;
     final doneCount = (workoutDone ? 1 : 0) +
+        (mobilityDone ? 1 : 0) +
         (weightDone ? 1 : 0) +
         simpleTasks.where((t) => t.done).length;
-    final totalCount = 2 + simpleTasks.length;
+    final totalCount = 3 + simpleTasks.length;
 
     return GlowCard(
       child: Column(
@@ -158,17 +164,41 @@ class _TodayChecklistCard extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           _ChecklistRow(
-            icon: workout.icon,
-            title: workout.name,
-            subtitle:
-                '${workout.completedCount} / ${workout.sets.length} sets · ${workout.subtitle}',
+            icon: Icons.fitness_center_rounded,
+            title: AppLocalizations.of(context)!.planTodaysWorkoutTitle,
+            subtitle: workoutSets.isEmpty
+                ? AppLocalizations.of(context)!.dashboardNoExercisesYet
+                : AppLocalizations.of(context)!.dashboardWorkoutSetsProgress(
+                    state.todayWorkoutCompletedSets.toString(),
+                    workoutSets.length.toString(),
+                  ),
             done: workoutDone,
-            progress: workout.progress,
+            progress: workoutSets.isEmpty ? null : state.todayWorkoutProgress,
             onTap: () => showModalBottomSheet(
               context: context,
               isScrollControlled: true,
               backgroundColor: Colors.transparent,
               builder: (_) => const WorkoutChecklistSheet(),
+            ),
+          ),
+          const _ChecklistDivider(),
+          _ChecklistRow(
+            icon: Icons.self_improvement_rounded,
+            title: AppLocalizations.of(context)!.planMobilityStretchTitle,
+            subtitle: mobilityActivities.isEmpty
+                ? AppLocalizations.of(context)!.dashboardNoActivitiesYet
+                : AppLocalizations.of(context)!.planMobilityProgress(
+                    state.todayMobilityCompletedCount.toString(),
+                    mobilityActivities.length.toString(),
+                  ),
+            done: mobilityDone,
+            progress:
+                mobilityActivities.isEmpty ? null : state.todayMobilityProgress,
+            onTap: () => showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
+              builder: (_) => const MobilityChecklistSheet(),
             ),
           ),
           const _ChecklistDivider(),
@@ -522,7 +552,17 @@ class _LastBodyScanCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final latest = state.weightHistory.last;
+    // Empty until the user logs their first weigh-in (or Health sync pulls
+    // one in) — a brand new account has no entries yet, so this can't
+    // assume there's always a `.last` to show.
+    final latest = state.weightHistory.isEmpty ? null : state.weightHistory.last;
+    final title = latest == null
+        ? AppLocalizations.of(context)!.dashboardBodyScanEmptyTitle
+        : AppLocalizations.of(context)!.dashboardBodyScanSummary(
+            latest.kg.round().toString(), latest.bodyFatPct.toStringAsFixed(1));
+    final subtitle = latest == null
+        ? AppLocalizations.of(context)!.dashboardBodyScanEmptySubtitle
+        : AppLocalizations.of(context)!.dashboardTapToViewFullReport;
     return ScaleTap(
       onTap: () => Navigator.push(
         context,
@@ -546,18 +586,13 @@ class _LastBodyScanCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                      AppLocalizations.of(context)!.dashboardBodyScanSummary(
-                          latest.kg.round().toString(),
-                          latest.bodyFatPct.toStringAsFixed(1)),
+                  Text(title,
                       style: const TextStyle(
                           color: AppColors.textPrimary,
                           fontWeight: FontWeight.w800,
                           fontSize: 15)),
                   const SizedBox(height: 4),
-                  Text(
-                      AppLocalizations.of(context)!
-                          .dashboardTapToViewFullReport,
+                  Text(subtitle,
                       style: const TextStyle(
                           color: AppColors.textMuted, fontSize: 12)),
                 ],

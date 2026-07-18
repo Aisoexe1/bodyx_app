@@ -27,8 +27,12 @@ void main() {
       expect(reply, contains("don't have a canned answer"));
     });
 
-    test('modelName names a real, currently-supported model', () {
+    test('modelName does not claim to be a real AI model — this is local '
+        'keyword matching, not a live LLM call', () {
       expect(SupportAssistant.modelName, isNotEmpty);
+      expect(SupportAssistant.modelName.toLowerCase(), isNot(contains('claude')));
+      expect(SupportAssistant.modelName.toLowerCase(), isNot(contains('gpt')));
+      expect(SupportAssistant.modelName.toLowerCase(), isNot(contains('gemini')));
     });
   });
 }

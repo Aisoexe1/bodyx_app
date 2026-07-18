@@ -44,4 +44,12 @@ class ProgressPhotoStorage {
       await file.delete();
     }
   }
+
+  /// Removes every stored progress-photo file — used for account deletion.
+  Future<void> deleteAll() async {
+    final dir = await _photosDir();
+    if (await dir.exists()) {
+      await dir.delete(recursive: true);
+    }
+  }
 }

@@ -5,13 +5,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:bodyx_app/app.dart';
-import 'package:bodyx_app/state/app_state.dart';
+
+import 'fake_repositories.dart';
 
 void main() {
   testWidgets('BodyX boots to the splash screen then the sign-in screen',
       (WidgetTester tester) async {
     SharedPreferences.setMockInitialValues({});
-    final appState = AppState();
+    final appState = newTestAppState();
     await appState.hydrate();
 
     await tester.pumpWidget(BodyXApp(appState: appState));

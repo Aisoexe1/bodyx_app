@@ -56,6 +56,7 @@ class ApiClient {
       _send('PATCH', path, body);
   Future<dynamic> put(String path, [Map<String, dynamic>? body]) =>
       _send('PUT', path, body);
+  Future<dynamic> delete(String path) => _send('DELETE', path);
 
   Future<dynamic> _send(String method, String path, [Map<String, dynamic>? body]) async {
     final uri = Uri.parse('$baseUrl$path');
@@ -109,6 +110,8 @@ class ApiClient {
         return _client.patch(uri, headers: headers, body: body);
       case 'PUT':
         return _client.put(uri, headers: headers, body: body);
+      case 'DELETE':
+        return _client.delete(uri, headers: headers);
       default:
         throw ArgumentError('Unsupported HTTP method: $method');
     }

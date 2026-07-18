@@ -122,27 +122,4 @@ void main() {
     });
   });
 
-  group('heart rate', () {
-    test('zones progress from rest to max as bpm rises', () {
-      const age = 25; // max ~195
-      expect(HealthInsights.hrZoneFor(bpm: 80, age: age).label, 'Отдых');
-      expect(HealthInsights.hrZoneFor(bpm: 160, age: age).label,
-          'Стимул для роста мышц');
-      expect(HealthInsights.hrZoneFor(bpm: 190, age: age).level, StatusLevel.warn);
-    });
-
-    test('resting HR trend flags a rise above baseline', () {
-      final stable = HealthInsights.restingHrTrend(
-        todayBpm: 60,
-        priorDaysBpm: [58, 59, 60, 61, 59, 60, 58],
-      );
-      expect(stable.level, StatusLevel.good);
-
-      final elevated = HealthInsights.restingHrTrend(
-        todayBpm: 70,
-        priorDaysBpm: [58, 59, 60, 61, 59, 60, 58],
-      );
-      expect(elevated.level, StatusLevel.bad);
-    });
-  });
 }

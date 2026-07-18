@@ -11,7 +11,6 @@ class HealthDailySnapshot {
     this.sleepRemMinutes,
     this.sleepAwakeMinutes,
     this.waterMl,
-    this.heartRateBpm,
   });
 
   final int? steps;
@@ -21,7 +20,6 @@ class HealthDailySnapshot {
   final int? sleepRemMinutes;
   final int? sleepAwakeMinutes;
   final int? waterMl;
-  final int? heartRateBpm;
 
   /// Null when no sleep data at all was found for the day.
   int? get totalSleepMinutes {
