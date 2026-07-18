@@ -1,4 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Required in the RELEASE manifest, not just debug/profile: the app's
+         auth/profile/weight/measurement sync all use HTTP (lib/network/) and
+         would silently fail in a release build without it. The debug/profile
+         variants declare it separately for Flutter's dev tooling. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+
     <!-- Lets the local-notifications plugin re-arm daily reminders after a
          device reboot; scheduling itself uses inexact alarms so no
          SCHEDULE_EXACT_ALARM/USE_EXACT_ALARM permission is needed. -->

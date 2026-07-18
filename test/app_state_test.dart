@@ -348,6 +348,25 @@ void main() {
       expect(restarted.unreadAlertCount, 0);
     });
 
+    test('failed server delete is retried on next launch, session not restored',
+        () async {
+      final state = newTestAppState(authRepository: UnreachableAuthRepository());
+      await state.hydrate();
+      await state.signIn('delete@bodyx.app', 'pw');
+
+      await state.deleteAccount(); // server DELETE throws → flag persisted
+
+      // Relaunch with a reachable backend: hydrate must NOT restore the
+      // session and must complete the pending server-side deletion.
+      final reachable = FakeAuthRepository();
+      final restarted = newTestAppState(authRepository: reachable);
+      await restarted.hydrate();
+      await Future<void>.delayed(Duration.zero); // let the unawaited retry run
+
+      expect(restarted.user, isNull);
+      expect(reachable.deleteAccountCalled, isTrue);
+    });
+
     test('notification settings survive a restart', () async {
       final state = newTestAppState();
       await state.hydrate();

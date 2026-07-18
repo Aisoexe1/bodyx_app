@@ -302,6 +302,18 @@ class PersistenceService {
 
   /// Wipes every locally persisted value — used for account deletion, where
   /// (unlike [clearSession]) the logged history must not survive.
+  // Survives clearAllData() by being written after it — see
+  // AppState.deleteAccount(): marks that the server-side DELETE /users/me
+  // failed and should be retried on a future launch.
+  static const _kPendingAccountDeletion = 'bodyx.pending_account_deletion';
+
+  Future<bool> loadPendingAccountDeletion() async =>
+      (await _prefs).getBool(_kPendingAccountDeletion) ?? false;
+
+  Future<void> savePendingAccountDeletion(bool pending) async => pending
+      ? (await _prefs).setBool(_kPendingAccountDeletion, true)
+      : (await _prefs).remove(_kPendingAccountDeletion).then((_) {});
+
   Future<void> clearAllData() async {
     await (await _prefs).clear();
   }
