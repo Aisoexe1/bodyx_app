@@ -14,11 +14,15 @@ class LiveActivityService {
 
   static const _channel = MethodChannel('bodyx/live_activity');
 
+  /// [startedAt] drives a count-up timer (workout); [endsAt] drives a
+  /// countdown (mobility's per-activity timer). Pass only whichever matches
+  /// the kind — never both.
   Future<void> startOrUpdate({
     required String kind,
     required String title,
     required int accumulatedSeconds,
-    required DateTime? startedAt,
+    DateTime? startedAt,
+    DateTime? endsAt,
   }) async {
     if (!Platform.isIOS) return;
     try {
@@ -27,6 +31,7 @@ class LiveActivityService {
         'title': title,
         'accumulatedSeconds': accumulatedSeconds,
         'startedAtMillis': startedAt?.millisecondsSinceEpoch,
+        'endsAtMillis': endsAt?.millisecondsSinceEpoch,
       });
     } catch (e) {
       debugPrint('Live Activity update failed: $e');
@@ -39,6 +44,21 @@ class LiveActivityService {
       await _channel.invokeMethod<void>('end', {'kind': kind});
     } catch (e) {
       debugPrint('Live Activity end failed: $e');
+    }
+  }
+
+  /// Picks up a timer that was stopped from the Lock Screen's Stop button
+  /// while this Dart process wasn't around to hear about it directly (the
+  /// widget extension has no Flutter engine to call back into) — returns
+  /// the "kind" that was stopped ('workout'/'mobility'), or null if none is
+  /// pending. Consumes the signal, so each stop is only reported once.
+  Future<String?> consumePendingStop() async {
+    if (!Platform.isIOS) return null;
+    try {
+      return await _channel.invokeMethod<String>('consumePendingStop');
+    } catch (e) {
+      debugPrint('Live Activity pending-stop check failed: $e');
+      return null;
     }
   }
 }

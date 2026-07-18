@@ -131,6 +131,14 @@ class NotificationService {
   /// phone locked or the app in the background.
   Future<void> showActivityCompleted(String title, String body) async {
     await init();
+    // Best-effort: if permission (incl. sound) was never granted — the user
+    // never touched a Notifications toggle — request it now rather than
+    // silently presenting nothing. A no-op if already decided either way.
+    try {
+      await requestPermission();
+    } catch (e) {
+      debugPrint('Activity-completed permission request failed: $e');
+    }
     await _plugin.show(
       _activityDoneId,
       title,
@@ -142,11 +150,17 @@ class NotificationService {
           channelDescription: 'Plays when a timed activity finishes',
           importance: Importance.high,
           priority: Priority.high,
+          playSound: true,
         ),
+        // `sound` must be set explicitly — on iOS, presentSound only
+        // controls whether a foreground notification is *allowed* to play
+        // whatever sound is attached; without a `sound` it plays nothing
+        // (which is why this used to feel like "vibration but no sound").
         iOS: DarwinNotificationDetails(
           presentAlert: true,
           presentBanner: true,
           presentSound: true,
+          sound: 'default',
         ),
       ),
     );

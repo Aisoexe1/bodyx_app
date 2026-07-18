@@ -178,6 +178,8 @@
       "bodyFatPercent": {}
     }
   },
+  "dashboardBodyScanEmptyTitle": "Поки немає відміток",
+  "dashboardBodyScanEmptySubtitle": "Натисніть, щоб записати першу вагу",
   "logMealTitle": "Прийом їжі",
   "logMealCaloriesToday": "{eaten} / {tdee} ккал сьогодні",
   "@logMealCaloriesToday": {
@@ -351,6 +353,8 @@
       "weight": {}
     }
   },
+  "progressWeightEmptyTitle": "Поки немає відміток ваги",
+  "progressWeightEmptySubtitle": "Запишіть вагу, щоб почати відстежувати динаміку",
   "progressBodyFatLabel": "Жир у тілі",
   "progressBodyFatValue": "{value}%",
   "@progressBodyFatValue": {

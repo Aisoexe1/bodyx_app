@@ -40,7 +40,7 @@ enum AuthStage {
 /// [MockData.emptyBodyMeasurements]) rather than fabricated history — real
 /// numbers come from the user's own logging or, once enabled, a real
 /// HealthKit/Health Connect sync via [syncHealthData].
-class AppState extends ChangeNotifier {
+class AppState extends ChangeNotifier with WidgetsBindingObserver {
   AppState({
     PersistenceService? persistence,
     AuthRepository? authRepository,
@@ -62,6 +62,36 @@ class AppState extends ChangeNotifier {
     todayMobilityActivities = [];
     meals = [];
     progressPhotos = [];
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  /// A running timer's Lock Screen "Stop" button ends the Live Activity
+  /// directly from the widget extension, which has no Flutter engine to
+  /// call back into — so the app only finds out once it's actually running
+  /// again. Checked here (foreground) and once more at the end of
+  /// [hydrate] (cold start), which together cover every way the app can
+  /// come back after the button was tapped while it wasn't in the
+  /// foreground.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(_reconcilePendingLiveActivityStop());
+    }
+  }
+
+  Future<void> _reconcilePendingLiveActivityStop() async {
+    final kind = await LiveActivityService.instance.consumePendingStop();
+    if (kind == 'workout') {
+      _applyExternalWorkoutStop();
+    } else if (kind == 'mobility' && activeMobilityCountdownIndex != null) {
+      cancelMobilityCountdown();
+    }
   }
 
   final PersistenceService _persistence;
@@ -157,8 +187,18 @@ class AppState extends ChangeNotifier {
       todayMobilityActivities = savedMobility;
     }
 
-    await _restoreServerSession();
+    // Best-effort, matching this method's own doc comment ("never blocks
+    // or degrades it") — it wasn't actually non-blocking before: awaiting
+    // an up-to-8s network round trip here held up runApp() itself, so an
+    // unreachable/slow backend could delay the first frame long enough for
+    // iOS's launch watchdog to kill a cold (non-debugger-attached) launch
+    // before it ever rendered anything.
+    unawaited(_restoreServerSession());
     _pushWidgetOverview();
+    // Best-effort and non-blocking, like every other native sync in this
+    // method — a Live Activity stop signal should never hold up the splash
+    // screen while the app waits on a platform-channel round trip.
+    unawaited(_reconcilePendingLiveActivityStop());
   }
 
   /// Mirrors today's numbers into the Home Screen widget — call after any
@@ -499,6 +539,7 @@ class AppState extends ChangeNotifier {
     todayWaterLog = [];
     dailyStats = MockData.emptyDailyStats();
     unawaited(LiveActivityService.instance.end('workout'));
+    unawaited(LiveActivityService.instance.end('mobility'));
     notifyListeners();
   }
 
@@ -643,6 +684,20 @@ class AppState extends ChangeNotifier {
     ));
   }
 
+  /// Mirrors what [toggleWorkoutTimer]'s stop branch does, for when the
+  /// stop happened via the Lock Screen button instead of an in-app tap —
+  /// the native side has already ended the Live Activity, so this only
+  /// needs to bank the elapsed time into local/persisted state.
+  void _applyExternalWorkoutStop() {
+    final startedAt = _workoutTimerStartedAt;
+    if (startedAt == null) return;
+    _workoutAccumulatedSeconds += DateTime.now().difference(startedAt).inSeconds;
+    _workoutTimerStartedAt = null;
+    unawaited(_persistence.saveTodayWorkoutTimer(
+        _workoutAccumulatedSeconds, _workoutTimerStartedAt));
+    notifyListeners();
+  }
+
   // ---- Mobility / stretch (also fully user-defined) ------------------------
   //
   // Same "no fixed template" shape as the workout — starts empty every
@@ -665,7 +720,9 @@ class AppState extends ChangeNotifier {
   }
 
   /// Starts the countdown for [index]; tapping the already-running one
-  /// cancels it instead (nothing gets marked done).
+  /// cancels it instead (nothing gets marked done). Mirrors the workout
+  /// timer's Live Activity — shows on the Lock Screen / Dynamic Island and
+  /// is stoppable from there, just counting down instead of up.
   void startMobilityCountdown(int index) {
     if (activeMobilityCountdownIndex == index) {
       cancelMobilityCountdown();
@@ -674,10 +731,17 @@ class AppState extends ChangeNotifier {
     HapticFeedback.mediumImpact();
     _mobilityCountdownTimer?.cancel();
     activeMobilityCountdownIndex = index;
-    final duration =
-        Duration(minutes: todayMobilityActivities[index].minutes);
-    _mobilityCountdownEndsAt = DateTime.now().add(duration);
+    final activity = todayMobilityActivities[index];
+    final duration = Duration(minutes: activity.minutes);
+    final endsAt = DateTime.now().add(duration);
+    _mobilityCountdownEndsAt = endsAt;
     _mobilityCountdownTimer = Timer(duration, _completeMobilityCountdown);
+    unawaited(LiveActivityService.instance.startOrUpdate(
+      kind: 'mobility',
+      title: activity.name,
+      accumulatedSeconds: 0,
+      endsAt: endsAt,
+    ));
     notifyListeners();
   }
 
@@ -686,6 +750,7 @@ class AppState extends ChangeNotifier {
     _mobilityCountdownTimer = null;
     activeMobilityCountdownIndex = null;
     _mobilityCountdownEndsAt = null;
+    unawaited(LiveActivityService.instance.end('mobility'));
     notifyListeners();
   }
 
@@ -694,6 +759,7 @@ class AppState extends ChangeNotifier {
     _mobilityCountdownTimer = null;
     activeMobilityCountdownIndex = null;
     _mobilityCountdownEndsAt = null;
+    unawaited(LiveActivityService.instance.end('mobility'));
     if (index == null || index >= todayMobilityActivities.length) {
       notifyListeners();
       return;

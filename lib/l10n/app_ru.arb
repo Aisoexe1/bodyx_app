@@ -178,6 +178,8 @@
       "bodyFatPercent": {}
     }
   },
+  "dashboardBodyScanEmptyTitle": "Пока нет отметок",
+  "dashboardBodyScanEmptySubtitle": "Нажмите, чтобы записать первый вес",
   "logMealTitle": "Приём пищи",
   "logMealCaloriesToday": "{eaten} / {tdee} ккал сегодня",
   "@logMealCaloriesToday": {
@@ -351,6 +353,8 @@
       "weight": {}
     }
   },
+  "progressWeightEmptyTitle": "Пока нет отметок веса",
+  "progressWeightEmptySubtitle": "Запишите вес, чтобы начать отслеживать динамику",
   "progressBodyFatLabel": "Процент жира",
   "progressBodyFatValue": "{value}%",
   "@progressBodyFatValue": {

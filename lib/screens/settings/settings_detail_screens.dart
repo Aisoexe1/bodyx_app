@@ -8,6 +8,8 @@ import '../../models/models.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/common/confirm_dialog.dart';
+import '../../widgets/common/editable_number_label.dart';
 import '../../widgets/common/glow_card.dart';
 import '../../widgets/common/inputs_buttons.dart';
 import '../../widgets/common/scale_tap.dart';
@@ -231,11 +233,19 @@ class _NumberEditScreenState extends State<_NumberEditScreen> {
       child: Column(
         children: [
           const SizedBox(height: 20),
-          Text('${_value.toStringAsFixed(widget.step < 1 ? 1 : 0)} ${widget.unit}',
-              style: const TextStyle(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 44)),
+          EditableNumberLabel(
+            value: _value,
+            min: widget.min,
+            max: widget.max,
+            decimals: widget.step < 1 ? 1 : 0,
+            suffix: widget.unit,
+            width: 180,
+            onChanged: (v) => setState(() => _value = v),
+            style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w800,
+                fontSize: 44),
+          ),
           const SizedBox(height: 24),
           SliderTheme(
             data: SliderTheme.of(context).copyWith(
@@ -697,34 +707,16 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
   bool _deleting = false;
 
   Future<void> _confirmDelete() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        title: Text(
-            AppLocalizations.of(context)!.settingsDeleteAccountDialogTitle,
-            style: const TextStyle(color: AppColors.textPrimary)),
-        content: Text(
-            AppLocalizations.of(context)!.settingsDeleteAccountDialogContent,
-            style: const TextStyle(color: AppColors.textMuted)),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child:
-                  Text(AppLocalizations.of(context)!.settingsCancelButton)),
-          TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: Text(
-                  AppLocalizations.of(context)!
-                      .settingsDeleteAccountConfirmButton,
-                  style: const TextStyle(
-                      color: AppColors.warningDeep,
-                      fontWeight: FontWeight.w700)),
-          ),
-        ],
-      ),
+    final confirmed = await showConfirmDialog(
+      context,
+      icon: Icons.delete_forever_rounded,
+      title: AppLocalizations.of(context)!.settingsDeleteAccountDialogTitle,
+      message: AppLocalizations.of(context)!.settingsDeleteAccountDialogContent,
+      confirmLabel:
+          AppLocalizations.of(context)!.settingsDeleteAccountConfirmButton,
+      cancelLabel: AppLocalizations.of(context)!.settingsCancelButton,
     );
-    if (confirmed != true || !mounted) return;
+    if (!confirmed || !mounted) return;
 
     setState(() => _deleting = true);
     HapticFeedback.mediumImpact();

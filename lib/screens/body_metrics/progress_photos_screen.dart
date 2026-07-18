@@ -8,6 +8,7 @@ import '../../state/app_state.dart';
 import '../../state/progress_photo_storage.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/common/confirm_dialog.dart';
 import '../../widgets/common/glow_card.dart';
 import '../../widgets/common/inputs_buttons.dart';
 import '../../widgets/common/scale_tap.dart';
@@ -253,29 +254,15 @@ class _ProgressPhotosScreenState extends State<ProgressPhotosScreen> {
 
 /// Shared by the grid's long-press delete and the full-screen preview's
 /// delete button, so both surfaces confirm identically.
-Future<bool> confirmDeletePhotoDialog(BuildContext context) async {
-  final confirmed = await showDialog<bool>(
-    context: context,
-    builder: (context) => AlertDialog(
-      backgroundColor: AppColors.surfaceElevated,
-      title: Text(AppLocalizations.of(context)!.progressPhotosDeleteDialogTitle,
-          style: const TextStyle(color: AppColors.textPrimary)),
-      content: Text(AppLocalizations.of(context)!.progressPhotosDeleteDialogContent,
-          style: const TextStyle(color: AppColors.textSecondary)),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context, false),
-          child: Text(AppLocalizations.of(context)!.progressPhotosCancelButton),
-        ),
-        TextButton(
-          onPressed: () => Navigator.pop(context, true),
-          child: Text(AppLocalizations.of(context)!.progressPhotosDeleteButton,
-              style: const TextStyle(color: AppColors.warningDeep)),
-        ),
-      ],
-    ),
+Future<bool> confirmDeletePhotoDialog(BuildContext context) {
+  return showConfirmDialog(
+    context,
+    icon: Icons.delete_outline_rounded,
+    title: AppLocalizations.of(context)!.progressPhotosDeleteDialogTitle,
+    message: AppLocalizations.of(context)!.progressPhotosDeleteDialogContent,
+    confirmLabel: AppLocalizations.of(context)!.progressPhotosDeleteButton,
+    cancelLabel: AppLocalizations.of(context)!.progressPhotosCancelButton,
   );
-  return confirmed == true;
 }
 
 class _PhotoTile extends StatelessWidget {

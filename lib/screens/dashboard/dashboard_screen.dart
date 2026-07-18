@@ -552,7 +552,17 @@ class _LastBodyScanCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final latest = state.weightHistory.last;
+    // Empty until the user logs their first weigh-in (or Health sync pulls
+    // one in) — a brand new account has no entries yet, so this can't
+    // assume there's always a `.last` to show.
+    final latest = state.weightHistory.isEmpty ? null : state.weightHistory.last;
+    final title = latest == null
+        ? AppLocalizations.of(context)!.dashboardBodyScanEmptyTitle
+        : AppLocalizations.of(context)!.dashboardBodyScanSummary(
+            latest.kg.round().toString(), latest.bodyFatPct.toStringAsFixed(1));
+    final subtitle = latest == null
+        ? AppLocalizations.of(context)!.dashboardBodyScanEmptySubtitle
+        : AppLocalizations.of(context)!.dashboardTapToViewFullReport;
     return ScaleTap(
       onTap: () => Navigator.push(
         context,
@@ -576,18 +586,13 @@ class _LastBodyScanCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                      AppLocalizations.of(context)!.dashboardBodyScanSummary(
-                          latest.kg.round().toString(),
-                          latest.bodyFatPct.toStringAsFixed(1)),
+                  Text(title,
                       style: const TextStyle(
                           color: AppColors.textPrimary,
                           fontWeight: FontWeight.w800,
                           fontSize: 15)),
                   const SizedBox(height: 4),
-                  Text(
-                      AppLocalizations.of(context)!
-                          .dashboardTapToViewFullReport,
+                  Text(subtitle,
                       style: const TextStyle(
                           color: AppColors.textMuted, fontSize: 12)),
                 ],

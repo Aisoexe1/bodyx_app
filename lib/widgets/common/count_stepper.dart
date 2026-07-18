@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
+import 'editable_number_label.dart';
 import 'scale_tap.dart';
 
 /// A compact -/value/+ integer stepper for small bounded counts (sets,
@@ -53,11 +54,16 @@ class CountStepper extends StatelessWidget {
                         ? AppColors.textMuted
                         : AppColors.textMuted.withValues(alpha: 0.3)),
               ),
-              Text('$value',
-                  style: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 18)),
+              EditableNumberLabel(
+                value: value.toDouble(),
+                min: min.toDouble(),
+                max: max.toDouble(),
+                onChanged: (v) => onChanged(v.round().clamp(min, max)),
+                style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 18),
+              ),
               ScaleTap(
                 onTap: value < max
                     ? () => onChanged((value + step).clamp(min, max))

@@ -5,6 +5,7 @@ import '../../models/models.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/common/editable_number_label.dart';
 import '../../widgets/common/inputs_buttons.dart';
 
 /// Onboarding "your body data" screen — gender toggle plus height / weight
@@ -276,8 +277,13 @@ class _MetricSlider extends StatelessWidget {
                       color: AppColors.textSecondary,
                       fontWeight: FontWeight.w600)),
               const Spacer(),
-              Text(
-                '${value.round()} $unit',
+              EditableNumberLabel(
+                value: value,
+                min: min,
+                max: max,
+                suffix: unit,
+                width: 92,
+                onChanged: onChanged,
                 style: const TextStyle(
                     color: AppColors.textPrimary,
                     fontWeight: FontWeight.w800,

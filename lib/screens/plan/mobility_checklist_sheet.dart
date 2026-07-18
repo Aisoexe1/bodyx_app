@@ -6,6 +6,7 @@ import 'package:bodyx_app/l10n/gen/app_localizations.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/common/confirm_dialog.dart';
 import '../../widgets/common/glow_card.dart';
 import '../../widgets/common/inputs_buttons.dart';
 import '../../widgets/common/scale_tap.dart';
@@ -62,29 +63,14 @@ class _MobilityChecklistSheetState extends State<MobilityChecklistSheet> {
   }
 
   Future<void> _confirmRemove(BuildContext context, String name) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surfaceElevated,
-        title: Text(
-            AppLocalizations.of(context)!
-                .workoutChecklistRemoveExerciseTitle(name),
-            style: const TextStyle(color: AppColors.textPrimary)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(AppLocalizations.of(context)!.settingsCancelButton),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(
-                AppLocalizations.of(context)!.workoutChecklistRemoveButton,
-                style: const TextStyle(color: AppColors.warningDeep)),
-          ),
-        ],
-      ),
+    final confirmed = await showConfirmDialog(
+      context,
+      title: AppLocalizations.of(context)!
+          .workoutChecklistRemoveExerciseTitle(name),
+      confirmLabel: AppLocalizations.of(context)!.workoutChecklistRemoveButton,
+      cancelLabel: AppLocalizations.of(context)!.settingsCancelButton,
     );
-    if (confirmed == true && context.mounted) {
+    if (confirmed && context.mounted) {
       context.read<AppState>().removeMobilityActivity(name);
     }
   }

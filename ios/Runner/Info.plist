@@ -51,27 +51,20 @@
 			</array>
 		</dict>
 	</array>
-	<key>UIApplicationSceneManifest</key>
-	<dict>
-		<key>UIApplicationSupportsMultipleScenes</key>
-		<false/>
-		<key>UISceneConfigurations</key>
-		<dict>
-			<key>UIWindowSceneSessionRoleApplication</key>
-			<array>
-				<dict>
-					<key>UISceneClassName</key>
-					<string>UIWindowScene</string>
-					<key>UISceneConfigurationName</key>
-					<string>flutter</string>
-					<key>UISceneDelegateClassName</key>
-					<string>$(PRODUCT_MODULE_NAME).SceneDelegate</string>
-					<key>UISceneStoryboardFile</key>
-					<string>Main</string>
-				</dict>
-			</array>
-		</dict>
-	</dict>
+	<!-- No UIApplicationSceneManifest: deliberately using the classic
+	     single-window (non-Scene) app lifecycle. The Scene-connection path
+	     (implicit engine attaching to a storyboard-instantiated
+	     FlutterViewController asynchronously during scene creation) has a
+	     known Flutter engine race on ProMotion devices when launched without
+	     a debugger attached — viewDidLoad can fire before the engine finishes
+	     attaching, leaving platformTaskRunner null and segfaulting in
+	     -[VSyncClient initWithTaskRunner:callback:] a few dozen milliseconds
+	     after launch (flutter/flutter#183900, #153971) — confirmed via real
+	     on-device crash reports, 100% reproducible from a Home Screen tap.
+	     The classic lifecycle builds the engine + window + root view
+	     controller synchronously in didFinishLaunchingWithOptions, with no
+	     such race. Revisit once the upstream engine bug is fixed — Flutter's
+	     own tooling warns Scene support will eventually be mandatory. -->
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>

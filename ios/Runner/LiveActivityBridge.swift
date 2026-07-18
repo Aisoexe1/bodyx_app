@@ -29,6 +29,19 @@ final class LiveActivityBridge: NSObject {
     }
 
     private func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        // Doesn't address a specific activity, so it's handled before the
+        // `kind` guard every other method below requires.
+        if call.method == "consumePendingStop" {
+            guard let defaults = UserDefaults(suiteName: BodyXTimerAttributes.appGroupId) else {
+                result(nil)
+                return
+            }
+            let stoppedKind = defaults.string(forKey: BodyXTimerAttributes.pendingStopKey)
+            defaults.removeObject(forKey: BodyXTimerAttributes.pendingStopKey)
+            result(stoppedKind)
+            return
+        }
+
         guard let args = call.arguments as? [String: Any],
               let kind = args["kind"] as? String
         else {
@@ -42,13 +55,21 @@ final class LiveActivityBridge: NSObject {
             let accumulatedSeconds = args["accumulatedSeconds"] as? Int ?? 0
             let startedAtMillis = args["startedAtMillis"] as? Int64
             let startedAt = startedAtMillis.map { Date(timeIntervalSince1970: Double($0) / 1000) }
+            let endsAtMillis = args["endsAtMillis"] as? Int64
+            let endsAt = endsAtMillis.map { Date(timeIntervalSince1970: Double($0) / 1000) }
             let state = BodyXTimerAttributes.ContentState(
-                startedAt: startedAt, accumulatedSeconds: accumulatedSeconds)
+                startedAt: startedAt, accumulatedSeconds: accumulatedSeconds, endsAt: endsAt)
             let content = ActivityContent(state: state, staleDate: nil)
 
-            if let activity = activities[kind] {
+            // A cached activity may have already been ended by the Lock
+            // Screen Stop button (BodyXStopTimerIntent, running in the
+            // widget extension process) without this dictionary finding
+            // out — updating a dead activity is a silent no-op, so treat
+            // anything not `.active` as gone and start a fresh one.
+            if let activity = activities[kind], activity.activityState == .active {
                 Task { await activity.update(content) }
             } else {
+                activities.removeValue(forKey: kind)
                 guard ActivityAuthorizationInfo().areActivitiesEnabled else {
                     // User has Live Activities disabled system-wide — not an
                     // error, just a no-op, same as any other permission the

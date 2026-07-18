@@ -178,6 +178,8 @@
       "bodyFatPercent": {}
     }
   },
+  "dashboardBodyScanEmptyTitle": "No check-in yet",
+  "dashboardBodyScanEmptySubtitle": "Tap to log your first weigh-in",
   "logMealTitle": "Meal",
   "logMealCaloriesToday": "{eaten} / {tdee} kcal today",
   "@logMealCaloriesToday": {
@@ -351,6 +353,8 @@
       "weight": {}
     }
   },
+  "progressWeightEmptyTitle": "No weigh-ins yet",
+  "progressWeightEmptySubtitle": "Log your weight to start tracking your trend",
   "progressBodyFatLabel": "Body fat",
   "progressBodyFatValue": "{value}%",
   "@progressBodyFatValue": {

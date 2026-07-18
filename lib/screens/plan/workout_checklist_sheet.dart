@@ -5,6 +5,7 @@ import 'package:bodyx_app/l10n/gen/app_localizations.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/common/confirm_dialog.dart';
 import '../../widgets/common/glow_card.dart';
 import '../../widgets/common/inputs_buttons.dart';
 import '../../widgets/common/scale_tap.dart';
@@ -55,33 +56,16 @@ class _WorkoutChecklistSheetState extends State<WorkoutChecklistSheet> {
   }
 
   Future<void> _confirmRemoveExercise(String exercise) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surfaceElevated,
-        title: Text(
-            AppLocalizations.of(context)!
-                .workoutChecklistRemoveExerciseTitle(exercise),
-            style: const TextStyle(color: AppColors.textPrimary)),
-        content: Text(
-            AppLocalizations.of(context)!
-                .workoutChecklistRemoveExerciseContent,
-            style: const TextStyle(color: AppColors.textSecondary)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(AppLocalizations.of(context)!.settingsCancelButton),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(
-                AppLocalizations.of(context)!.workoutChecklistRemoveButton,
-                style: const TextStyle(color: AppColors.warningDeep)),
-          ),
-        ],
-      ),
+    final confirmed = await showConfirmDialog(
+      context,
+      title: AppLocalizations.of(context)!
+          .workoutChecklistRemoveExerciseTitle(exercise),
+      message:
+          AppLocalizations.of(context)!.workoutChecklistRemoveExerciseContent,
+      confirmLabel: AppLocalizations.of(context)!.workoutChecklistRemoveButton,
+      cancelLabel: AppLocalizations.of(context)!.settingsCancelButton,
     );
-    if (confirmed == true && mounted) {
+    if (confirmed && mounted) {
       context.read<AppState>().removeExercise(exercise);
     }
   }
