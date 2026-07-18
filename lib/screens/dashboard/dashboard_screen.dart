@@ -39,6 +39,14 @@ class DashboardScreen extends StatelessWidget {
                 _GreetingRow(
                     name: user?.name ??
                         AppLocalizations.of(context)!.dashboardAthlete),
+                for (final announcement in state.activeAnnouncements) ...[
+                  const SizedBox(height: 14),
+                  _AnnouncementBanner(
+                    announcement: announcement,
+                    onDismiss: () =>
+                        context.read<AppState>().dismissAnnouncement(announcement.id),
+                  ),
+                ],
                 const SizedBox(height: 24),
                 _DailyOverviewCard(state: state, stats: stats),
                 const SizedBox(height: 20),
@@ -363,6 +371,49 @@ class _GreetingRow extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// An admin-broadcast banner (see the Announcements view in /admin) —
+/// dismissible per device, never re-shown once closed on this install.
+class _AnnouncementBanner extends StatelessWidget {
+  const _AnnouncementBanner({
+    required this.announcement,
+    required this.onDismiss,
+  });
+
+  final Announcement announcement;
+  final VoidCallback onDismiss;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.sm),
+      decoration: BoxDecoration(
+        color: AppColors.primarySoft,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: AppColors.primaryDeep),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.campaign_rounded,
+              color: AppColors.primaryBright, size: 20),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(announcement.message,
+                style: const TextStyle(
+                    color: AppColors.textPrimary, fontSize: 13, height: 1.35)),
+          ),
+          const SizedBox(width: 6),
+          ScaleTap(
+            onTap: onDismiss,
+            child: const Icon(Icons.close_rounded,
+                color: AppColors.textMuted, size: 18),
+          ),
+        ],
+      ),
     );
   }
 }

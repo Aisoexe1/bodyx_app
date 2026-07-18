@@ -726,6 +726,102 @@ void main() {
     });
   });
 
+  group('announcements', () {
+    // hydrate()'s own local-state early-return (`if (!_hasSession) return`)
+    // means _restoreServerSession — and therefore the announcement fetch —
+    // never runs on a never-onboarded AppState. So every case here signs in
+    // for real first (which flips onboardingDone), then builds a *second*
+    // AppState with a restoredSession to simulate the app reopening, exactly
+    // like the "persistence round-trip" tests above simulate a restart.
+    test('activeAnnouncements reflects announcements fetched on session restore',
+        () async {
+      final onboarding = newTestAppState();
+      await onboarding.hydrate();
+      await onboarding.signIn('announce@bodyx.app', 'pw');
+
+      final announcement = Announcement(
+        id: 'ann-1',
+        message: 'Scheduled maintenance tonight',
+        createdAt: DateTime.now(),
+      );
+      final restarted = AppState(
+        authRepository: FakeAuthRepository()..restoredSession = onboarding.user,
+        profileRepository: FakeProfileRepository(),
+        weightRepository: FakeWeightRepository(),
+        measurementRepository: FakeMeasurementRepository(),
+        announcementRepository: FakeAnnouncementRepository()..active = [announcement],
+      );
+
+      await restarted.hydrate();
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      expect(restarted.activeAnnouncements.map((a) => a.id), contains('ann-1'));
+    });
+
+    test('dismissAnnouncement removes it from activeAnnouncements', () async {
+      final onboarding = newTestAppState();
+      await onboarding.hydrate();
+      await onboarding.signIn('announce2@bodyx.app', 'pw');
+
+      final announcement = Announcement(
+        id: 'ann-2',
+        message: 'New feature: support tickets',
+        createdAt: DateTime.now(),
+      );
+      final restarted = AppState(
+        authRepository: FakeAuthRepository()..restoredSession = onboarding.user,
+        profileRepository: FakeProfileRepository(),
+        weightRepository: FakeWeightRepository(),
+        measurementRepository: FakeMeasurementRepository(),
+        announcementRepository: FakeAnnouncementRepository()..active = [announcement],
+      );
+      await restarted.hydrate();
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      expect(restarted.activeAnnouncements, isNotEmpty);
+
+      restarted.dismissAnnouncement('ann-2');
+
+      expect(restarted.activeAnnouncements, isEmpty);
+    });
+
+    test('a dismissed announcement stays dismissed across a restart', () async {
+      final onboarding = newTestAppState();
+      await onboarding.hydrate();
+      await onboarding.signIn('announce3@bodyx.app', 'pw');
+
+      final announcement = Announcement(
+        id: 'ann-3',
+        message: 'Planned downtime this weekend',
+        createdAt: DateTime.now(),
+      );
+      final firstReopen = AppState(
+        authRepository: FakeAuthRepository()..restoredSession = onboarding.user,
+        profileRepository: FakeProfileRepository(),
+        weightRepository: FakeWeightRepository(),
+        measurementRepository: FakeMeasurementRepository(),
+        announcementRepository: FakeAnnouncementRepository()..active = [announcement],
+      );
+      await firstReopen.hydrate();
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      expect(firstReopen.activeAnnouncements, isNotEmpty,
+          reason: 'sanity check: the announcement must actually be fetched '
+              'before dismissing it proves anything');
+      firstReopen.dismissAnnouncement('ann-3');
+
+      final secondReopen = AppState(
+        authRepository: FakeAuthRepository()..restoredSession = onboarding.user,
+        profileRepository: FakeProfileRepository(),
+        weightRepository: FakeWeightRepository(),
+        measurementRepository: FakeMeasurementRepository(),
+        announcementRepository: FakeAnnouncementRepository()..active = [announcement],
+      );
+      await secondReopen.hydrate();
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      expect(secondReopen.activeAnnouncements, isEmpty);
+    });
+  });
+
   group('sleep data honesty', () {
     test('generated demo history is never mislabeled as Health-synced',
         () async {
