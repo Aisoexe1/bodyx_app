@@ -705,6 +705,46 @@ void main() {
     });
   });
 
+  group('support tickets', () {
+    test('createSupportTicket returns an open ticket with the first message',
+        () async {
+      final state = newTestAppState();
+      await state.hydrate();
+
+      final ticket =
+          await state.createSupportTicket('Can\'t log a meal', 'Save does nothing');
+
+      expect(ticket.subject, 'Can\'t log a meal');
+      expect(ticket.status, TicketStatus.open);
+      expect(ticket.messages, hasLength(1));
+      expect(ticket.messages.first.sender, TicketMessageSender.user);
+    });
+
+    test('listSupportTickets returns tickets created via createSupportTicket',
+        () async {
+      final state = newTestAppState();
+      await state.hydrate();
+
+      await state.createSupportTicket('First', 'One');
+      await state.createSupportTicket('Second', 'Two');
+
+      final tickets = await state.listSupportTickets();
+      expect(tickets.map((t) => t.subject), containsAll(['First', 'Second']));
+    });
+
+    test('addSupportTicketMessage appends a message to the thread', () async {
+      final state = newTestAppState();
+      await state.hydrate();
+
+      final ticket = await state.createSupportTicket('Subject', 'Body');
+      final updated =
+          await state.addSupportTicketMessage(ticket.id, 'Any update?');
+
+      expect(updated.messages, hasLength(2));
+      expect(updated.messages.last.text, 'Any update?');
+    });
+  });
+
   group('sleep data honesty', () {
     test('generated demo history is never mislabeled as Health-synced',
         () async {

@@ -6,6 +6,8 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/scale_tap.dart';
 import 'package:bodyx_app/l10n/gen/app_localizations.dart';
+import 'new_ticket_screen.dart';
+import 'tickets_list_screen.dart';
 
 class _ChatMessage {
   _ChatMessage(this.text, this.fromUser);
@@ -125,6 +127,17 @@ class _ContactSupportScreenState extends State<ContactSupportScreen> {
                       ],
                     ),
                   ),
+                  IconButton(
+                    tooltip: AppLocalizations.of(context)!
+                        .contactSupportMyTicketsTooltip,
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const TicketsListScreen()),
+                    ),
+                    icon: const Icon(Icons.confirmation_number_outlined,
+                        size: 20),
+                  ),
                 ],
               ),
             ),
@@ -170,6 +183,19 @@ class _ContactSupportScreenState extends State<ContactSupportScreen> {
                       .toList(),
                 ),
               ),
+            Center(
+              child: TextButton(
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const NewTicketScreen()),
+                ),
+                child: Text(
+                  AppLocalizations.of(context)!.contactSupportOpenTicketLink,
+                  style: const TextStyle(
+                      color: AppColors.primaryBright, fontSize: 12.5),
+                ),
+              ),
+            ),
             Padding(
               padding: const EdgeInsets.fromLTRB(
                   AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.md),

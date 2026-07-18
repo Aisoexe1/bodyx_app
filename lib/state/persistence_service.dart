@@ -119,7 +119,10 @@ class PersistenceService {
   Future<List<String>?> loadReadAlertIds() async {
     final raw = (await _prefs).getString(_kAlertRead);
     if (raw == null) return null;
-    return (jsonDecode(raw) as List).cast<String>();
+    // whereType, not cast — this key used to store a List<bool> (alerts were
+    // tracked by position, not id); a stale value in that old shape should
+    // be dropped, not crash the whole app on launch.
+    return (jsonDecode(raw) as List).whereType<String>().toList();
   }
 
   Future<void> saveReadAlertIds(Iterable<String> ids) async =>

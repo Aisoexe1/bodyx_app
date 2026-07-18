@@ -9,6 +9,7 @@ import '../network/api_client.dart';
 import '../network/auth_repository.dart';
 import '../network/measurement_repository.dart';
 import '../network/profile_repository.dart';
+import '../network/support_repository.dart';
 import '../network/weight_repository.dart';
 import 'health_service.dart';
 import 'live_activity_service.dart';
@@ -47,12 +48,14 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     ProfileRepository? profileRepository,
     WeightRepository? weightRepository,
     MeasurementRepository? measurementRepository,
+    SupportRepository? supportRepository,
   })  : _persistence = persistence ?? PersistenceService(),
         _authRepository = authRepository ?? ApiAuthRepository(),
         _profileRepository = profileRepository ?? ApiProfileRepository(),
         _weightRepository = weightRepository ?? ApiWeightRepository(),
         _measurementRepository =
-            measurementRepository ?? ApiMeasurementRepository() {
+            measurementRepository ?? ApiMeasurementRepository(),
+        _supportRepository = supportRepository ?? ApiSupportRepository() {
     dailyStats = MockData.emptyDailyStats();
     weightHistory = [];
     bodyMeasurements = MockData.emptyBodyMeasurements(Gender.male);
@@ -132,7 +135,23 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   final ProfileRepository _profileRepository;
   final WeightRepository _weightRepository;
   final MeasurementRepository _measurementRepository;
+  final SupportRepository _supportRepository;
   bool _hasSession = false;
+
+  // ---- Support tickets -----------------------------------------------------
+  // Always fetched live from the server (no local persistence/offline cache)
+  // — a support thread is only ever meaningful in sync with the admin side.
+  Future<List<SupportTicket>> listSupportTickets() =>
+      _supportRepository.listTickets();
+
+  Future<SupportTicket> getSupportTicket(String ticketId) =>
+      _supportRepository.getTicket(ticketId);
+
+  Future<SupportTicket> createSupportTicket(String subject, String message) =>
+      _supportRepository.createTicket(subject, message);
+
+  Future<SupportTicket> addSupportTicketMessage(String ticketId, String text) =>
+      _supportRepository.addMessage(ticketId, text);
 
   /// Loads any persisted session/data over the freshly-seeded mock state.
   /// Call once, right after construction and before [runApp] — cheap and
