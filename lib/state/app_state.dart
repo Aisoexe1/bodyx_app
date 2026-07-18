@@ -28,9 +28,9 @@ enum AuthStage {
   resetPassword,
 }
 
-/// Single source of truth for the whole prototype. Everything the UI reads
+/// Single source of truth for the whole app. Everything the UI reads
 /// (auth flow, dashboard numbers, body measurements, plan, alerts) lives
-/// here so every screen updates reactively when mock data changes.
+/// here so every screen updates reactively when state changes.
 ///
 /// Anything the user actively logs or configures (profile, weight/
 /// measurement history, plan/alert read-state, settings, today's water/
@@ -107,6 +107,16 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     final savedLocaleCode = await _persistence.loadLocaleCode();
     if (savedLocaleCode != null) {
       locale = Locale(savedLocaleCode);
+    }
+
+    // A previous account deletion whose server call failed leaves this flag
+    // (written after the local wipe, so it's the only thing that survives).
+    // Retry best-effort using the JWT still in Keychain — cleared only once
+    // the server confirms — and never restore a session for a user who asked
+    // for the account to be gone.
+    if (await _persistence.loadPendingAccountDeletion()) {
+      unawaited(_retryPendingAccountDeletion());
+      return;
     }
 
     _hasSession = await _persistence.onboardingDone;
@@ -508,13 +518,41 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   /// ends, so deletion works for the user even when the backend is
   /// unreachable.
   Future<void> deleteAccount() async {
+    var serverDeleteSucceeded = true;
     try {
       await _authRepository.deleteAccount();
     } catch (e) {
+      serverDeleteSucceeded = false;
       debugPrint('Server-side account deletion failed: $e');
     }
-    await ProgressPhotoStorage.instance.deleteAll();
+    // A photo-directory failure must not abort the rest of the wipe — the
+    // prefs clear and in-memory reset below still have to happen.
+    try {
+      await ProgressPhotoStorage.instance.deleteAll();
+    } catch (e) {
+      debugPrint('Progress photo wipe failed: $e');
+    }
     await _persistence.clearAllData();
+    // Written AFTER the wipe so it survives it — next launch retries the
+    // server delete (see [hydrate]) instead of silently forgetting it.
+    if (!serverDeleteSucceeded) {
+      await _persistence.savePendingAccountDeletion(true);
+    }
+    _finishAccountReset();
+  }
+
+  Future<void> _retryPendingAccountDeletion() async {
+    try {
+      await _authRepository.deleteAccount();
+      await _persistence.savePendingAccountDeletion(false);
+      debugPrint('Pending server-side account deletion completed');
+    } catch (e) {
+      // Still unreachable — flag stays set, retried again next launch.
+      debugPrint('Pending account deletion retry failed: $e');
+    }
+  }
+
+  void _finishAccountReset() {
     user = null;
     _pendingEmail = null;
     _pendingPassword = null;
