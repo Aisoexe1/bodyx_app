@@ -80,8 +80,42 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
+      _rolloverToNewDayIfNeeded();
       unawaited(_reconcilePendingLiveActivityStop());
     }
+  }
+
+  /// iOS keeps apps suspended for days — [hydrate]'s day-scoping only runs
+  /// on a cold launch, so without this a user who reopens the app on a new
+  /// day would see yesterday's meals/water/workout presented as "today",
+  /// and anything they log would land on yesterday's [DailyStats] entry.
+  /// Mirrors exactly what a fresh launch produces for a new day.
+  void _rolloverToNewDayIfNeeded() {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    if (dailyStats.last.date == today) return;
+
+    dailyStats = MockData.emptyDailyStats();
+    todayWaterLog = [];
+    meals = [];
+    todayWorkoutSets = [];
+    _workoutAccumulatedSeconds = 0;
+    _workoutTimerStartedAt = null;
+    todayMobilityActivities = [];
+    _mobilityCountdownTimer?.cancel();
+    _mobilityCountdownTimer = null;
+    activeMobilityCountdownIndex = null;
+    _mobilityCountdownEndsAt = null;
+    unawaited(LiveActivityService.instance.end('workout'));
+    unawaited(LiveActivityService.instance.end('mobility'));
+    unawaited(_persistence.saveTodayWaterLog(todayWaterLog));
+    unawaited(_persistence.saveTodayMeals(meals));
+    unawaited(_persistence.saveTodayWorkoutSets(todayWorkoutSets));
+    unawaited(_persistence.saveTodayWorkoutTimer(0, null));
+    unawaited(_persistence.saveTodayMobilityActivities(todayMobilityActivities));
+    if (healthSyncEnabled) unawaited(syncHealthData());
+    _pushWidgetOverview();
+    notifyListeners();
   }
 
   Future<void> _reconcilePendingLiveActivityStop() async {
