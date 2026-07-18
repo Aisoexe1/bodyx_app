@@ -33,6 +33,11 @@
       "steps": {}
     }
   },
+  "navHome": "Home",
+  "navProgress": "Progress",
+  "navPlan": "Plan",
+  "navAlerts": "Alerts",
+  "navProfile": "Profile",
   "bodyDataTitle": "Your body data",
   "bodyDataSubtitle": "We use this to calculate your plan\nand personalize your experience",
   "bodyDataMale": "Male",

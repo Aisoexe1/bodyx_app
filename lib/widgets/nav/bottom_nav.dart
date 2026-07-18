@@ -1,25 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:bodyx_app/l10n/gen/app_localizations.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
 
 class BottomNavItem {
-  const BottomNavItem(this.icon, this.activeIcon, this.label);
+  const BottomNavItem(this.icon, this.activeIcon);
   final IconData icon;
   final IconData activeIcon;
-  final String label;
 }
 
 const List<BottomNavItem> kBottomNavItems = [
-  BottomNavItem(Icons.home_outlined, Icons.home_rounded, 'Home'),
-  BottomNavItem(
-      Icons.show_chart_rounded, Icons.show_chart_rounded, 'Progress'),
-  BottomNavItem(
-      Icons.grid_view_outlined, Icons.grid_view_rounded, 'Plan'),
-  BottomNavItem(
-      Icons.notifications_outlined, Icons.notifications_rounded, 'Alerts'),
-  BottomNavItem(Icons.person_outline_rounded, Icons.person_rounded, 'Profile'),
+  BottomNavItem(Icons.home_outlined, Icons.home_rounded),
+  BottomNavItem(Icons.show_chart_rounded, Icons.show_chart_rounded),
+  BottomNavItem(Icons.grid_view_outlined, Icons.grid_view_rounded),
+  BottomNavItem(Icons.notifications_outlined, Icons.notifications_rounded),
+  BottomNavItem(Icons.person_outline_rounded, Icons.person_rounded),
 ];
+
+/// Labels live here (index-matched to [kBottomNavItems]) rather than on the
+/// const items themselves, since a localized string needs a BuildContext
+/// that a top-level const list can't have.
+String _navLabel(AppLocalizations l10n, int index) {
+  switch (index) {
+    case 0:
+      return l10n.navHome;
+    case 1:
+      return l10n.navProgress;
+    case 2:
+      return l10n.navPlan;
+    case 3:
+      return l10n.navAlerts;
+    default:
+      return l10n.navProfile;
+  }
+}
 
 /// Floating, glassy bottom navigation bar with an animated pill indicator
 /// that slides beneath the active tab.
@@ -37,6 +52,7 @@ class AppBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       margin: const EdgeInsets.fromLTRB(
           AppSpacing.md, 0, AppSpacing.md, AppSpacing.md),
@@ -113,7 +129,7 @@ class AppBottomNav extends StatelessWidget {
                             ? AppColors.primaryBright
                             : AppColors.textMuted,
                       ),
-                      child: Text(item.label),
+                      child: Text(_navLabel(l10n, i)),
                     ),
                   ],
                 ),

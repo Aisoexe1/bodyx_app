@@ -33,6 +33,11 @@
       "steps": {}
     }
   },
+  "navHome": "Головна",
+  "navProgress": "Прогрес",
+  "navPlan": "План",
+  "navAlerts": "Сповіщення",
+  "navProfile": "Профіль",
   "bodyDataTitle": "Дані про ваше тіло",
   "bodyDataSubtitle": "Це допоможе нам скласти ваш план\nта персоналізувати досвід",
   "bodyDataMale": "Чоловіча",
