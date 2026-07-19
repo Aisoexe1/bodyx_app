@@ -201,6 +201,28 @@ class DragonPainter extends CustomPainter {
 
   final DragonTraits traits;
 
+  /// Ink-style outline used around every filled shape — cheap but does a lot
+  /// of work to make the illustration read as "detailed" rather than flat.
+  static final Paint _ink = Paint()
+    ..color = Colors.black.withOpacity(0.22)
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 1.1
+    ..strokeJoin = StrokeJoin.round;
+
+  /// A top-light/bottom-shadow gradient fill instead of a flat color, so
+  /// every shape reads with some volume.
+  Paint _shaded(Color base, Rect bounds) {
+    final light = Color.lerp(base, Colors.white, 0.28)!;
+    final dark = Color.lerp(base, Colors.black, 0.28)!;
+    return Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [light, base, dark],
+        stops: const [0.0, 0.55, 1.0],
+      ).createShader(bounds);
+  }
+
   @override
   void paint(Canvas canvas, Size size) {
     canvas.save();
@@ -215,8 +237,10 @@ class DragonPainter extends CustomPainter {
     if (traits.eggStage > 0) {
       _paintEgg(canvas);
     } else {
+      _paintTail(canvas);
       if (traits.hasWings) _paintWings(canvas);
       _paintBody(canvas);
+      _paintArms(canvas);
       if (traits.hasArmor) _paintArmor(canvas);
       _paintHead(canvas);
       if (traits.hornSize > 0) _paintHorns(canvas);
@@ -337,24 +361,37 @@ class DragonPainter extends CustomPainter {
       ..cubicTo(68, 92, 32, 92, 26, 70)
       ..cubicTo(20, 46, 28, 18, 50, 18)
       ..close();
-    canvas.drawPath(path, Paint()..color = traits.bodyColor);
-    canvas.drawPath(
-      path,
+    canvas.drawPath(path, _shaded(traits.bodyColor, path.getBounds()));
+    canvas.drawPath(path, _ink);
+
+    // A soft sheen highlight so the shell reads as smooth and rounded.
+    canvas.drawOval(
+      Rect.fromCenter(center: const Offset(40, 34), width: 14, height: 20),
       Paint()
-        ..color = Colors.black.withOpacity(0.12)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.4,
+        ..color = Colors.white.withOpacity(0.25)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
     );
 
+    final rand = math.Random(3);
     final specklePaint = Paint()..color = traits.bellyColor.withOpacity(0.8);
     for (final c in const [
       Offset(38, 40),
       Offset(60, 34),
       Offset(44, 58),
       Offset(62, 62),
-      Offset(50, 76)
+      Offset(50, 76),
+      Offset(33, 52),
+      Offset(66, 46),
+      Offset(46, 30),
     ]) {
-      canvas.drawOval(Rect.fromCenter(center: c, width: 7, height: 5), specklePaint);
+      final w = 5.0 + rand.nextDouble() * 4;
+      final h = w * 0.65;
+      canvas.save();
+      canvas.translate(c.dx, c.dy);
+      canvas.rotate(rand.nextDouble() * math.pi);
+      canvas.drawOval(
+          Rect.fromCenter(center: Offset.zero, width: w, height: h), specklePaint);
+      canvas.restore();
     }
 
     if (traits.eggStage >= 2) {
@@ -363,13 +400,26 @@ class DragonPainter extends CustomPainter {
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.6
         ..strokeJoin = StrokeJoin.round;
+      final mainCrack = Path()
+        ..moveTo(38, 24)
+        ..lineTo(46, 38)
+        ..lineTo(40, 46)
+        ..lineTo(51, 58)
+        ..lineTo(45, 68)
+        ..lineTo(52, 80);
+      canvas.drawPath(mainCrack, crackPaint);
+      // small side branches off the main fracture, for a more "shattering"
+      // look than a single clean line.
       canvas.drawPath(
         Path()
-          ..moveTo(38, 26)
-          ..lineTo(46, 40)
-          ..lineTo(40, 48)
-          ..lineTo(50, 62)
-          ..lineTo(44, 74),
+          ..moveTo(46, 38)
+          ..lineTo(56, 36),
+        crackPaint,
+      );
+      canvas.drawPath(
+        Path()
+          ..moveTo(51, 58)
+          ..lineTo(60, 54),
         crackPaint,
       );
       canvas.drawCircle(
@@ -379,32 +429,143 @@ class DragonPainter extends CustomPainter {
           ..color = const Color(0xFFFFC873).withOpacity(0.85)
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2.2),
       );
+      canvas.drawCircle(
+        const Offset(51, 62),
+        2.4,
+        Paint()
+          ..color = const Color(0xFFFFC873).withOpacity(0.7)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.6),
+      );
     }
+  }
+
+  void _paintTail(Canvas canvas) {
+    final path = Path()
+      ..moveTo(64, 90)
+      ..cubicTo(82, 94, 94, 84, 90, 66)
+      ..cubicTo(88, 78, 92, 88, 96, 84)
+      ..cubicTo(93, 96, 78, 100, 66, 98)
+      ..close();
+    canvas.drawPath(path, _shaded(traits.bodyColor, path.getBounds()));
+    canvas.drawPath(path, _ink);
+    // spade-shaped tail tip
+    canvas.drawPath(
+      Path()
+        ..moveTo(88, 68)
+        ..lineTo(97, 60)
+        ..lineTo(93, 72)
+        ..lineTo(100, 70)
+        ..lineTo(90, 80)
+        ..close(),
+      Paint()..color = Color.lerp(traits.bodyColor, Colors.black, 0.2)!,
+    );
+    // a couple of small dorsal spikes along the tail's spine
+    final spike = Paint()..color = Color.lerp(traits.hornColor, traits.bodyColor, 0.3)!;
+    for (final c in const [Offset(76, 88), Offset(84, 82)]) {
+      canvas.drawPath(
+        Path()
+          ..moveTo(c.dx - 3, c.dy + 2)
+          ..lineTo(c.dx, c.dy - 5)
+          ..lineTo(c.dx + 3, c.dy + 2)
+          ..close(),
+        spike,
+      );
+    }
+  }
+
+  void _paintArms(Canvas canvas) {
+    final armColor = Color.lerp(traits.bodyColor, Colors.black, 0.12)!;
+    final claw = Paint()..color = Colors.white.withOpacity(0.92);
+
+    void drawOneArm() {
+      final path = Path()
+        ..moveTo(66, 86)
+        ..quadraticBezierTo(76, 90, 74, 99)
+        ..lineTo(62, 100)
+        ..quadraticBezierTo(60, 92, 66, 86)
+        ..close();
+      canvas.drawPath(path, _shaded(armColor, path.getBounds()));
+      canvas.drawPath(path, _ink);
+      for (final dx in [63.0, 67.0, 71.0]) {
+        canvas.drawPath(
+          Path()
+            ..moveTo(dx - 1.2, 99)
+            ..lineTo(dx, 104)
+            ..lineTo(dx + 1.2, 99)
+            ..close(),
+          claw,
+        );
+      }
+    }
+
+    drawOneArm();
+    canvas.save();
+    canvas.translate(100, 0);
+    canvas.scale(-1, 1);
+    drawOneArm();
+    canvas.restore();
   }
 
   void _paintBody(Canvas canvas) {
     final path = Path()
-      ..moveTo(28, 92)
-      ..quadraticBezierTo(50, 78, 72, 92)
-      ..lineTo(72, 100)
-      ..lineTo(28, 100)
+      ..moveTo(26, 92)
+      ..quadraticBezierTo(50, 76, 74, 92)
+      ..lineTo(74, 100)
+      ..lineTo(26, 100)
       ..close();
-    canvas.drawPath(path, Paint()..color = traits.bodyColor);
+    canvas.drawPath(path, _shaded(traits.bodyColor, path.getBounds()));
+    canvas.drawPath(path, _ink);
+
+    // segmented belly-scute lines for texture.
+    final plate = Paint()
+      ..color = Colors.black.withOpacity(0.14)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.9;
+    canvas.drawLine(const Offset(36, 90), const Offset(36, 100), plate);
+    canvas.drawLine(const Offset(50, 88), const Offset(50, 100), plate);
+    canvas.drawLine(const Offset(64, 90), const Offset(64, 100), plate);
   }
 
   void _paintArmor(Canvas canvas) {
+    final metal = Paint()..color = const Color(0xFF9AA5AD);
+    final metalDark = Paint()..color = const Color(0xFF7A838A);
+    // back plate first, then a lighter overlapping front band for a
+    // layered, riveted look instead of one flat shape.
     canvas.drawPath(
       Path()
-        ..moveTo(30, 88)
-        ..quadraticBezierTo(50, 98, 70, 88)
-        ..lineTo(70, 94)
-        ..quadraticBezierTo(50, 104, 30, 94)
+        ..moveTo(28, 86)
+        ..quadraticBezierTo(50, 96, 72, 86)
+        ..lineTo(72, 96)
+        ..quadraticBezierTo(50, 106, 28, 96)
         ..close(),
-      Paint()..color = const Color(0xFF9AA5AD),
+      metalDark,
     );
+    final frontBand = Path()
+      ..moveTo(30, 88)
+      ..quadraticBezierTo(50, 98, 70, 88)
+      ..lineTo(70, 94)
+      ..quadraticBezierTo(50, 104, 30, 94)
+      ..close();
+    canvas.drawPath(frontBand, metal);
+    canvas.drawPath(frontBand, _ink);
+
+    // small shoulder pauldrons
+    for (final side in [1.0, -1.0]) {
+      final cx = 50 + side * 22.0;
+      canvas.drawOval(
+        Rect.fromCenter(center: Offset(cx, 84), width: 12, height: 9),
+        _shaded(const Color(0xFFB7C0C6), Rect.fromCenter(center: Offset(cx, 84), width: 12, height: 9)),
+      );
+      canvas.drawOval(
+        Rect.fromCenter(center: Offset(cx, 84), width: 12, height: 9),
+        _ink,
+      );
+    }
+
     final rivet = Paint()..color = const Color(0xFFE3E7EA);
     canvas.drawCircle(const Offset(38, 91), 1.6, rivet);
     canvas.drawCircle(const Offset(62, 91), 1.6, rivet);
+    canvas.drawCircle(const Offset(50, 94), 1.6, rivet);
   }
 
   void _paintHead(Canvas canvas) {
@@ -415,60 +576,175 @@ class DragonPainter extends CustomPainter {
       ..cubicTo(36, 80, 25, 70, 24, 56)
       ..cubicTo(22, 42, 32, 28, 50, 28)
       ..close();
-    canvas.drawPath(headPath, Paint()..color = traits.bodyColor);
+    canvas.drawPath(headPath, _shaded(traits.bodyColor, headPath.getBounds()));
+    canvas.drawPath(headPath, _ink);
 
-    final earPaint = Paint()..color = traits.bodyColor;
+    // brow-ridge bumps — small always-on texture so even wingless/hornless
+    // baby stages don't read as a flat blob.
+    final ridgeColor = Color.lerp(traits.bodyColor, Colors.black, 0.22)!.withOpacity(0.55);
+    for (final c in const [Offset(40, 32), Offset(50, 29), Offset(60, 32)]) {
+      canvas.drawOval(
+          Rect.fromCenter(center: c, width: 6, height: 4), Paint()..color = ridgeColor);
+    }
+
+    // faint scale-arc texture along the cheeks.
+    final scaleStroke = Paint()
+      ..color = Colors.black.withOpacity(0.08)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.8;
+    for (final c in const [
+      Offset(30, 60),
+      Offset(38, 65),
+      Offset(46, 68),
+      Offset(54, 68),
+      Offset(62, 65),
+      Offset(70, 60),
+    ]) {
+      canvas.drawArc(Rect.fromCenter(center: c, width: 9, height: 7), math.pi * 1.1,
+          math.pi * 0.8, false, scaleStroke);
+    }
+
+    final earPaint = _shaded(
+        traits.bodyColor, const Rect.fromLTWH(74, 26, 12, 24));
     final earPath = Path()
       ..moveTo(74, 42)
       ..lineTo(86, 26)
       ..lineTo(78, 50)
       ..close();
     canvas.drawPath(earPath, earPaint);
+    canvas.drawPath(earPath, _ink);
     canvas.save();
     canvas.translate(100, 0);
     canvas.scale(-1, 1);
     canvas.drawPath(earPath, earPaint);
+    canvas.drawPath(earPath, _ink);
     canvas.restore();
 
-    canvas.drawOval(
-      Rect.fromCenter(center: const Offset(50, 70), width: 30, height: 20),
-      Paint()..color = traits.bellyColor,
-    );
+    final snoutRect = Rect.fromCenter(center: const Offset(50, 70), width: 30, height: 20);
+    canvas.drawOval(snoutRect, _shaded(traits.bellyColor, snoutRect));
+    canvas.drawOval(snoutRect, _ink);
+
+    // belly/snout scute lines suggesting segmented plates.
+    final scute = Paint()
+      ..color = Colors.black.withOpacity(0.16)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.9;
+    canvas.drawArc(Rect.fromCenter(center: const Offset(50, 66), width: 22, height: 12),
+        math.pi * 1.05, math.pi * 0.9, false, scute);
+    canvas.drawArc(Rect.fromCenter(center: const Offset(50, 73), width: 18, height: 9),
+        math.pi * 1.1, math.pi * 0.8, false, scute);
+
     final nostril = Paint()..color = Colors.black.withOpacity(0.55);
     canvas.drawOval(Rect.fromCenter(center: const Offset(44, 68), width: 3, height: 4), nostril);
     canvas.drawOval(Rect.fromCenter(center: const Offset(56, 68), width: 3, height: 4), nostril);
+
+    // mouth line + two small fangs peeking over the lower jaw.
+    canvas.drawArc(
+      Rect.fromCenter(center: const Offset(50, 74), width: 20, height: 10),
+      math.pi * 0.1,
+      math.pi * 0.8,
+      false,
+      Paint()
+        ..color = Colors.black.withOpacity(0.45)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.1,
+    );
+    final fang = Paint()..color = Colors.white.withOpacity(0.95);
+    canvas.drawPath(Path()..moveTo(43, 78)..lineTo(44.4, 82.5)..lineTo(46, 78)..close(), fang);
+    canvas.drawPath(Path()..moveTo(57, 78)..lineTo(55.6, 82.5)..lineTo(54, 78)..close(), fang);
 
     _paintEye(canvas, const Offset(38, 52));
     _paintEye(canvas, const Offset(62, 52));
   }
 
   void _paintEye(Canvas canvas, Offset center) {
+    // eyebrow ridge
+    canvas.drawArc(
+      Rect.fromCenter(center: center + const Offset(0, -7.5), width: 15, height: 7),
+      math.pi,
+      math.pi,
+      false,
+      Paint()
+        ..color = Color.lerp(traits.bodyColor, Colors.black, 0.4)!
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.2
+        ..strokeCap = StrokeCap.round,
+    );
+
     canvas.drawOval(
         Rect.fromCenter(center: center, width: 13, height: 15), Paint()..color = Colors.white);
-    canvas.drawCircle(center + const Offset(0, 1.5), 4.2, Paint()..color = const Color(0xFF1E1E1E));
+    // iris, ring-shaded toward the horn/accent color for a bit of magic.
+    canvas.drawCircle(center + const Offset(0, 1.5), 4.4,
+        Paint()..color = traits.hornColor.withOpacity(0.95));
     canvas.drawCircle(
-        center + const Offset(-1.4, -0.5), 1.3, Paint()..color = Colors.white.withOpacity(0.9));
+        center + const Offset(0, 1.5), 4.4, Paint()..color = Colors.black.withOpacity(0.12)..style = PaintingStyle.stroke..strokeWidth = 0.6);
+    // vertical slit pupil, more "dragon" than a plain round pupil.
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(center: center + const Offset(0, 1.5), width: 1.7, height: 6.6),
+        const Radius.circular(1),
+      ),
+      Paint()..color = const Color(0xFF161616),
+    );
+    canvas.drawCircle(
+        center + const Offset(-1.5, -1.0), 1.3, Paint()..color = Colors.white.withOpacity(0.9));
+    // lower lid line
+    canvas.drawArc(
+      Rect.fromCenter(center: center + const Offset(0, 1.5), width: 13, height: 15),
+      math.pi * 0.12,
+      math.pi * 0.76,
+      false,
+      Paint()
+        ..color = Colors.black.withOpacity(0.25)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 0.8,
+    );
   }
 
   void _paintHorns(Canvas canvas) {
     final s = traits.hornSize.clamp(0.0, 1.0);
     final tipY = 30 - 16 * s;
+    const base = Offset(60, 33);
+    final tip = Offset(64 + 3 * s, tipY + 4);
     final path = Path()
       ..moveTo(58, 34)
       ..quadraticBezierTo(66, 24 - 8 * s, 64 + 6 * s, tipY)
       ..quadraticBezierTo(62, 28, 56, 32)
       ..close();
-    final paint = Paint()..color = traits.hornColor;
-    canvas.drawPath(path, paint);
+
+    void drawOneHorn() {
+      canvas.drawPath(path, _shaded(traits.hornColor, path.getBounds()));
+      canvas.drawPath(path, _ink);
+      final ridgePaint = Paint()
+        ..color = Colors.black.withOpacity(0.2)
+        ..strokeWidth = 0.8
+        ..style = PaintingStyle.stroke;
+      for (final t in const [0.35, 0.62]) {
+        final p = Offset.lerp(base, tip, t)!;
+        canvas.drawLine(p.translate(-2, 0), p.translate(2, 0), ridgePaint);
+      }
+    }
+
+    drawOneHorn();
     canvas.save();
     canvas.translate(100, 0);
     canvas.scale(-1, 1);
-    canvas.drawPath(path, paint);
+    drawOneHorn();
     canvas.restore();
   }
 
   void _paintCrown(Canvas canvas) {
     const base = 22.0;
+    // a small velvet cap peeking from beneath the gold band.
+    canvas.drawPath(
+      Path()
+        ..moveTo(50 - base * 0.75, 24)
+        ..quadraticBezierTo(50, 16, 50 + base * 0.75, 24)
+        ..lineTo(50 + base * 0.7, 28)
+        ..quadraticBezierTo(50, 21, 50 - base * 0.7, 28)
+        ..close(),
+      Paint()..color = const Color(0xFF7A1F3D),
+    );
     final path = Path()
       ..moveTo(50 - base, 26)
       ..lineTo(50 - base * 0.5, 12)
@@ -478,7 +754,7 @@ class DragonPainter extends CustomPainter {
       ..lineTo(50 + base * 0.5, 12)
       ..lineTo(50 + base, 26)
       ..close();
-    canvas.drawPath(path, Paint()..color = traits.hornColor);
+    canvas.drawPath(path, _shaded(traits.hornColor, path.getBounds()));
     canvas.drawPath(
       path,
       Paint()
@@ -487,6 +763,13 @@ class DragonPainter extends CustomPainter {
         ..strokeWidth = 1,
     );
     canvas.drawCircle(const Offset(50, 14), 2, Paint()..color = const Color(0xFFE23B5E));
+    canvas.drawCircle(
+        const Offset(50 - base * 0.5, 15), 1.4, Paint()..color = const Color(0xFF3E7BD9));
+    canvas.drawCircle(
+        const Offset(50 + base * 0.5, 15), 1.4, Paint()..color = const Color(0xFF3E7BD9));
+    // tiny highlight dots so the jewels/gold catch the light.
+    final shine = Paint()..color = Colors.white.withOpacity(0.8);
+    canvas.drawCircle(const Offset(49.3, 13.3), 0.6, shine);
   }
 
   void _paintFlame(Canvas canvas) {
@@ -495,45 +778,80 @@ class DragonPainter extends CustomPainter {
     canvas.drawPath(
       Path()
         ..moveTo(50, 80)
-        ..cubicTo(46, 80 + h * 0.4, 44, 80 + h * 0.8, 50, 80 + h)
-        ..cubicTo(56, 80 + h * 0.8, 54, 80 + h * 0.4, 50, 80)
+        ..cubicTo(45, 80 + h * 0.35, 43, 80 + h * 0.75, 49, 80 + h)
+        ..cubicTo(48, 80 + h * 0.8, 47.5, 80 + h * 0.5, 50, 80 + h * 0.3)
+        ..cubicTo(52.5, 80 + h * 0.5, 52, 80 + h * 0.8, 51, 80 + h)
+        ..cubicTo(57, 80 + h * 0.75, 55, 80 + h * 0.35, 50, 80)
+        ..close(),
+      Paint()..color = const Color(0xFFE8632A),
+    );
+    canvas.drawPath(
+      Path()
+        ..moveTo(50, 81)
+        ..cubicTo(47, 81 + h * 0.3, 46, 81 + h * 0.55, 49.5, 81 + h * 0.75)
+        ..cubicTo(53, 81 + h * 0.55, 52.5, 81 + h * 0.3, 50, 81)
         ..close(),
       Paint()..color = const Color(0xFFFF9F45),
     );
     canvas.drawPath(
       Path()
         ..moveTo(50, 82)
-        ..cubicTo(48, 82 + h * 0.3, 47, 82 + h * 0.5, 50, 82 + h * 0.6)
-        ..cubicTo(53, 82 + h * 0.5, 52, 82 + h * 0.3, 50, 82)
+        ..cubicTo(48.4, 82 + h * 0.22, 48, 82 + h * 0.4, 50, 82 + h * 0.5)
+        ..cubicTo(52, 82 + h * 0.4, 51.6, 82 + h * 0.22, 50, 82)
         ..close(),
-      Paint()..color = const Color(0xFFFFD166),
+      Paint()..color = const Color(0xFFFFE566),
     );
   }
 
   void _paintWings(Canvas canvas) {
-    final wingColor = Color.lerp(traits.bodyColor, Colors.black, 0.15)!;
+    final wingColor = Color.lerp(traits.bodyColor, Colors.black, 0.12)!;
+    const shoulder = Offset(56, 70);
+    const tips = [Offset(66, 36), Offset(82, 22), Offset(98, 16)];
+    const concaves = [Offset(74, 46), Offset(90, 34)];
     final path = Path()
-      ..moveTo(58, 66)
-      ..cubicTo(80, 55, 96, 30, 92, 10)
-      ..cubicTo(84, 26, 72, 34, 62, 44)
-      ..cubicTo(70, 40, 78, 42, 82, 50)
-      ..cubicTo(72, 50, 64, 56, 58, 66)
+      ..moveTo(shoulder.dx, shoulder.dy)
+      ..lineTo(tips[0].dx, tips[0].dy)
+      ..lineTo(concaves[0].dx, concaves[0].dy)
+      ..lineTo(tips[1].dx, tips[1].dy)
+      ..lineTo(concaves[1].dx, concaves[1].dy)
+      ..lineTo(tips[2].dx, tips[2].dy)
+      ..lineTo(76, 58)
+      ..lineTo(64, 62)
       ..close();
-    final paint = Paint()..color = wingColor;
     final membrane = Paint()
-      ..color = Colors.black.withOpacity(0.18)
+      ..color = Colors.black.withOpacity(0.2)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1;
+    final rib = Paint()
+      ..color = Colors.black.withOpacity(0.12)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.7;
     final sparkle = Paint()..color = Colors.white.withOpacity(0.85);
 
     void drawOneWing() {
-      canvas.drawPath(path, paint);
-      canvas.drawLine(const Offset(64, 50), const Offset(84, 30), membrane);
-      canvas.drawLine(const Offset(66, 58), const Offset(90, 42), membrane);
+      canvas.drawPath(path, _shaded(wingColor, path.getBounds()));
+      canvas.drawPath(path, _ink);
+      // three bone lines from the shoulder to each finger tip.
+      for (final tip in tips) {
+        canvas.drawLine(shoulder, tip, membrane);
+      }
+      // fine membrane ribs fanning between the bones for extra texture.
+      for (final t in const [0.35, 0.6, 0.85]) {
+        canvas.drawLine(
+          Offset.lerp(shoulder, tips[0], t)!,
+          Offset.lerp(shoulder, tips[1], t)!,
+          rib,
+        );
+        canvas.drawLine(
+          Offset.lerp(shoulder, tips[1], t)!,
+          Offset.lerp(shoulder, tips[2], t)!,
+          rib,
+        );
+      }
       if (traits.sparkleWings) {
-        canvas.drawCircle(const Offset(78, 26), 1.1, sparkle);
-        canvas.drawCircle(const Offset(86, 38), 1.0, sparkle);
-        canvas.drawCircle(const Offset(70, 44), 0.9, sparkle);
+        canvas.drawCircle(const Offset(80, 24), 1.1, sparkle);
+        canvas.drawCircle(const Offset(90, 32), 1.0, sparkle);
+        canvas.drawCircle(const Offset(70, 40), 0.9, sparkle);
       }
     }
 
