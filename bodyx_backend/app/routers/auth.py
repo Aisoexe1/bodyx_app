@@ -71,10 +71,10 @@ async def forgot_password(
 
     code = await password_reset_repo.create_code(db, user["_id"])
     # Best-effort, matching this app's usual pattern for external services:
-    # a broken/blocked SMTP connection must not 500 (or hang) the request —
-    # the code is already saved, so the user can still reset if a retry or
-    # a different delivery path works, and no code is ever leaked in the
-    # response once SMTP is configured, delivery failure or not.
+    # a broken email provider must not 500 (or hang) the request — the code
+    # is already saved, so the user can still reset if a retry or a
+    # different delivery path works, and no code is ever leaked in the
+    # response once email is configured, delivery failure or not.
     try:
         await asyncio.to_thread(send_password_reset_email, user["email"], code)
     except Exception:
@@ -82,10 +82,10 @@ async def forgot_password(
             "Failed to send password reset email to %s", user["email"]
         )
 
-    if settings.smtp_configured:
+    if settings.email_configured:
         return ForgotPasswordResponse(message=generic_message)
-    # Dev mode (no SMTP): echo the code back so the flow is testable without
-    # an inbox. Never happens once SMTP is configured.
+    # Dev mode (no email provider configured): echo the code back so the
+    # flow is testable without an inbox. Never happens in production.
     return ForgotPasswordResponse(message=generic_message, dev_code=code)
 
 

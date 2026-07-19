@@ -1,60 +1,56 @@
-"""Password-reset email delivery. Falls back to logging the code when no
-SMTP is configured (see app.config.Settings.smtp_configured) so the reset
-flow is fully buildable/testable before real SMTP credentials exist."""
+"""Password-reset email delivery via Brevo's HTTPS API. Falls back to
+logging the code when no API key is configured (see
+app.config.Settings.email_configured) so the reset flow is fully
+buildable/testable before real credentials exist.
+
+Raw SMTP was the first approach, but Render's free tier blocks outbound
+SMTP traffic entirely (connections either failed immediately with
+`OSError: Network is unreachable` or hung until timeout) — an HTTPS API
+call sidesteps that since outbound port 443 isn't blocked.
+"""
 
 import logging
-import smtplib
-import socket
-from email.message import EmailMessage
+import re
+
+import requests
 
 from app.config import settings
 
 logger = logging.getLogger("bodyx.email")
 
-# Some hosts (Render's free tier included) block or silently drop outbound
-# SMTP entirely — without an explicit timeout, a blocked connection can hang
-# the request for minutes instead of failing fast. Always bound it.
-_CONNECT_TIMEOUT_SECONDS = 10
+_BREVO_SEND_URL = "https://api.brevo.com/v3/smtp/email"
+_REQUEST_TIMEOUT_SECONDS = 10
+
+_FROM_RE = re.compile(r"^(?P<name>.*?)\s*<(?P<email>[^>]+)>$")
 
 
-class _IPv4SMTP(smtplib.SMTP):
-    """Some hosts advertise no outbound IPv6 route, but smtp.gmail.com (and
-    other providers) resolve to an IPv6 address first — the connection then
-    fails with `OSError: [Errno 101] Network is unreachable` before SMTP/TLS/
-    auth ever get a chance to run. Forcing IPv4 resolution here sidesteps
-    that specific case; `self._host` is left as the real hostname (set by
-    the base constructor before connect() runs), so STARTTLS certificate
-    hostname verification is unaffected. Does not help if outbound SMTP is
-    blocked outright (see _CONNECT_TIMEOUT_SECONDS above for that case)."""
-
-    def _get_socket(self, host, port, timeout):
-        family, socktype, proto, _, sockaddr = socket.getaddrinfo(
-            host, port, socket.AF_INET, socket.SOCK_STREAM
-        )[0]
-        sock = socket.socket(family, socktype, proto)
-        sock.settimeout(_CONNECT_TIMEOUT_SECONDS if timeout is socket._GLOBAL_DEFAULT_TIMEOUT else timeout)
-        sock.connect(sockaddr)
-        return sock
+def _parse_sender(email_from: str) -> dict:
+    match = _FROM_RE.match(email_from)
+    if match:
+        return {"name": match.group("name") or "BodyX", "email": match.group("email")}
+    return {"name": "BodyX", "email": email_from}
 
 
 def send_password_reset_email(to_email: str, code: str) -> None:
-    if not settings.smtp_configured:
-        logger.warning("DEV MODE (no SMTP configured) — password reset code for %s: %s", to_email, code)
+    if not settings.email_configured:
+        logger.warning("DEV MODE (no email provider configured) — password reset code for %s: %s", to_email, code)
         return
 
-    message = EmailMessage()
-    message["Subject"] = "Your BodyX password reset code"
-    message["From"] = settings.smtp_from
-    message["To"] = to_email
-    message.set_content(
+    text = (
         f"Your BodyX password reset code is: {code}\n\n"
         f"This code expires in {settings.password_reset_code_ttl_minutes} minutes. "
         "If you didn't request this, you can ignore this email."
     )
-
-    with _IPv4SMTP(settings.smtp_host, settings.smtp_port) as server:
-        if settings.smtp_use_tls:
-            server.starttls()
-        if settings.smtp_username and settings.smtp_password:
-            server.login(settings.smtp_username, settings.smtp_password)
-        server.send_message(message)
+    payload = {
+        "sender": _parse_sender(settings.email_from),
+        "to": [{"email": to_email}],
+        "subject": "Your BodyX password reset code",
+        "textContent": text,
+    }
+    response = requests.post(
+        _BREVO_SEND_URL,
+        json=payload,
+        headers={"api-key": settings.brevo_api_key, "Content-Type": "application/json"},
+        timeout=_REQUEST_TIMEOUT_SECONDS,
+    )
+    response.raise_for_status()

@@ -15,20 +15,18 @@ class Settings(BaseSettings):
 
     session_secret: str = "dev-session-secret-change-me"
 
-    # Password reset email delivery. If smtp_host is unset, the reset code
-    # is logged (and, dev-only, echoed back in the API response) instead of
-    # emailed — lets the flow be built/tested before real SMTP is wired up.
-    smtp_host: Optional[str] = None
-    smtp_port: int = 587
-    smtp_username: Optional[str] = None
-    smtp_password: Optional[str] = None
-    smtp_from: str = "BodyX <no-reply@bodyx.app>"
-    smtp_use_tls: bool = True
+    # Password reset email delivery via Brevo's HTTPS API. If brevo_api_key
+    # is unset, the reset code is logged (and, dev-only, echoed back in the
+    # API response) instead of emailed — lets the flow be built/tested before
+    # real email delivery is wired up. Raw SMTP was tried first but Render's
+    # free tier blocks outbound SMTP traffic; an HTTPS API sidesteps that.
+    brevo_api_key: Optional[str] = None
+    email_from: str = "BodyX <no-reply@bodyx.app>"
     password_reset_code_ttl_minutes: int = 15
 
     @property
-    def smtp_configured(self) -> bool:
-        return bool(self.smtp_host)
+    def email_configured(self) -> bool:
+        return bool(self.brevo_api_key)
 
     # Google/Apple Sign-In. Unset until the app owner registers real OAuth
     # clients (Google Cloud Console / Apple Developer) — the endpoints

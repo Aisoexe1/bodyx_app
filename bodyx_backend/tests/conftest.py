@@ -10,10 +10,10 @@ from app.main import app
 
 @pytest.fixture(autouse=True)
 def _force_dev_mode_email(monkeypatch):
-    """The test suite must behave the same regardless of what SMTP creds a
+    """The test suite must behave the same regardless of what email creds a
     developer happens to have in their local .env — force dev-mode (no real
     send, code echoed back) so forgot-password tests stay deterministic."""
-    monkeypatch.setattr(settings, "smtp_host", None)
+    monkeypatch.setattr(settings, "brevo_api_key", None)
 
 
 @pytest_asyncio.fixture
