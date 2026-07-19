@@ -11,23 +11,28 @@ from app.config import settings
 
 logger = logging.getLogger("bodyx.email")
 
+# Some hosts (Render's free tier included) block or silently drop outbound
+# SMTP entirely — without an explicit timeout, a blocked connection can hang
+# the request for minutes instead of failing fast. Always bound it.
+_CONNECT_TIMEOUT_SECONDS = 10
+
 
 class _IPv4SMTP(smtplib.SMTP):
-    """Some free-tier hosts (Render's included) advertise no outbound IPv6
-    route, but smtp.gmail.com (and other providers) resolve to an IPv6
-    address first — the connection then fails with `OSError: [Errno 101]
-    Network is unreachable` before SMTP/TLS/auth ever get a chance to run.
-    Forcing IPv4 resolution here sidesteps it; `self._host` is left as the
-    real hostname (set by the base constructor before connect() runs), so
-    STARTTLS certificate hostname verification is unaffected."""
+    """Some hosts advertise no outbound IPv6 route, but smtp.gmail.com (and
+    other providers) resolve to an IPv6 address first — the connection then
+    fails with `OSError: [Errno 101] Network is unreachable` before SMTP/TLS/
+    auth ever get a chance to run. Forcing IPv4 resolution here sidesteps
+    that specific case; `self._host` is left as the real hostname (set by
+    the base constructor before connect() runs), so STARTTLS certificate
+    hostname verification is unaffected. Does not help if outbound SMTP is
+    blocked outright (see _CONNECT_TIMEOUT_SECONDS above for that case)."""
 
     def _get_socket(self, host, port, timeout):
         family, socktype, proto, _, sockaddr = socket.getaddrinfo(
             host, port, socket.AF_INET, socket.SOCK_STREAM
         )[0]
         sock = socket.socket(family, socktype, proto)
-        if timeout is not None and timeout != socket._GLOBAL_DEFAULT_TIMEOUT:
-            sock.settimeout(timeout)
+        sock.settimeout(_CONNECT_TIMEOUT_SECONDS if timeout is socket._GLOBAL_DEFAULT_TIMEOUT else timeout)
         sock.connect(sockaddr)
         return sock
 

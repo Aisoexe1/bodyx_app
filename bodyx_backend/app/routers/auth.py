@@ -1,3 +1,4 @@
+import logging
 import asyncio
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -69,7 +70,17 @@ async def forgot_password(
         return ForgotPasswordResponse(message=generic_message)
 
     code = await password_reset_repo.create_code(db, user["_id"])
-    await asyncio.to_thread(send_password_reset_email, user["email"], code)
+    # Best-effort, matching this app's usual pattern for external services:
+    # a broken/blocked SMTP connection must not 500 (or hang) the request —
+    # the code is already saved, so the user can still reset if a retry or
+    # a different delivery path works, and no code is ever leaked in the
+    # response once SMTP is configured, delivery failure or not.
+    try:
+        await asyncio.to_thread(send_password_reset_email, user["email"], code)
+    except Exception:
+        logging.getLogger("bodyx.email").exception(
+            "Failed to send password reset email to %s", user["email"]
+        )
 
     if settings.smtp_configured:
         return ForgotPasswordResponse(message=generic_message)
