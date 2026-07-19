@@ -1,18 +1,21 @@
-# Render Blueprint — deploys the BodyX backend with one click.
+# Render Blueprint — deploys stfdv's MongoDB backend with one click.
 # In Render: New → Blueprint → select this repo → Apply.
+# MONGO_URI must be set by hand in the Render dashboard (Atlas connection
+# string) — it's a secret, so it is deliberately not in this file.
 services:
   - type: web
     name: bodyx-api
     runtime: docker
-    rootDir: backend
+    rootDir: bodyx_backend
     dockerfilePath: ./Dockerfile
     plan: free
     healthCheckPath: /api/v1/health
     envVars:
       - key: JWT_SECRET
         generateValue: true
-      # Free tier has no persistent disk: the SQLite file resets on each
-      # deploy/restart. Fine for first testing; swap to MongoDB (stfdv's
-      # cluster) or a paid disk before real users.
-      - key: BODYX_DB
-        value: /tmp/bodyx.db
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: MONGO_DB_NAME
+        value: bodyx
+      - key: MONGO_URI
+        sync: false
