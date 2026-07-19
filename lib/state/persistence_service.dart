@@ -34,6 +34,9 @@ class PersistenceService {
   static const _kPublicProfile = 'bodyx.public_profile';
   static const _kShareAnonData = 'bodyx.share_anon_data';
   static const _kDismissedAnnouncementIds = 'bodyx.dismissed_announcement_ids';
+  static const _kPetXp = 'bodyx.pet_xp';
+  static const _kPetAwardedGoals = 'bodyx.pet_awarded_goals';
+  static const _kPetAwardedGoalsDate = 'bodyx.pet_awarded_goals_date';
 
   Future<SharedPreferences> get _prefs => SharedPreferences.getInstance();
 
@@ -292,6 +295,25 @@ class PersistenceService {
   Future<void> saveDismissedAnnouncementIds(Iterable<String> ids) async =>
       (await _prefs)
           .setString(_kDismissedAnnouncementIds, jsonEncode(ids.toList()));
+
+  Future<int> get petXp async => (await _prefs).getInt(_kPetXp) ?? 0;
+
+  Future<void> savePetXp(int xp) async => (await _prefs).setInt(_kPetXp, xp);
+
+  /// Which goal keys (`water`, `steps`, ...) already earned pet XP today —
+  /// day-scoped like the water log/meals, so goals become awardable again
+  /// once the day rolls over.
+  Future<Set<String>> loadTodayAwardedPetGoals() async {
+    final prefs = await _prefs;
+    if (prefs.getString(_kPetAwardedGoalsDate) != _todayKey) return {};
+    return (prefs.getStringList(_kPetAwardedGoals) ?? const []).toSet();
+  }
+
+  Future<void> saveTodayAwardedPetGoals(Set<String> goals) async {
+    final prefs = await _prefs;
+    await prefs.setString(_kPetAwardedGoalsDate, _todayKey);
+    await prefs.setStringList(_kPetAwardedGoals, goals.toList());
+  }
 
   /// Signs the session out without discarding the user's logged history —
   /// there's only ever one local "account" in this app, so their

@@ -690,5 +690,32 @@
     "placeholders": {
       "minutes": {}
     }
-  }
+  },
+  "petCardTitle": "Your pet",
+  "petLevelShort": "Lv. {level}",
+  "@petLevelShort": {
+    "placeholders": {
+      "level": {}
+    }
+  },
+  "petXpProgress": "{xp} / 100 XP",
+  "@petXpProgress": {
+    "placeholders": {
+      "xp": {}
+    }
+  },
+  "petScreenTitle": "Your pet",
+  "petTodayGoalsTitle": "Today's goals",
+  "petStageEgg": "Egg",
+  "petStageHatchling": "Hatchling",
+  "petStageYoung": "Young dragon",
+  "petStageGrown": "Dragon",
+  "petGoalWater": "Hit your water goal",
+  "petGoalSteps": "Hit your step goal",
+  "petGoalSleep": "Hit your sleep goal",
+  "petGoalWorkout": "Finish today's workout",
+  "petGoalMobility": "Finish today's mobility",
+  "petNoGoalsYet": "Log something today to start earning XP",
+  "petAdminSectionTitle": "Admin tools",
+  "petAdminBoostButton": "Boost pet (+1 level, no goals required)"
 }

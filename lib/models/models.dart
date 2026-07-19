@@ -56,6 +56,7 @@ class UserProfile {
     this.activityLevel = 'Moderately active',
     this.unitsMetric = true,
     this.avatarSeed = 0,
+    this.role = 'user',
   });
 
   final String email;
@@ -69,6 +70,11 @@ class UserProfile {
   String activityLevel;
   bool unitsMetric;
   int avatarSeed;
+
+  /// Backend account role — `"user"`, `"admin"`, or `"superadmin"`. The same
+  /// role that gates the Starlette-Admin panel; on the app side it's only
+  /// used for admin-only affordances like [AppState.isAdminAccount].
+  String role;
 
   double get bmi => weightKg / ((heightCm / 100) * (heightCm / 100));
 
@@ -84,6 +90,7 @@ class UserProfile {
         'activityLevel': activityLevel,
         'unitsMetric': unitsMetric,
         'avatarSeed': avatarSeed,
+        'role': role,
       };
 
   factory UserProfile.fromJson(Map<String, dynamic> json) => UserProfile(
@@ -98,6 +105,7 @@ class UserProfile {
         activityLevel: json['activityLevel'] as String,
         unitsMetric: json['unitsMetric'] as bool,
         avatarSeed: json['avatarSeed'] as int,
+        role: json['role'] as String? ?? 'user',
       );
 }
 
@@ -491,4 +499,25 @@ class Announcement {
         message: json['message'] as String,
         createdAt: DateTime.parse(json['createdAt'] as String),
       );
+}
+
+/// Growth stage of the pet — a purely visual milestone derived from
+/// [AppState.petLevel], not stored on its own.
+enum PetStage { egg, hatchling, young, grown }
+
+extension PetStageX on PetStage {
+  /// A single-emoji sprite — no art assets needed, and every stage renders
+  /// consistently across platforms.
+  String get emoji {
+    switch (this) {
+      case PetStage.egg:
+        return '🥚';
+      case PetStage.hatchling:
+        return '🐣';
+      case PetStage.young:
+        return '🐲';
+      case PetStage.grown:
+        return '🐉';
+    }
+  }
 }

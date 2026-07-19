@@ -690,5 +690,32 @@
     "placeholders": {
       "minutes": {}
     }
-  }
+  },
+  "petCardTitle": "Улюбленець",
+  "petLevelShort": "Рів. {level}",
+  "@petLevelShort": {
+    "placeholders": {
+      "level": {}
+    }
+  },
+  "petXpProgress": "{xp} / 100 XP",
+  "@petXpProgress": {
+    "placeholders": {
+      "xp": {}
+    }
+  },
+  "petScreenTitle": "Ваш улюбленець",
+  "petTodayGoalsTitle": "Сьогоднішні цілі",
+  "petStageEgg": "Яйце",
+  "petStageHatchling": "Пташеня",
+  "petStageYoung": "Молодий дракон",
+  "petStageGrown": "Дракон",
+  "petGoalWater": "Виконати ціль по воді",
+  "petGoalSteps": "Виконати ціль по крокам",
+  "petGoalSleep": "Виконати ціль по сну",
+  "petGoalWorkout": "Завершити сьогоднішнє тренування",
+  "petGoalMobility": "Завершити сьогоднішню розтяжку",
+  "petNoGoalsYet": "Залогуйте щось сьогодні, щоб почати отримувати досвід",
+  "petAdminSectionTitle": "Інструменти адміністратора",
+  "petAdminBoostButton": "Прокачати улюбленця (+1 рівень, без цілей)"
 }

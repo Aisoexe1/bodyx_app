@@ -116,6 +116,8 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     _mobilityCountdownTimer = null;
     activeMobilityCountdownIndex = null;
     _mobilityCountdownEndsAt = null;
+    _petAwardedToday.clear();
+    unawaited(_persistence.saveTodayAwardedPetGoals(_petAwardedToday));
     unawaited(LiveActivityService.instance.end('workout'));
     unawaited(LiveActivityService.instance.end('mobility'));
     unawaited(_persistence.saveTodayWaterLog(todayWaterLog));
@@ -182,6 +184,105 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     notifyListeners();
   }
 
+  // ---- Pet (tamagotchi-style progress) --------------------------------------
+  // Grows from real goal completion, not fake activity — see the "honest
+  // empty state" philosophy at the top of this class. XP is awarded once per
+  // goal per day the first time it's met; [_petAwardedToday] tracks which
+  // goals already paid out today (day-scoped like the water log/meals) so
+  // toggling a set on and off can't be farmed for XP.
+  int petXp = 0;
+  final Set<String> _petAwardedToday = {};
+
+  static const _petXpWater = 10;
+  static const _petXpSteps = 10;
+  static const _petXpSleep = 10;
+  static const _petXpWorkout = 15;
+  static const _petXpMobility = 10;
+  static const _petXpPerfectDay = 25;
+
+  int get petLevel => 1 + petXp ~/ 100;
+  int get petXpIntoLevel => petXp % 100;
+  double get petLevelProgress => petXpIntoLevel / 100;
+
+  PetStage get petStage {
+    final level = petLevel;
+    if (level < 3) return PetStage.egg;
+    if (level < 6) return PetStage.hatchling;
+    if (level < 12) return PetStage.young;
+    return PetStage.grown;
+  }
+
+  /// Which of today's goals are currently met — exposed for the pet screen's
+  /// checklist. A goal only appears once it has real content today (e.g. no
+  /// workout logged yet means there's nothing to "complete"), matching how
+  /// [todayWorkoutSets]/[todayMobilityActivities] have no fixed template.
+  Map<String, bool> get todayPetGoals {
+    final stats = dailyStats.last;
+    return {
+      'water': stats.waterProgress >= 1.0,
+      'steps': stats.stepProgress >= 1.0,
+      'sleep': stats.sleepProgress >= 1.0,
+      if (todayWorkoutSets.isNotEmpty)
+        'workout': todayWorkoutSets.every((s) => s.done),
+      if (todayMobilityActivities.isNotEmpty)
+        'mobility': todayMobilityActivities.every((a) => a.done),
+    };
+  }
+
+  bool isPetGoalAwardedToday(String key) => _petAwardedToday.contains(key);
+
+  void _evaluatePetGoals() {
+    const xpFor = {
+      'water': _petXpWater,
+      'steps': _petXpSteps,
+      'sleep': _petXpSleep,
+      'workout': _petXpWorkout,
+      'mobility': _petXpMobility,
+    };
+
+    final goalsMetNow = todayPetGoals;
+    var gained = 0;
+    goalsMetNow.forEach((key, met) {
+      if (met && !_petAwardedToday.contains(key)) {
+        _petAwardedToday.add(key);
+        gained += xpFor[key]!;
+      }
+    });
+
+    if (goalsMetNow.values.every((met) => met) &&
+        !_petAwardedToday.contains('perfect')) {
+      _petAwardedToday.add('perfect');
+      gained += _petXpPerfectDay;
+    }
+
+    if (gained > 0) {
+      petXp += gained;
+      unawaited(_persistence.savePetXp(petXp));
+      unawaited(_persistence.saveTodayAwardedPetGoals(_petAwardedToday));
+      notifyListeners();
+    }
+  }
+
+  /// True for accounts with elevated backend privileges (`role` is
+  /// `"admin"`/`"superadmin"` — the same role that gates the
+  /// Starlette-Admin panel), so admin/QA accounts can be told apart from
+  /// regular users on the client.
+  bool get isAdminAccount =>
+      user?.role == 'admin' || user?.role == 'superadmin';
+
+  static const _petXpAdminBoost = 100;
+
+  /// Admin-only shortcut: grants exactly one level of XP with no goal
+  /// requirement, for poking at the pet feature without playing the app for
+  /// real. Guarded here (not just hidden in the UI) so it can't be invoked
+  /// to bypass real progression on a non-admin account.
+  void adminBoostPet() {
+    if (!isAdminAccount) return;
+    petXp += _petXpAdminBoost;
+    unawaited(_persistence.savePetXp(petXp));
+    notifyListeners();
+  }
+
   // ---- Support tickets -----------------------------------------------------
   // Always fetched live from the server (no local persistence/offline cache)
   // — a support thread is only ever meaningful in sync with the admin side.
@@ -211,6 +312,11 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     _dismissedAnnouncementIds
       ..clear()
       ..addAll(savedDismissedIds);
+
+    petXp = await _persistence.petXp;
+    _petAwardedToday
+      ..clear()
+      ..addAll(await _persistence.loadTodayAwardedPetGoals());
 
     // A previous account deletion whose server call failed leaves this flag
     // (written after the local wipe, so it's the only thing that survives).
@@ -298,6 +404,12 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     if (savedMobility != null) {
       todayMobilityActivities = savedMobility;
     }
+
+    // Catches goals already met from persisted state (e.g. water logged
+    // right before closing the app yesterday... though that would have
+    // already been awarded then; mainly here so a fresh cold-start with an
+    // already-met goal doesn't wait for the next toggle to award XP).
+    _evaluatePetGoals();
 
     // Best-effort, matching this method's own doc comment ("never blocks
     // or degrades it") — it wasn't actually non-blocking before: awaiting
@@ -744,6 +856,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     set.done = !set.done;
     if (set.done) HapticFeedback.mediumImpact();
     _persistWorkoutSets();
+    _evaluatePetGoals();
     notifyListeners();
   }
 
@@ -956,6 +1069,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     activity.done = !activity.done;
     if (activity.done) HapticFeedback.mediumImpact();
     _persistMobilityActivities();
+    _evaluatePetGoals();
     notifyListeners();
   }
 
@@ -1066,6 +1180,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     todayWaterLog = [...todayWaterLog, WaterLogEntry(DateTime.now(), ml)];
     _applyTodayWaterTotal();
     unawaited(_persistence.saveTodayWaterLog(todayWaterLog));
+    _evaluatePetGoals();
     notifyListeners();
   }
 
@@ -1076,6 +1191,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     todayWaterLog = todayWaterLog.where((e) => e != entry).toList();
     _applyTodayWaterTotal();
     unawaited(_persistence.saveTodayWaterLog(todayWaterLog));
+    _evaluatePetGoals();
     notifyListeners();
   }
 
@@ -1462,6 +1578,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       }
 
       _pushWidgetOverview();
+      _evaluatePetGoals();
       notifyListeners();
     } catch (e) {
       debugPrint('Health sync failed: $e');

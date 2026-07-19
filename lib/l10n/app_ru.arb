@@ -690,5 +690,32 @@
     "placeholders": {
       "minutes": {}
     }
-  }
+  },
+  "petCardTitle": "Питомец",
+  "petLevelShort": "Ур. {level}",
+  "@petLevelShort": {
+    "placeholders": {
+      "level": {}
+    }
+  },
+  "petXpProgress": "{xp} / 100 XP",
+  "@petXpProgress": {
+    "placeholders": {
+      "xp": {}
+    }
+  },
+  "petScreenTitle": "Ваш питомец",
+  "petTodayGoalsTitle": "Сегодняшние цели",
+  "petStageEgg": "Яйцо",
+  "petStageHatchling": "Птенец",
+  "petStageYoung": "Молодой дракон",
+  "petStageGrown": "Дракон",
+  "petGoalWater": "Выполнить цель по воде",
+  "petGoalSteps": "Выполнить цель по шагам",
+  "petGoalSleep": "Выполнить цель по сну",
+  "petGoalWorkout": "Закончить сегодняшнюю тренировку",
+  "petGoalMobility": "Закончить сегодняшнюю растяжку",
+  "petNoGoalsYet": "Залогируйте что-нибудь сегодня, чтобы начать получать опыт",
+  "petAdminSectionTitle": "Инструменты администратора",
+  "petAdminBoostButton": "Прокачать питомца (+1 уровень, без целей)"
 }

@@ -581,6 +581,162 @@ void main() {
     });
   });
 
+  group('pet', () {
+    test('starts as an egg at level 1 with no XP', () async {
+      final state = newTestAppState();
+      await state.hydrate();
+
+      expect(state.petXp, 0);
+      expect(state.petLevel, 1);
+      expect(state.petStage, PetStage.egg);
+    });
+
+    test('hitting the water goal awards XP exactly once', () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      await state.signIn('pet-water@bodyx.app', 'pw');
+
+      final goalMl = state.dailyStats.last.waterGoalMl;
+      state.logWater(goalMl);
+
+      expect(state.petXp, 10);
+      expect(state.isPetGoalAwardedToday('water'), true);
+
+      // Logging more water after the goal is already met must not re-award.
+      state.logWater(100);
+      expect(state.petXp, 10);
+    });
+
+    test('finishing today\'s workout awards workout XP', () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      await state.signIn('pet-workout@bodyx.app', 'pw');
+
+      state.addExercise('Bench Press', 2, 8);
+      expect(state.todayPetGoals['workout'], false);
+
+      state.toggleWorkoutSet(0);
+      expect(state.petXp, 0, reason: 'only half the sets are done so far');
+
+      state.toggleWorkoutSet(1);
+      expect(state.todayPetGoals['workout'], true);
+      expect(state.petXp, 15);
+    });
+
+    test('a perfect day (every present goal met) adds a bonus on top',
+        () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      await state.signIn('pet-perfect@bodyx.app', 'pw');
+
+      // No workout/mobility logged today, so only water/steps/sleep count
+      // toward "every present goal" — hit them all via the water goal plus
+      // directly bumping today's stats for steps/sleep.
+      final today = state.dailyStats.last;
+      state.dailyStats[state.dailyStats.length - 1] = DailyStats(
+        date: today.date,
+        steps: today.stepGoal,
+        stepGoal: today.stepGoal,
+        calories: today.calories,
+        calorieGoal: today.calorieGoal,
+        sleepMinutes: today.sleepGoalMinutes,
+        sleepGoalMinutes: today.sleepGoalMinutes,
+        waterMl: today.waterMl,
+        waterGoalMl: today.waterGoalMl,
+        lightSleepMinutes: today.lightSleepMinutes,
+        deepSleepMinutes: today.deepSleepMinutes,
+        remSleepMinutes: today.remSleepMinutes,
+        awakeMinutes: today.awakeMinutes,
+      );
+      state.logWater(today.waterGoalMl);
+
+      // water(10) + steps(10) + sleep(10) + perfect-day bonus(25)
+      expect(state.petXp, 55);
+    });
+
+    test('level and stage derive from accumulated XP', () async {
+      // Tests the level/stage formula directly (goals only pay out once per
+      // day each, so driving level-2+ through real goal completion would
+      // need simulating several real calendar days).
+      final state = newTestAppState();
+      await state.hydrate();
+
+      state.petXp = 45;
+      expect(state.petLevel, 1);
+      expect(state.petStage, PetStage.egg);
+
+      state.petXp = 250;
+      expect(state.petLevel, 3);
+      expect(state.petStage, PetStage.hatchling);
+
+      state.petXp = 550;
+      expect(state.petLevel, 6);
+      expect(state.petStage, PetStage.young);
+
+      state.petXp = 1100;
+      expect(state.petLevel, 12);
+      expect(state.petStage, PetStage.grown);
+    });
+
+    test('pet XP and today\'s awarded goals survive a restart', () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      await state.signIn('pet-restart@bodyx.app', 'pw');
+
+      state.logWater(state.dailyStats.last.waterGoalMl);
+      expect(state.petXp, 10);
+
+      final restarted = newTestAppState();
+      await restarted.hydrate();
+
+      expect(restarted.petXp, 10);
+      expect(restarted.isPetGoalAwardedToday('water'), true);
+
+      // Re-logging water on the "same day" must not re-award the XP.
+      restarted.logWater(50);
+      expect(restarted.petXp, 10);
+    });
+
+    test('adminBoostPet grants a level with no goals for an admin account',
+        () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      await state.signIn('pet-admin@bodyx.app', 'pw');
+      state.user!.role = 'admin';
+
+      expect(state.isAdminAccount, true);
+      expect(state.todayPetGoals.values.any((met) => met), false,
+          reason: 'no goals were actually completed');
+
+      state.adminBoostPet();
+      expect(state.petXp, 100);
+      expect(state.petLevel, 2);
+
+      state.adminBoostPet();
+      expect(state.petXp, 200);
+    });
+
+    test('adminBoostPet is a no-op for a regular account', () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      await state.signIn('pet-regular@bodyx.app', 'pw');
+
+      expect(state.isAdminAccount, false);
+
+      state.adminBoostPet();
+      expect(state.petXp, 0);
+    });
+
+    test('superadmin also counts as an admin account', () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      await state.signIn('pet-superadmin@bodyx.app', 'pw');
+      state.user!.role = 'superadmin';
+
+      expect(state.isAdminAccount, true);
+    });
+  });
+
   group('progress photos', () {
     test('addProgressPhoto prepends, keeps newest-first order, and persists',
         () async {
@@ -874,6 +1030,7 @@ void main() {
         goal: 'Improve endurance',
         activityLevel: 'Very active',
         unitsMetric: false,
+        role: 'admin',
       );
 
       final restored = UserProfile.fromJson(user.toJson());
@@ -888,6 +1045,7 @@ void main() {
       expect(restored.goal, user.goal);
       expect(restored.activityLevel, user.activityLevel);
       expect(restored.unitsMetric, user.unitsMetric);
+      expect(restored.role, user.role);
     });
 
     test('BodyMeasurement.deltaFromFirst is 0 for empty history', () {
