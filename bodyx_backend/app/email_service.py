@@ -4,11 +4,32 @@ flow is fully buildable/testable before real SMTP credentials exist."""
 
 import logging
 import smtplib
+import socket
 from email.message import EmailMessage
 
 from app.config import settings
 
 logger = logging.getLogger("bodyx.email")
+
+
+class _IPv4SMTP(smtplib.SMTP):
+    """Some free-tier hosts (Render's included) advertise no outbound IPv6
+    route, but smtp.gmail.com (and other providers) resolve to an IPv6
+    address first — the connection then fails with `OSError: [Errno 101]
+    Network is unreachable` before SMTP/TLS/auth ever get a chance to run.
+    Forcing IPv4 resolution here sidesteps it; `self._host` is left as the
+    real hostname (set by the base constructor before connect() runs), so
+    STARTTLS certificate hostname verification is unaffected."""
+
+    def _get_socket(self, host, port, timeout):
+        family, socktype, proto, _, sockaddr = socket.getaddrinfo(
+            host, port, socket.AF_INET, socket.SOCK_STREAM
+        )[0]
+        sock = socket.socket(family, socktype, proto)
+        if timeout is not None and timeout != socket._GLOBAL_DEFAULT_TIMEOUT:
+            sock.settimeout(timeout)
+        sock.connect(sockaddr)
+        return sock
 
 
 def send_password_reset_email(to_email: str, code: str) -> None:
@@ -26,7 +47,7 @@ def send_password_reset_email(to_email: str, code: str) -> None:
         "If you didn't request this, you can ignore this email."
     )
 
-    with smtplib.SMTP(settings.smtp_host, settings.smtp_port) as server:
+    with _IPv4SMTP(settings.smtp_host, settings.smtp_port) as server:
         if settings.smtp_use_tls:
             server.starttls()
         if settings.smtp_username and settings.smtp_password:
