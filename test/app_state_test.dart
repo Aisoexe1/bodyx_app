@@ -588,7 +588,7 @@ void main() {
 
       expect(state.petXp, 0);
       expect(state.petLevel, 1);
-      expect(state.petStage, PetStage.egg);
+      expect(state.petStage, PetStage.ancientEgg);
     });
 
     test('hitting the water goal awards XP exactly once', () async {
@@ -657,25 +657,35 @@ void main() {
     test('level and stage derive from accumulated XP', () async {
       // Tests the level/stage formula directly (goals only pay out once per
       // day each, so driving level-2+ through real goal completion would
-      // need simulating several real calendar days).
+      // need simulating several real calendar days). One stage per level,
+      // capped at PetStage.legendaryDragon (index 14, level 15+).
       final state = newTestAppState();
       await state.hydrate();
 
       state.petXp = 45;
       expect(state.petLevel, 1);
-      expect(state.petStage, PetStage.egg);
+      expect(state.petStage, PetStage.ancientEgg);
 
       state.petXp = 250;
       expect(state.petLevel, 3);
-      expect(state.petStage, PetStage.hatchling);
+      expect(state.petStage, PetStage.babyDragon);
 
       state.petXp = 550;
       expect(state.petLevel, 6);
-      expect(state.petStage, PetStage.young);
+      expect(state.petStage, PetStage.youngDragon);
 
       state.petXp = 1100;
       expect(state.petLevel, 12);
-      expect(state.petStage, PetStage.grown);
+      expect(state.petStage, PetStage.starDragon);
+
+      state.petXp = 1400;
+      expect(state.petLevel, 15);
+      expect(state.petStage, PetStage.legendaryDragon);
+
+      // Stage caps at legendary — it doesn't run off the end of the enum.
+      state.petXp = 5000;
+      expect(state.petLevel, 51);
+      expect(state.petStage, PetStage.legendaryDragon);
     });
 
     test('pet XP and today\'s awarded goals survive a restart', () async {

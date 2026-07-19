@@ -7,6 +7,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/glow_card.dart';
 import '../../widgets/common/inputs_buttons.dart';
+import '../../widgets/pet/dragon_avatar.dart';
 
 /// Full-screen view of the tamagotchi-style pet — see [AppState.petXp] and
 /// [AppState.todayPetGoals] for how it actually grows (real goal completion,
@@ -48,8 +49,7 @@ class PetScreen extends StatelessWidget {
               Center(
                 child: Column(
                   children: [
-                    Text(state.petStage.emoji,
-                        style: const TextStyle(fontSize: 96)),
+                    DragonAvatar(stage: state.petStage, size: 140),
                     const SizedBox(height: 12),
                     Text(_stageName(l10n, state.petStage),
                         style: const TextStyle(
@@ -62,6 +62,11 @@ class PetScreen extends StatelessWidget {
                             color: AppColors.primaryBright,
                             fontSize: 14,
                             fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 6),
+                    Text(_stageDescription(l10n, state.petStage),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                            color: AppColors.textMuted, fontSize: 12.5)),
                   ],
                 ),
               ),
@@ -143,14 +148,71 @@ class PetScreen extends StatelessWidget {
 
   String _stageName(AppLocalizations l10n, PetStage stage) {
     switch (stage) {
-      case PetStage.egg:
-        return l10n.petStageEgg;
-      case PetStage.hatchling:
-        return l10n.petStageHatchling;
-      case PetStage.young:
-        return l10n.petStageYoung;
-      case PetStage.grown:
-        return l10n.petStageGrown;
+      case PetStage.ancientEgg:
+        return l10n.petStageAncientEggName;
+      case PetStage.crackedEgg:
+        return l10n.petStageCrackedEggName;
+      case PetStage.babyDragon:
+        return l10n.petStageBabyDragonName;
+      case PetStage.curiousDragon:
+        return l10n.petStageCuriousDragonName;
+      case PetStage.fireBreathingHatchling:
+        return l10n.petStageFireBreathingHatchlingName;
+      case PetStage.youngDragon:
+        return l10n.petStageYoungDragonName;
+      case PetStage.warriorDragon:
+        return l10n.petStageWarriorDragonName;
+      case PetStage.temperedDragon:
+        return l10n.petStageTemperedDragonName;
+      case PetStage.magmaDragon:
+        return l10n.petStageMagmaDragonName;
+      case PetStage.stormDragon:
+        return l10n.petStageStormDragonName;
+      case PetStage.crystalDragon:
+        return l10n.petStageCrystalDragonName;
+      case PetStage.starDragon:
+        return l10n.petStageStarDragonName;
+      case PetStage.royalDragon:
+        return l10n.petStageRoyalDragonName;
+      case PetStage.ancientDragon:
+        return l10n.petStageAncientDragonName;
+      case PetStage.legendaryDragon:
+        return l10n.petStageLegendaryDragonName;
+    }
+  }
+
+  String _stageDescription(AppLocalizations l10n, PetStage stage) {
+    switch (stage) {
+      case PetStage.ancientEgg:
+        return l10n.petStageAncientEggDesc;
+      case PetStage.crackedEgg:
+        return l10n.petStageCrackedEggDesc;
+      case PetStage.babyDragon:
+        return l10n.petStageBabyDragonDesc;
+      case PetStage.curiousDragon:
+        return l10n.petStageCuriousDragonDesc;
+      case PetStage.fireBreathingHatchling:
+        return l10n.petStageFireBreathingHatchlingDesc;
+      case PetStage.youngDragon:
+        return l10n.petStageYoungDragonDesc;
+      case PetStage.warriorDragon:
+        return l10n.petStageWarriorDragonDesc;
+      case PetStage.temperedDragon:
+        return l10n.petStageTemperedDragonDesc;
+      case PetStage.magmaDragon:
+        return l10n.petStageMagmaDragonDesc;
+      case PetStage.stormDragon:
+        return l10n.petStageStormDragonDesc;
+      case PetStage.crystalDragon:
+        return l10n.petStageCrystalDragonDesc;
+      case PetStage.starDragon:
+        return l10n.petStageStarDragonDesc;
+      case PetStage.royalDragon:
+        return l10n.petStageRoyalDragonDesc;
+      case PetStage.ancientDragon:
+        return l10n.petStageAncientDragonDesc;
+      case PetStage.legendaryDragon:
+        return l10n.petStageLegendaryDragonDesc;
     }
   }
 

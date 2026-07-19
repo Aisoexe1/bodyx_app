@@ -204,13 +204,10 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   int get petXpIntoLevel => petXp % 100;
   double get petLevelProgress => petXpIntoLevel / 100;
 
-  PetStage get petStage {
-    final level = petLevel;
-    if (level < 3) return PetStage.egg;
-    if (level < 6) return PetStage.hatchling;
-    if (level < 12) return PetStage.young;
-    return PetStage.grown;
-  }
+  /// One stage per level — level 1 is the freshly laid egg, level 15+ caps
+  /// out at [PetStage.legendaryDragon].
+  PetStage get petStage =>
+      PetStage.values[(petLevel - 1).clamp(0, PetStage.values.length - 1)];
 
   /// Which of today's goals are currently met — exposed for the pet screen's
   /// checklist. A goal only appears once it has real content today (e.g. no

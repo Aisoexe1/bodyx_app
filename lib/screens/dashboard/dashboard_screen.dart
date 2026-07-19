@@ -10,6 +10,7 @@ import '../../widgets/common/count_up_text.dart';
 import '../../widgets/common/glow_card.dart';
 import '../../widgets/common/progress_ring.dart';
 import '../../widgets/common/scale_tap.dart';
+import '../../widgets/pet/dragon_avatar.dart';
 import '../body_metrics/body_metrics_screen.dart';
 import '../body_metrics/log_metrics_sheet.dart';
 import '../pet/pet_screen.dart';
@@ -438,7 +439,7 @@ class _PetCard extends StatelessWidget {
       child: GlowCard(
         child: Row(
           children: [
-            Text(state.petStage.emoji, style: const TextStyle(fontSize: 38)),
+            DragonAvatar(stage: state.petStage, size: 46),
             const SizedBox(width: 14),
             Expanded(
               child: Column(

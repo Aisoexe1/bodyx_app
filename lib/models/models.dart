@@ -502,22 +502,24 @@ class Announcement {
 }
 
 /// Growth stage of the pet — a purely visual milestone derived from
-/// [AppState.petLevel], not stored on its own.
-enum PetStage { egg, hatchling, young, grown }
-
-extension PetStageX on PetStage {
-  /// A single-emoji sprite — no art assets needed, and every stage renders
-  /// consistently across platforms.
-  String get emoji {
-    switch (this) {
-      case PetStage.egg:
-        return '🥚';
-      case PetStage.hatchling:
-        return '🐣';
-      case PetStage.young:
-        return '🐲';
-      case PetStage.grown:
-        return '🐉';
-    }
-  }
+/// [AppState.petLevel], not stored on its own. One stage per level, capped at
+/// [PetStage.legendaryDragon] — see [kDragonTraits] in `dragon_avatar.dart`
+/// for how each stage is actually drawn (a custom-painted dragon, not a
+/// sticker/emoji).
+enum PetStage {
+  ancientEgg,
+  crackedEgg,
+  babyDragon,
+  curiousDragon,
+  fireBreathingHatchling,
+  youngDragon,
+  warriorDragon,
+  temperedDragon,
+  magmaDragon,
+  stormDragon,
+  crystalDragon,
+  starDragon,
+  royalDragon,
+  ancientDragon,
+  legendaryDragon,
 }
