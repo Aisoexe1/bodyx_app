@@ -48,6 +48,16 @@ async def update_user(db: AsyncIOMotorDatabase, user_id: ObjectId, updates: dict
     return await db.users.find_one({"_id": user_id})
 
 
+async def delete_user(db: AsyncIOMotorDatabase, user_id: ObjectId) -> None:
+    """Full account deletion — matches the Privacy Policy's promise that
+    deleting an account removes the associated data server-side too, not
+    just the user document. Every collection that stores a user_id."""
+    await db.weight_entries.delete_many({"user_id": user_id})
+    await db.body_measurements.delete_many({"user_id": user_id})
+    await db.support_tickets.delete_many({"user_id": user_id})
+    await db.users.delete_one({"_id": user_id})
+
+
 async def set_weight_kg(db: AsyncIOMotorDatabase, user_id: ObjectId, kg: float) -> None:
     await db.users.update_one(
         {"_id": user_id},

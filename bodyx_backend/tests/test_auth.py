@@ -266,3 +266,38 @@ async def test_oauth_username_collision_gets_disambiguated(client, registered_us
     resp = await client.post("/api/v1/auth/oauth/google", json={"idToken": "fake-token"})
     assert resp.status_code == 200
     assert resp.json()["user"]["username"] != "alex"
+
+
+async def test_delete_me_removes_account_and_data(client, registered_user, auth_headers):
+    import app.database as database_module
+    from bson import ObjectId
+
+    db = database_module.get_database()
+    user_id = ObjectId(registered_user["user"]["id"])
+
+    # Give the account a weight entry and a measurement so the cascade has
+    # something real to remove, not just the user document.
+    resp = await client.post("/api/v1/weight", json={"kg": 80, "bodyFatPct": 15}, headers=auth_headers)
+    assert resp.status_code == 201
+    resp = await client.put(
+        "/api/v1/measurements",
+        json={"chest": {"valueCm": 100, "targetCm": 105}},
+        headers=auth_headers,
+    )
+    assert resp.status_code == 200
+
+    resp = await client.delete("/api/v1/users/me", headers=auth_headers)
+    assert resp.status_code == 204
+
+    assert await db.users.find_one({"_id": user_id}) is None
+    assert await db.weight_entries.find_one({"user_id": user_id}) is None
+    assert await db.body_measurements.find_one({"user_id": user_id}) is None
+
+    # The token must no longer authenticate anything — the account is gone.
+    resp = await client.get("/api/v1/users/me", headers=auth_headers)
+    assert resp.status_code == 401
+
+
+async def test_delete_me_requires_token_401(client):
+    resp = await client.delete("/api/v1/users/me")
+    assert resp.status_code == 401
