@@ -472,3 +472,23 @@ class SupportTicket {
         updatedAt: DateTime.parse(json['updatedAt'] as String),
       );
 }
+
+/// A broadcast banner created by an admin (see the Announcements view in
+/// /admin) — shown to every signed-in user until they dismiss it locally.
+class Announcement {
+  const Announcement({
+    required this.id,
+    required this.message,
+    required this.createdAt,
+  });
+
+  final String id;
+  final String message;
+  final DateTime createdAt;
+
+  factory Announcement.fromJson(Map<String, dynamic> json) => Announcement(
+        id: json['id'] as String,
+        message: json['message'] as String,
+        createdAt: DateTime.parse(json['createdAt'] as String),
+      );
+}

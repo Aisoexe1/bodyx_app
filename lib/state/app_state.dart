@@ -5,6 +5,7 @@ import '../data/mock_data.dart';
 import '../l10n/gen/app_localizations.dart';
 import '../logic/health_insights.dart';
 import '../models/models.dart';
+import '../network/announcement_repository.dart';
 import '../network/api_client.dart';
 import '../network/auth_repository.dart';
 import '../network/measurement_repository.dart';
@@ -49,13 +50,16 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     WeightRepository? weightRepository,
     MeasurementRepository? measurementRepository,
     SupportRepository? supportRepository,
+    AnnouncementRepository? announcementRepository,
   })  : _persistence = persistence ?? PersistenceService(),
         _authRepository = authRepository ?? ApiAuthRepository(),
         _profileRepository = profileRepository ?? ApiProfileRepository(),
         _weightRepository = weightRepository ?? ApiWeightRepository(),
         _measurementRepository =
             measurementRepository ?? ApiMeasurementRepository(),
-        _supportRepository = supportRepository ?? ApiSupportRepository() {
+        _supportRepository = supportRepository ?? ApiSupportRepository(),
+        _announcementRepository =
+            announcementRepository ?? ApiAnnouncementRepository() {
     dailyStats = MockData.emptyDailyStats();
     weightHistory = [];
     bodyMeasurements = MockData.emptyBodyMeasurements(Gender.male);
@@ -65,10 +69,13 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     meals = [];
     progressPhotos = [];
     WidgetsBinding.instance.addObserver(this);
+    _announcementPollTimer =
+        Timer.periodic(const Duration(seconds: 30), (_) => _pollAnnouncements());
   }
 
   @override
   void dispose() {
+    _announcementPollTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -136,7 +143,44 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   final WeightRepository _weightRepository;
   final MeasurementRepository _measurementRepository;
   final SupportRepository _supportRepository;
+  final AnnouncementRepository _announcementRepository;
   bool _hasSession = false;
+
+  // ---- Announcements --------------------------------------------------------
+  // Admin-broadcast banners (see the Announcements view in /admin) — fetched
+  // on session restore and re-polled periodically (there's no push channel
+  // here) so one created while the app is already open still shows up
+  // without the user having to restart it. Dismissed ids persist locally so
+  // a banner the user closed doesn't reappear on this device.
+  List<Announcement> _announcements = [];
+  final Set<String> _dismissedAnnouncementIds = {};
+  Timer? _announcementPollTimer;
+
+  Future<void> _pollAnnouncements() async {
+    if (!_hasSession) return;
+    try {
+      final fetched = await _announcementRepository.listActive();
+      final changed = fetched.length != _announcements.length ||
+          !fetched.every((a) => _announcements.any((b) => b.id == a.id));
+      if (changed) {
+        _announcements = fetched;
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Failed to poll announcements: $e');
+    }
+  }
+
+  List<Announcement> get activeAnnouncements => _announcements
+      .where((a) => !_dismissedAnnouncementIds.contains(a.id))
+      .toList();
+
+  void dismissAnnouncement(String id) {
+    _dismissedAnnouncementIds.add(id);
+    unawaited(
+        _persistence.saveDismissedAnnouncementIds(_dismissedAnnouncementIds));
+    notifyListeners();
+  }
 
   // ---- Support tickets -----------------------------------------------------
   // Always fetched live from the server (no local persistence/offline cache)
@@ -161,6 +205,12 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     if (savedLocaleCode != null) {
       locale = Locale(savedLocaleCode);
     }
+
+    final savedDismissedIds =
+        await _persistence.loadDismissedAnnouncementIds();
+    _dismissedAnnouncementIds
+      ..clear()
+      ..addAll(savedDismissedIds);
 
     // A previous account deletion whose server call failed leaves this flag
     // (written after the local wipe, so it's the only thing that survives).
@@ -296,6 +346,13 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       }
     } catch (e) {
       debugPrint('Failed to pull weight/measurements during session restore: $e');
+    }
+
+    try {
+      _announcements = await _announcementRepository.listActive();
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Failed to fetch announcements during session restore: $e');
     }
   }
 

@@ -27,5 +27,9 @@ void main() {
     await tester.pumpAndSettle(const Duration(milliseconds: 2200));
 
     expect(find.text('Welcome back'), findsOneWidget);
+
+    // AppState's periodic announcement-poll timer would otherwise still be
+    // pending when the test binding checks for leftover timers below.
+    appState.dispose();
   });
 }

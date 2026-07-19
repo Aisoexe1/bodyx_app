@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:bodyx_app/models/models.dart';
+import 'package:bodyx_app/network/announcement_repository.dart';
 import 'package:bodyx_app/network/auth_repository.dart';
 import 'package:bodyx_app/network/measurement_repository.dart';
 import 'package:bodyx_app/network/profile_repository.dart';
@@ -226,6 +227,17 @@ class FakeSupportRepository implements SupportRepository {
   }
 }
 
+class FakeAnnouncementRepository implements AnnouncementRepository {
+  List<Announcement> active = [];
+  Object? listActiveThrows;
+
+  @override
+  Future<List<Announcement>> listActive() async {
+    if (listActiveThrows != null) throw listActiveThrows!;
+    return active;
+  }
+}
+
 /// Builds an [AppState] wired to fakes for every network dependency, so
 /// tests exercise the same code paths as production without touching HTTP
 /// or the keychain. [persistence] is left real (backed by the
@@ -234,6 +246,7 @@ class FakeSupportRepository implements SupportRepository {
 AppState newTestAppState({
   PersistenceService? persistence,
   AuthRepository? authRepository,
+  AnnouncementRepository? announcementRepository,
 }) =>
     AppState(
       persistence: persistence,
@@ -242,4 +255,5 @@ AppState newTestAppState({
       weightRepository: FakeWeightRepository(),
       measurementRepository: FakeMeasurementRepository(),
       supportRepository: FakeSupportRepository(),
+      announcementRepository: announcementRepository ?? FakeAnnouncementRepository(),
     );

@@ -33,6 +33,7 @@ class PersistenceService {
   static const _kLocale = 'bodyx.locale';
   static const _kPublicProfile = 'bodyx.public_profile';
   static const _kShareAnonData = 'bodyx.share_anon_data';
+  static const _kDismissedAnnouncementIds = 'bodyx.dismissed_announcement_ids';
 
   Future<SharedPreferences> get _prefs => SharedPreferences.getInstance();
 
@@ -281,6 +282,16 @@ class PersistenceService {
       await prefs.setString(_kLocale, code);
     }
   }
+
+  Future<List<String>> loadDismissedAnnouncementIds() async {
+    final raw = (await _prefs).getString(_kDismissedAnnouncementIds);
+    if (raw == null) return [];
+    return (jsonDecode(raw) as List).whereType<String>().toList();
+  }
+
+  Future<void> saveDismissedAnnouncementIds(Iterable<String> ids) async =>
+      (await _prefs)
+          .setString(_kDismissedAnnouncementIds, jsonEncode(ids.toList()));
 
   /// Signs the session out without discarding the user's logged history —
   /// there's only ever one local "account" in this app, so their
