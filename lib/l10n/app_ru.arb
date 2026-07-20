@@ -160,6 +160,7 @@
   },
   "logMetricsSaveMeasurement": "Сохранить измерение",
   "logMetricsWeightKgLabel": "Вес (кг)",
+  "logMetricsWeightLbLabel": "Вес (lb)",
   "logMetricsBodyFatPctLabel": "Процент жира (%)",
   "logMetricsSaveCheckIn": "Сохранить отметку",
   "progressPhotoCompareTitle": "Сравнение",
@@ -306,6 +307,16 @@
     }
   },
   "dailyPlanTitle": "План на день",
+  "stepsDetailTitle": "Шаги",
+  "stepsDetailGoal": "из {goal} цели",
+  "@stepsDetailGoal": {
+    "placeholders": {
+      "goal": {}
+    }
+  },
+  "stepsDetail7DayTrend": "ТРЕНД ЗА 7 ДНЕЙ",
+  "caloriesDetailTitle": "Калории",
+  "sleepDetailTitle": "Сон",
   "dailyPlanSubtitle": "Отслеживайте свой прогресс каждый день",
   "dailyPlanStepsLabel": "Шаги",
   "dailyPlanCaloriesLabel": "Калории",
@@ -393,18 +404,6 @@
   "profileHeightLabel": "Рост",
   "profileWeightLabel": "Вес",
   "profileAgeLabel": "Возраст",
-  "profileHeightValue": "{value} см",
-  "@profileHeightValue": {
-    "placeholders": {
-      "value": {}
-    }
-  },
-  "profileWeightValue": "{value} кг",
-  "@profileWeightValue": {
-    "placeholders": {
-      "value": {}
-    }
-  },
   "profileEditProfile": "Редактировать профиль",
   "profileAccountGroupLabel": "АККАУНТ",
   "profilePersonalData": "Личные данные",
@@ -422,16 +421,20 @@
   "progressTitle": "Прогресс",
   "progressSubtitle": "Отслеживайте, как меняются ваши показатели",
   "progressWeightLabel": "Вес",
-  "progressWeightDelta": "{delta} кг",
+  "progressWeightDelta": "{delta} {unit}",
   "@progressWeightDelta": {
     "placeholders": {
       "delta": {}
+    ,
+      "unit": {}
     }
   },
-  "progressWeightValue": "{weight} кг",
+  "progressWeightValue": "{weight} {unit}",
   "@progressWeightValue": {
     "placeholders": {
       "weight": {}
+    ,
+      "unit": {}
     }
   },
   "progressWeightEmptyTitle": "Пока нет отметок веса",
@@ -538,6 +541,12 @@
   },
   "settingsWeightValueKg": "{value} кг",
   "@settingsWeightValueKg": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "settingsWeightValueLb": "{value} фунт",
+  "@settingsWeightValueLb": {
     "placeholders": {
       "value": {}
     }
@@ -676,10 +685,12 @@
   "stepsBarChartSaturday": "Сб",
   "stepsBarChartSunday": "Вс",
   "weightLineChartEmptyCaption": "Добавьте отметку, чтобы увидеть динамику",
-  "weightLineChartTooltipKg": "{value} кг",
+  "weightLineChartTooltipKg": "{value} {unit}",
   "@weightLineChartTooltipKg": {
     "placeholders": {
       "value": {}
+    ,
+      "unit": {}
     }
   },
   "compareSliderBeforeLabel": "До",

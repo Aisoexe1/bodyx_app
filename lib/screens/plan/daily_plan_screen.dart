@@ -8,7 +8,10 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/glow_card.dart';
 import '../../widgets/common/scale_tap.dart';
+import 'calories_detail_sheet.dart';
 import 'daily_summary_screen.dart';
+import 'sleep_detail_sheet.dart';
+import 'steps_detail_sheet.dart';
 
 /// "Daily plan" — quick stat rows plus a scrollable date picker, matching
 /// the mockup's Track-your-progress-every-day screen.
@@ -54,10 +57,11 @@ class DailyPlanScreen extends StatelessWidget {
               label: AppLocalizations.of(context)!.dailyPlanStepsLabel,
               value: '${today.steps}',
               color: AppColors.primaryBright,
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (_) => DailySummaryScreen(stats: today)),
+              onTap: () => showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (_) => const StepsDetailSheet(),
               ),
             ),
             const SizedBox(height: 10),
@@ -66,10 +70,11 @@ class DailyPlanScreen extends StatelessWidget {
               label: AppLocalizations.of(context)!.dailyPlanCaloriesLabel,
               value: '${today.calories}',
               color: AppColors.warning,
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (_) => DailySummaryScreen(stats: today)),
+              onTap: () => showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (_) => const CaloriesDetailSheet(),
               ),
             ),
             const SizedBox(height: 10),
@@ -78,10 +83,11 @@ class DailyPlanScreen extends StatelessWidget {
               label: AppLocalizations.of(context)!.dailyPlanSleepLabel,
               value: today.sleepLabel,
               color: AppColors.info,
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (_) => DailySummaryScreen(stats: today)),
+              onTap: () => showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (_) => const SleepDetailSheet(),
               ),
             ),
             const SizedBox(height: 28),

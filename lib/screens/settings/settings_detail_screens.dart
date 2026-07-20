@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:bodyx_app/l10n/gen/app_localizations.dart';
 import '../../logic/goal_labels.dart';
+import '../../logic/units.dart';
 import '../../models/models.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_colors.dart';
@@ -103,19 +104,18 @@ class PersonalDataScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = context.watch<AppState>().user;
+    final unitsMetric = user?.unitsMetric ?? true;
     final rows = <(IconData, String, String, WidgetBuilder)>[
       (
         Icons.straighten_rounded,
         AppLocalizations.of(context)!.settingsHeightLabel,
-        AppLocalizations.of(context)!
-            .settingsHeightValueCm(user?.heightCm.toStringAsFixed(0) ?? '--'),
+        user == null ? '--' : formatHeight(context, user.heightCm, unitsMetric),
         (ctx) => const EditHeightScreen()
       ),
       (
         Icons.monitor_weight_outlined,
         AppLocalizations.of(context)!.settingsWeightLabel,
-        AppLocalizations.of(context)!
-            .settingsWeightValueKg(user?.weightKg.toStringAsFixed(0) ?? '--'),
+        user == null ? '--' : formatWeight(context, user.weightKg, unitsMetric),
         (ctx) => const EditWeightScreen()
       ),
       (
@@ -278,14 +278,19 @@ class EditHeightScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = context.read<AppState>();
+    final unitsMetric = state.user?.unitsMetric ?? true;
+    final heightCm = state.user?.heightCm ?? 175;
     return _NumberEditScreen(
       title: AppLocalizations.of(context)!.settingsEditHeightTitle,
-      unit: AppLocalizations.of(context)!.settingsCmUnit,
-      min: 130,
-      max: 220,
+      unit: unitsMetric
+          ? AppLocalizations.of(context)!.settingsCmUnit
+          : AppLocalizations.of(context)!.bodyDataUnitIn,
+      min: unitsMetric ? 130 : cmToInches(130),
+      max: unitsMetric ? 220 : cmToInches(220),
       step: 1,
-      initial: state.user?.heightCm ?? 175,
-      onSave: (v) => state.updateHeightWeightAge(heightCm: v),
+      initial: unitsMetric ? heightCm : cmToInches(heightCm),
+      onSave: (v) => state.updateHeightWeightAge(
+          heightCm: unitsMetric ? v : inchesToCm(v)),
     );
   }
 }
@@ -295,14 +300,19 @@ class EditWeightScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = context.read<AppState>();
+    final unitsMetric = state.user?.unitsMetric ?? true;
+    final weightKg = state.user?.weightKg ?? 70;
     return _NumberEditScreen(
       title: AppLocalizations.of(context)!.settingsEditWeightTitle,
-      unit: AppLocalizations.of(context)!.settingsKgUnit,
-      min: 35,
-      max: 180,
-      step: 0.5,
-      initial: state.user?.weightKg ?? 70,
-      onSave: (v) => state.updateHeightWeightAge(weightKg: v),
+      unit: unitsMetric
+          ? AppLocalizations.of(context)!.settingsKgUnit
+          : AppLocalizations.of(context)!.bodyDataUnitLb,
+      min: unitsMetric ? 35 : kgToLb(35),
+      max: unitsMetric ? 180 : kgToLb(180),
+      step: unitsMetric ? 0.5 : 1,
+      initial: unitsMetric ? weightKg : kgToLb(weightKg),
+      onSave: (v) =>
+          state.updateHeightWeightAge(weightKg: unitsMetric ? v : lbToKg(v)),
     );
   }
 }

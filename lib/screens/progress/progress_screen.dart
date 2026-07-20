@@ -3,15 +3,16 @@ import 'package:bodyx_app/l10n/gen/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../logic/health_insights.dart';
 import '../../logic/health_insights_labels.dart';
+import '../../logic/units.dart';
 import '../../models/models.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
 import '../../theme/status_colors.dart';
-import '../../widgets/charts/macro_bars.dart';
 import '../../widgets/charts/sleep_donut_chart.dart';
 import '../../widgets/charts/steps_bar_chart.dart';
 import '../../widgets/charts/weight_line_chart.dart';
+import '../../widgets/common/calories_card.dart';
 import '../../widgets/common/glow_card.dart';
 import '../../widgets/common/progress_ring.dart';
 import '../../widgets/common/scale_tap.dart';
@@ -30,6 +31,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
+    final unitsMetric = state.user?.unitsMetric ?? true;
     final weightHistory = state.weightHistory;
     // A brand new account has no weigh-ins yet — don't assume there's
     // always a first/last entry to diff.
@@ -85,7 +87,12 @@ class _ProgressScreenState extends State<ProgressScreen> {
                                 StatChip(
                                   label: AppLocalizations.of(context)!
                                       .progressWeightDelta(
-                                          '${delta <= 0 ? '' : '+'}${delta.toStringAsFixed(1)}'),
+                                          '${delta <= 0 ? '' : '+'}${(unitsMetric ? delta : kgToLb(delta)).toStringAsFixed(1)}',
+                                          unitsMetric
+                                              ? AppLocalizations.of(context)!
+                                                  .settingsKgUnit
+                                              : AppLocalizations.of(context)!
+                                                  .bodyDataUnitLb),
                                   color: delta <= 0
                                       ? AppColors.success
                                       : AppColors.warning,
@@ -99,13 +106,24 @@ class _ProgressScreenState extends State<ProgressScreen> {
                             Text(
                                 AppLocalizations.of(context)!
                                     .progressWeightValue(
-                                        '${lastWeight!.kg.round()}'),
+                                        (unitsMetric
+                                                ? lastWeight!.kg
+                                                : kgToLb(lastWeight!.kg))
+                                            .round()
+                                            .toString(),
+                                        unitsMetric
+                                            ? AppLocalizations.of(context)!
+                                                .settingsKgUnit
+                                            : AppLocalizations.of(context)!
+                                                .bodyDataUnitLb),
                                 style: const TextStyle(
                                     color: AppColors.textPrimary,
                                     fontWeight: FontWeight.w800,
                                     fontSize: 28)),
                             const SizedBox(height: 12),
-                            WeightLineChart(entries: weightHistory),
+                            WeightLineChart(
+                                entries: weightHistory,
+                                unitsMetric: unitsMetric),
                           ],
                         )
                       : ScaleTap(
@@ -160,7 +178,12 @@ class _ProgressScreenState extends State<ProgressScreen> {
                             .progressWeightChangeLabel,
                         value: weightChange7d != null
                             ? AppLocalizations.of(context)!.progressWeightDelta(
-                                '${weightChange7d <= 0 ? '' : '+'}${weightChange7d.toStringAsFixed(1)}')
+                                '${weightChange7d <= 0 ? '' : '+'}${(unitsMetric ? weightChange7d : kgToLb(weightChange7d)).toStringAsFixed(1)}',
+                                unitsMetric
+                                    ? AppLocalizations.of(context)!
+                                        .settingsKgUnit
+                                    : AppLocalizations.of(context)!
+                                        .bodyDataUnitLb)
                             : '—',
                         progress: weightChange7d != null
                             ? (weightChange7d.abs() / 3).clamp(0, 1)
@@ -215,7 +238,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                     subtitle:
                         AppLocalizations.of(context)!.progressCaloriesSubtitle),
                 const SizedBox(height: 12),
-                _CaloriesCard(state: state),
+                CaloriesCard(state: state),
                 const SizedBox(height: 24),
                 SectionHeader(
                   title: AppLocalizations.of(context)!.progressSleepTitle,
@@ -334,60 +357,6 @@ class _WeightVerdictCard extends StatelessWidget {
   }
 }
 
-/// Shows the surplus as a difference (eaten - TDEE), never a raw calorie
-/// count on its own — plus a protein target, since a surplus without
-/// enough protein mostly builds fat, not muscle.
-class _CaloriesCard extends StatelessWidget {
-  const _CaloriesCard({required this.state});
-  final AppState state;
-
-  @override
-  Widget build(BuildContext context) {
-    final surplus = state.calorieSurplus;
-    final status = state.calorieSurplusStatus;
-    final color = statusColor(status.level);
-    final totalProtein =
-        state.meals.fold<int>(0, (sum, m) => sum + m.proteinG);
-    final totalCarbs = state.meals.fold<int>(0, (sum, m) => sum + m.carbsG);
-    final totalFat = state.meals.fold<int>(0, (sum, m) => sum + m.fatG);
-
-    return GlowCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                  AppLocalizations.of(context)!.progressCaloriesEaten(
-                      '${state.todayCaloriesEaten}'),
-                  style: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 24)),
-              const Spacer(),
-              StatChip(label: statusLabel(context, status), color: color),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            AppLocalizations.of(context)!.progressCaloriesSummary(
-                '${state.tdee.round()}',
-                '${surplus >= 0 ? '+' : ''}$surplus'),
-            style: const TextStyle(color: AppColors.textMuted, fontSize: 12.5),
-          ),
-          const SizedBox(height: 20),
-          MacroBars(
-            proteinG: totalProtein,
-            carbsG: totalCarbs,
-            fatG: totalFat,
-            proteinGoal: state.proteinTargetG.round(),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _RangeSelector extends StatelessWidget {
   const _RangeSelector({required this.index, required this.onChanged});

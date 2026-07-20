@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:bodyx_app/l10n/gen/app_localizations.dart';
+import '../../logic/units.dart';
 import '../../models/models.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_colors.dart';
@@ -35,6 +36,7 @@ class _LogMetricsSheetState extends State<LogMetricsSheet> {
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
+    final unitsMetric = state.user?.unitsMetric ?? true;
     _measurementValue ??= state.bodyMeasurements[_zone]!.valueCm;
     if (!_initializedWeight) {
       // A brand new account has no prior weigh-in to prefill from — the
@@ -153,12 +155,15 @@ class _LogMetricsSheetState extends State<LogMetricsSheet> {
               ),
             ] else ...[
               _ValueStepper(
-                label: AppLocalizations.of(context)!.logMetricsWeightKgLabel,
-                value: _weight,
-                min: 35,
-                max: 180,
-                step: 0.5,
-                onChanged: (v) => setState(() => _weight = v),
+                label: unitsMetric
+                    ? AppLocalizations.of(context)!.logMetricsWeightKgLabel
+                    : AppLocalizations.of(context)!.logMetricsWeightLbLabel,
+                value: unitsMetric ? _weight : kgToLb(_weight),
+                min: unitsMetric ? 35 : kgToLb(35),
+                max: unitsMetric ? 180 : kgToLb(180),
+                step: unitsMetric ? 0.5 : 1,
+                onChanged: (v) =>
+                    setState(() => _weight = unitsMetric ? v : lbToKg(v)),
               ),
               const SizedBox(height: 16),
               _ValueStepper(

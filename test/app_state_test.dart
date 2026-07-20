@@ -107,6 +107,25 @@ void main() {
       expect(state.bodyMeasurements.keys.toSet(), MuscleZone.values.toSet());
     });
 
+    test(
+        'submitBodyData persists the imperial/metric choice made during onboarding',
+        () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      state.submitSignUp('imperial@bodyx.app', 'pw');
+      await state.submitUsername('imperialuser');
+
+      state.submitBodyData(
+        gender: Gender.male,
+        heightCm: 180,
+        weightKg: 80,
+        age: 30,
+        unitsMetric: false,
+      );
+
+      expect(state.user!.unitsMetric, false);
+    });
+
     test('signIn with rememberMe: false does not survive a restart',
         () async {
       final state = newTestAppState();

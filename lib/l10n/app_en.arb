@@ -160,6 +160,7 @@
   },
   "logMetricsSaveMeasurement": "Save measurement",
   "logMetricsWeightKgLabel": "Weight (kg)",
+  "logMetricsWeightLbLabel": "Weight (lb)",
   "logMetricsBodyFatPctLabel": "Body fat (%)",
   "logMetricsSaveCheckIn": "Save check-in",
   "progressPhotoCompareTitle": "Compare",
@@ -306,6 +307,16 @@
     }
   },
   "dailyPlanTitle": "Daily plan",
+  "stepsDetailTitle": "Steps",
+  "stepsDetailGoal": "of {goal} goal",
+  "@stepsDetailGoal": {
+    "placeholders": {
+      "goal": {}
+    }
+  },
+  "stepsDetail7DayTrend": "7-DAY TREND",
+  "caloriesDetailTitle": "Calories",
+  "sleepDetailTitle": "Sleep",
   "dailyPlanSubtitle": "Track your progress every day",
   "dailyPlanStepsLabel": "Steps",
   "dailyPlanCaloriesLabel": "Calories",
@@ -393,18 +404,6 @@
   "profileHeightLabel": "Height",
   "profileWeightLabel": "Weight",
   "profileAgeLabel": "Age",
-  "profileHeightValue": "{value} cm",
-  "@profileHeightValue": {
-    "placeholders": {
-      "value": {}
-    }
-  },
-  "profileWeightValue": "{value} kg",
-  "@profileWeightValue": {
-    "placeholders": {
-      "value": {}
-    }
-  },
   "profileEditProfile": "Edit profile",
   "profileAccountGroupLabel": "ACCOUNT",
   "profilePersonalData": "Personal data",
@@ -422,16 +421,20 @@
   "progressTitle": "Progress",
   "progressSubtitle": "Track how your metrics evolve over time",
   "progressWeightLabel": "Weight",
-  "progressWeightDelta": "{delta} kg",
+  "progressWeightDelta": "{delta} {unit}",
   "@progressWeightDelta": {
     "placeholders": {
       "delta": {}
+    ,
+      "unit": {}
     }
   },
-  "progressWeightValue": "{weight} kg",
+  "progressWeightValue": "{weight} {unit}",
   "@progressWeightValue": {
     "placeholders": {
       "weight": {}
+    ,
+      "unit": {}
     }
   },
   "progressWeightEmptyTitle": "No weigh-ins yet",
@@ -538,6 +541,12 @@
   },
   "settingsWeightValueKg": "{value} kg",
   "@settingsWeightValueKg": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "settingsWeightValueLb": "{value} lb",
+  "@settingsWeightValueLb": {
     "placeholders": {
       "value": {}
     }
@@ -676,10 +685,12 @@
   "stepsBarChartSaturday": "Sa",
   "stepsBarChartSunday": "Su",
   "weightLineChartEmptyCaption": "Log a check-in to see your trend",
-  "weightLineChartTooltipKg": "{value} kg",
+  "weightLineChartTooltipKg": "{value} {unit}",
   "@weightLineChartTooltipKg": {
     "placeholders": {
       "value": {}
+    ,
+      "unit": {}
     }
   },
   "compareSliderBeforeLabel": "Before",

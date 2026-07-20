@@ -655,11 +655,13 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     required double heightCm,
     required double weightKg,
     required int age,
+    bool unitsMetric = true,
   }) {
     user!.gender = gender;
     user!.heightCm = heightCm;
     user!.weightKg = weightKg;
     user!.age = age;
+    user!.unitsMetric = unitsMetric;
     bodyMeasurements = MockData.emptyBodyMeasurements(gender);
     bodyViewerGender = gender;
     authStage = AuthStage.done;

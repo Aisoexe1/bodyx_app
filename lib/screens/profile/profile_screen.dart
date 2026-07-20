@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:bodyx_app/l10n/gen/app_localizations.dart';
 import '../../logic/goal_labels.dart';
+import '../../logic/units.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
@@ -78,18 +79,18 @@ class ProfileScreen extends StatelessWidget {
                               child: _StatPill(
                                   label: AppLocalizations.of(context)!
                                       .profileHeightLabel,
-                                  value: AppLocalizations.of(context)!
-                                      .profileHeightValue(user?.heightCm
-                                              .toStringAsFixed(0) ??
-                                          '--'))),
+                                  value: user == null
+                                      ? '--'
+                                      : formatHeight(context, user.heightCm,
+                                          user.unitsMetric))),
                           Expanded(
                               child: _StatPill(
                                   label: AppLocalizations.of(context)!
                                       .profileWeightLabel,
-                                  value: AppLocalizations.of(context)!
-                                      .profileWeightValue(user?.weightKg
-                                              .toStringAsFixed(0) ??
-                                          '--'))),
+                                  value: user == null
+                                      ? '--'
+                                      : formatWeight(context, user.weightKg,
+                                          user.unitsMetric))),
                           Expanded(
                               child: _StatPill(
                                   label: AppLocalizations.of(context)!

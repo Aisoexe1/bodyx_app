@@ -1,6 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:bodyx_app/l10n/gen/app_localizations.dart';
+import '../../logic/units.dart';
 import '../../models/models.dart';
 import '../../theme/app_colors.dart';
 import '../common/skeleton.dart';
@@ -8,10 +9,16 @@ import '../common/skeleton.dart';
 /// Weight trend over time with a smooth gradient-filled curve, used on the
 /// Progress screen's "Body composition" section.
 class WeightLineChart extends StatelessWidget {
-  const WeightLineChart({super.key, required this.entries, this.height = 200});
+  const WeightLineChart({
+    super.key,
+    required this.entries,
+    this.height = 200,
+    this.unitsMetric = true,
+  });
 
   final List<WeightEntry> entries;
   final double height;
+  final bool unitsMetric;
 
   @override
   Widget build(BuildContext context) {
@@ -36,12 +43,19 @@ class WeightLineChart extends StatelessWidget {
       );
     }
 
+    double displayValue(double kg) => unitsMetric ? kg : kgToLb(kg);
+    final unit = unitsMetric
+        ? AppLocalizations.of(context)!.settingsKgUnit
+        : AppLocalizations.of(context)!.bodyDataUnitLb;
+
     final spots = List.generate(
       entries.length,
-      (i) => FlSpot(i.toDouble(), entries[i].kg),
+      (i) => FlSpot(i.toDouble(), displayValue(entries[i].kg)),
     );
-    final minY = entries.map((e) => e.kg).reduce((a, b) => a < b ? a : b) - 1;
-    final maxY = entries.map((e) => e.kg).reduce((a, b) => a > b ? a : b) + 1;
+    final minY =
+        entries.map((e) => displayValue(e.kg)).reduce((a, b) => a < b ? a : b) - 1;
+    final maxY =
+        entries.map((e) => displayValue(e.kg)).reduce((a, b) => a > b ? a : b) + 1;
 
     return SizedBox(
       height: height,
@@ -83,7 +97,7 @@ class WeightLineChart extends StatelessWidget {
               getTooltipItems: (spots) => spots.map((s) {
                 return LineTooltipItem(
                   AppLocalizations.of(context)!
-                      .weightLineChartTooltipKg(s.y.toStringAsFixed(1)),
+                      .weightLineChartTooltipKg(s.y.toStringAsFixed(1), unit),
                   const TextStyle(
                       color: AppColors.textPrimary,
                       fontWeight: FontWeight.w700,
