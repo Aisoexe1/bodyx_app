@@ -424,16 +424,14 @@
   "progressWeightDelta": "{delta} {unit}",
   "@progressWeightDelta": {
     "placeholders": {
-      "delta": {}
-    ,
+      "delta": {},
       "unit": {}
     }
   },
   "progressWeightValue": "{weight} {unit}",
   "@progressWeightValue": {
     "placeholders": {
-      "weight": {}
-    ,
+      "weight": {},
       "unit": {}
     }
   },
@@ -688,8 +686,7 @@
   "weightLineChartTooltipKg": "{value} {unit}",
   "@weightLineChartTooltipKg": {
     "placeholders": {
-      "value": {}
-    ,
+      "value": {},
       "unit": {}
     }
   },
@@ -791,5 +788,85 @@
     "placeholders": {
       "minutes": {}
     }
-  }
+  },
+  "rankBronze": "Bronze",
+  "rankSilver": "Silver",
+  "rankGold": "Gold",
+  "rankPlatinum": "Platinum",
+  "rankDiamond": "Diamond",
+  "achievementStreakBronzeTitle": "Getting Started",
+  "achievementStreakBronzeDesc": "Log everything 3 days in a row",
+  "achievementStreakSilverTitle": "One Week Strong",
+  "achievementStreakSilverDesc": "Log everything 7 days in a row",
+  "achievementStreakGoldTitle": "Unstoppable",
+  "achievementStreakGoldDesc": "Log everything 30 days in a row",
+  "achievementStreakPlatinumTitle": "Iron Will",
+  "achievementStreakPlatinumDesc": "Log everything 100 days in a row",
+  "achievementWorkoutBronzeTitle": "First Rep",
+  "achievementWorkoutBronzeDesc": "Complete your first full workout",
+  "achievementWorkoutSilverTitle": "Getting Stronger",
+  "achievementWorkoutSilverDesc": "Complete 10 full workouts",
+  "achievementWorkoutGoldTitle": "Iron Regular",
+  "achievementWorkoutGoldDesc": "Complete 50 full workouts",
+  "achievementWorkoutPlatinumTitle": "Gym Legend",
+  "achievementWorkoutPlatinumDesc": "Complete 200 full workouts",
+  "achievementMobilityBronzeTitle": "First Stretch",
+  "achievementMobilityBronzeDesc": "Complete your first mobility activity",
+  "achievementMobilitySilverTitle": "Staying Loose",
+  "achievementMobilitySilverDesc": "Complete 10 mobility activities",
+  "achievementMobilityGoldTitle": "Flexibility Pro",
+  "achievementMobilityGoldDesc": "Complete 50 mobility activities",
+  "achievementMobilityPlatinumTitle": "Rubber Band Man",
+  "achievementMobilityPlatinumDesc": "Complete 200 mobility activities",
+  "achievementHydrationBronzeTitle": "First Sip",
+  "achievementHydrationBronzeDesc": "Hit your water goal for the first time",
+  "achievementHydrationSilverTitle": "Well Hydrated",
+  "achievementHydrationSilverDesc": "Hit your water goal 7 days",
+  "achievementHydrationGoldTitle": "Water Champion",
+  "achievementHydrationGoldDesc": "Hit your water goal 30 days",
+  "achievementHydrationPlatinumTitle": "Ocean Deep",
+  "achievementHydrationPlatinumDesc": "Hit your water goal 100 days",
+  "achievementNutritionBronzeTitle": "First Bite",
+  "achievementNutritionBronzeDesc": "Log your first meal",
+  "achievementNutritionSilverTitle": "Meal Tracker",
+  "achievementNutritionSilverDesc": "Log 25 meals",
+  "achievementNutritionGoldTitle": "Nutrition Nerd",
+  "achievementNutritionGoldDesc": "Log 100 meals",
+  "achievementNutritionPlatinumTitle": "Master Chef",
+  "achievementNutritionPlatinumDesc": "Log 500 meals",
+  "achievementsScreenTitle": "Achievements",
+  "achievementsRankLabel": "Rank",
+  "achievementsPointsLabel": "{points} pts",
+  "@achievementsPointsLabel": {
+    "placeholders": {
+      "points": {}
+    }
+  },
+  "achievementsNextRankProgress": "{remaining} pts to {rank}",
+  "@achievementsNextRankProgress": {
+    "placeholders": {
+      "remaining": {},
+      "rank": {}
+    }
+  },
+  "achievementsMaxRank": "Max rank reached",
+  "achievementsUnlockedOn": "Unlocked {date}",
+  "@achievementsUnlockedOn": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "achievementsLockedProgress": "{current} / {threshold}",
+  "@achievementsLockedProgress": {
+    "placeholders": {
+      "current": {},
+      "threshold": {}
+    }
+  },
+  "profileAchievementsLabel": "Achievements",
+  "achievementsFamilyStreak": "Consistency",
+  "achievementsFamilyWorkout": "Workouts",
+  "achievementsFamilyMobility": "Mobility",
+  "achievementsFamilyHydration": "Hydration",
+  "achievementsFamilyNutrition": "Nutrition"
 }

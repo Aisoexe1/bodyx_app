@@ -424,16 +424,14 @@
   "progressWeightDelta": "{delta} {unit}",
   "@progressWeightDelta": {
     "placeholders": {
-      "delta": {}
-    ,
+      "delta": {},
       "unit": {}
     }
   },
   "progressWeightValue": "{weight} {unit}",
   "@progressWeightValue": {
     "placeholders": {
-      "weight": {}
-    ,
+      "weight": {},
       "unit": {}
     }
   },
@@ -688,8 +686,7 @@
   "weightLineChartTooltipKg": "{value} {unit}",
   "@weightLineChartTooltipKg": {
     "placeholders": {
-      "value": {}
-    ,
+      "value": {},
       "unit": {}
     }
   },
@@ -791,5 +788,85 @@
     "placeholders": {
       "minutes": {}
     }
-  }
+  },
+  "rankBronze": "Бронза",
+  "rankSilver": "Серебро",
+  "rankGold": "Золото",
+  "rankPlatinum": "Платина",
+  "rankDiamond": "Алмаз",
+  "achievementStreakBronzeTitle": "Начало положено",
+  "achievementStreakBronzeDesc": "Веди всё подряд 3 дня",
+  "achievementStreakSilverTitle": "Неделя силы",
+  "achievementStreakSilverDesc": "Веди всё подряд 7 дней",
+  "achievementStreakGoldTitle": "Не остановить",
+  "achievementStreakGoldDesc": "Веди всё подряд 30 дней",
+  "achievementStreakPlatinumTitle": "Железная воля",
+  "achievementStreakPlatinumDesc": "Веди всё подряд 100 дней",
+  "achievementWorkoutBronzeTitle": "Первый подход",
+  "achievementWorkoutBronzeDesc": "Заверши первую тренировку целиком",
+  "achievementWorkoutSilverTitle": "Становишься сильнее",
+  "achievementWorkoutSilverDesc": "Заверши 10 тренировок целиком",
+  "achievementWorkoutGoldTitle": "Завсегдатай зала",
+  "achievementWorkoutGoldDesc": "Заверши 50 тренировок целиком",
+  "achievementWorkoutPlatinumTitle": "Легенда зала",
+  "achievementWorkoutPlatinumDesc": "Заверши 200 тренировок целиком",
+  "achievementMobilityBronzeTitle": "Первая растяжка",
+  "achievementMobilityBronzeDesc": "Заверши первую активность растяжки",
+  "achievementMobilitySilverTitle": "Держим форму",
+  "achievementMobilitySilverDesc": "Заверши 10 активностей растяжки",
+  "achievementMobilityGoldTitle": "Профи гибкости",
+  "achievementMobilityGoldDesc": "Заверши 50 активностей растяжки",
+  "achievementMobilityPlatinumTitle": "Человек-резинка",
+  "achievementMobilityPlatinumDesc": "Заверши 200 активностей растяжки",
+  "achievementHydrationBronzeTitle": "Первый глоток",
+  "achievementHydrationBronzeDesc": "Достигни цели по воде впервые",
+  "achievementHydrationSilverTitle": "Хорошо увлажнён",
+  "achievementHydrationSilverDesc": "Достигни цели по воде 7 дней",
+  "achievementHydrationGoldTitle": "Чемпион по воде",
+  "achievementHydrationGoldDesc": "Достигни цели по воде 30 дней",
+  "achievementHydrationPlatinumTitle": "Глубина океана",
+  "achievementHydrationPlatinumDesc": "Достигни цели по воде 100 дней",
+  "achievementNutritionBronzeTitle": "Первый укус",
+  "achievementNutritionBronzeDesc": "Запиши первый приём пищи",
+  "achievementNutritionSilverTitle": "Трекер питания",
+  "achievementNutritionSilverDesc": "Запиши 25 приёмов пищи",
+  "achievementNutritionGoldTitle": "Гуру питания",
+  "achievementNutritionGoldDesc": "Запиши 100 приёмов пищи",
+  "achievementNutritionPlatinumTitle": "Шеф-повар",
+  "achievementNutritionPlatinumDesc": "Запиши 500 приёмов пищи",
+  "achievementsScreenTitle": "Достижения",
+  "achievementsRankLabel": "Ранг",
+  "achievementsPointsLabel": "{points} очков",
+  "@achievementsPointsLabel": {
+    "placeholders": {
+      "points": {}
+    }
+  },
+  "achievementsNextRankProgress": "{remaining} очков до ранга «{rank}»",
+  "@achievementsNextRankProgress": {
+    "placeholders": {
+      "remaining": {},
+      "rank": {}
+    }
+  },
+  "achievementsMaxRank": "Максимальный ранг достигнут",
+  "achievementsUnlockedOn": "Открыто {date}",
+  "@achievementsUnlockedOn": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "achievementsLockedProgress": "{current} / {threshold}",
+  "@achievementsLockedProgress": {
+    "placeholders": {
+      "current": {},
+      "threshold": {}
+    }
+  },
+  "profileAchievementsLabel": "Достижения",
+  "achievementsFamilyStreak": "Постоянство",
+  "achievementsFamilyWorkout": "Тренировки",
+  "achievementsFamilyMobility": "Растяжка",
+  "achievementsFamilyHydration": "Гидратация",
+  "achievementsFamilyNutrition": "Питание"
 }

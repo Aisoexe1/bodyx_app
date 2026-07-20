@@ -424,16 +424,14 @@
   "progressWeightDelta": "{delta} {unit}",
   "@progressWeightDelta": {
     "placeholders": {
-      "delta": {}
-    ,
+      "delta": {},
       "unit": {}
     }
   },
   "progressWeightValue": "{weight} {unit}",
   "@progressWeightValue": {
     "placeholders": {
-      "weight": {}
-    ,
+      "weight": {},
       "unit": {}
     }
   },
@@ -688,8 +686,7 @@
   "weightLineChartTooltipKg": "{value} {unit}",
   "@weightLineChartTooltipKg": {
     "placeholders": {
-      "value": {}
-    ,
+      "value": {},
       "unit": {}
     }
   },
@@ -791,5 +788,85 @@
     "placeholders": {
       "minutes": {}
     }
-  }
+  },
+  "rankBronze": "Бронза",
+  "rankSilver": "Срібло",
+  "rankGold": "Золото",
+  "rankPlatinum": "Платина",
+  "rankDiamond": "Діамант",
+  "achievementStreakBronzeTitle": "Початок покладено",
+  "achievementStreakBronzeDesc": "Веди все поспіль 3 дні",
+  "achievementStreakSilverTitle": "Тиждень сили",
+  "achievementStreakSilverDesc": "Веди все поспіль 7 днів",
+  "achievementStreakGoldTitle": "Не зупинити",
+  "achievementStreakGoldDesc": "Веди все поспіль 30 днів",
+  "achievementStreakPlatinumTitle": "Залізна воля",
+  "achievementStreakPlatinumDesc": "Веди все поспіль 100 днів",
+  "achievementWorkoutBronzeTitle": "Перший підхід",
+  "achievementWorkoutBronzeDesc": "Заверши першу тренування повністю",
+  "achievementWorkoutSilverTitle": "Стаєш сильнішим",
+  "achievementWorkoutSilverDesc": "Заверши 10 тренувань повністю",
+  "achievementWorkoutGoldTitle": "Завсідник залу",
+  "achievementWorkoutGoldDesc": "Заверши 50 тренувань повністю",
+  "achievementWorkoutPlatinumTitle": "Легенда залу",
+  "achievementWorkoutPlatinumDesc": "Заверши 200 тренувань повністю",
+  "achievementMobilityBronzeTitle": "Перша розтяжка",
+  "achievementMobilityBronzeDesc": "Заверши першу активність розтяжки",
+  "achievementMobilitySilverTitle": "Тримаємо форму",
+  "achievementMobilitySilverDesc": "Заверши 10 активностей розтяжки",
+  "achievementMobilityGoldTitle": "Профі гнучкості",
+  "achievementMobilityGoldDesc": "Заверши 50 активностей розтяжки",
+  "achievementMobilityPlatinumTitle": "Людина-гумка",
+  "achievementMobilityPlatinumDesc": "Заверши 200 активностей розтяжки",
+  "achievementHydrationBronzeTitle": "Перший ковток",
+  "achievementHydrationBronzeDesc": "Досягни цілі по воді вперше",
+  "achievementHydrationSilverTitle": "Добре зволожений",
+  "achievementHydrationSilverDesc": "Досягни цілі по воді 7 днів",
+  "achievementHydrationGoldTitle": "Чемпіон з води",
+  "achievementHydrationGoldDesc": "Досягни цілі по воді 30 днів",
+  "achievementHydrationPlatinumTitle": "Глибина океану",
+  "achievementHydrationPlatinumDesc": "Досягни цілі по воді 100 днів",
+  "achievementNutritionBronzeTitle": "Перший укус",
+  "achievementNutritionBronzeDesc": "Запиши перший прийом їжі",
+  "achievementNutritionSilverTitle": "Трекер харчування",
+  "achievementNutritionSilverDesc": "Запиши 25 прийомів їжі",
+  "achievementNutritionGoldTitle": "Гуру харчування",
+  "achievementNutritionGoldDesc": "Запиши 100 прийомів їжі",
+  "achievementNutritionPlatinumTitle": "Шеф-кухар",
+  "achievementNutritionPlatinumDesc": "Запиши 500 прийомів їжі",
+  "achievementsScreenTitle": "Досягнення",
+  "achievementsRankLabel": "Ранг",
+  "achievementsPointsLabel": "{points} очок",
+  "@achievementsPointsLabel": {
+    "placeholders": {
+      "points": {}
+    }
+  },
+  "achievementsNextRankProgress": "{remaining} очок до рангу «{rank}»",
+  "@achievementsNextRankProgress": {
+    "placeholders": {
+      "remaining": {},
+      "rank": {}
+    }
+  },
+  "achievementsMaxRank": "Максимальний ранг досягнуто",
+  "achievementsUnlockedOn": "Відкрито {date}",
+  "@achievementsUnlockedOn": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "achievementsLockedProgress": "{current} / {threshold}",
+  "@achievementsLockedProgress": {
+    "placeholders": {
+      "current": {},
+      "threshold": {}
+    }
+  },
+  "profileAchievementsLabel": "Досягнення",
+  "achievementsFamilyStreak": "Постійність",
+  "achievementsFamilyWorkout": "Тренування",
+  "achievementsFamilyMobility": "Розтяжка",
+  "achievementsFamilyHydration": "Гідратація",
+  "achievementsFamilyNutrition": "Харчування"
 }

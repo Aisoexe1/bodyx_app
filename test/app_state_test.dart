@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:bodyx_app/models/achievements.dart';
 import 'package:bodyx_app/models/models.dart';
 import 'package:bodyx_app/state/app_state.dart';
 import 'package:bodyx_app/state/persistence_service.dart';
@@ -1058,6 +1059,245 @@ void main() {
         awakeMinutes: 0,
       );
       expect(stats.sleepLabel, '7h 34m');
+    });
+  });
+
+  group('achievements and rank', () {
+    test(
+        'logging meals unlocks nutrition achievements at the right thresholds',
+        () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      await state.signIn('achieve-meals@bodyx.app', 'pw', rememberMe: true);
+
+      state.logMeal(const MealEntry(
+        name: 'Oats',
+        time: '08:00',
+        kcal: 300,
+        proteinG: 10,
+        carbsG: 50,
+        fatG: 5,
+        icon: Icons.breakfast_dining_rounded,
+      ));
+      expect(state.totalMealsLogged, 1);
+      expect(state.unlockedAchievementIds.contains('nutrition_bronze'), true);
+      expect(state.unlockedAchievementIds.contains('nutrition_silver'), false);
+      expect(state.achievementPoints, 10);
+
+      for (var i = 0; i < 24; i++) {
+        state.logMeal(const MealEntry(
+          name: 'Snack',
+          time: '10:00',
+          kcal: 100,
+          proteinG: 5,
+          carbsG: 10,
+          fatG: 2,
+          icon: Icons.icecream_rounded,
+        ));
+      }
+      expect(state.totalMealsLogged, 25);
+      expect(state.unlockedAchievementIds.contains('nutrition_silver'), true);
+      expect(state.achievementPoints, 10 + 25);
+    });
+
+    test(
+        'a full workout day only counts once no matter how many times sets are toggled',
+        () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      await state.signIn('achieve-workout@bodyx.app', 'pw', rememberMe: true);
+      state.addExercise('Squats', 2, 10);
+
+      state.toggleWorkoutSet(0);
+      state.toggleWorkoutSet(1);
+      expect(state.totalWorkoutsCompleted, 1);
+      expect(state.unlockedAchievementIds.contains('workout_bronze'), true);
+
+      state.toggleWorkoutSet(0);
+      state.toggleWorkoutSet(0);
+      expect(state.totalWorkoutsCompleted, 1);
+    });
+
+    test('mobility completions increment the counter across the toggle path',
+        () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      await state.signIn('achieve-mobility@bodyx.app', 'pw', rememberMe: true);
+
+      for (var i = 0; i < 10; i++) {
+        state.addMobilityActivity('Stretch $i', 5);
+      }
+      for (var i = 0; i < 10; i++) {
+        state.toggleMobilityActivity(i);
+      }
+      expect(state.totalMobilityCompleted, 10);
+      expect(state.unlockedAchievementIds.contains('mobility_bronze'), true);
+      expect(state.unlockedAchievementIds.contains('mobility_silver'), true);
+    });
+
+    test('meeting the water goal only counts once per day', () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      await state.signIn('achieve-water@bodyx.app', 'pw', rememberMe: true);
+
+      state.logWater(state.individualizedWaterGoalMl);
+      expect(state.totalWaterGoalDaysMet, 1);
+      expect(state.unlockedAchievementIds.contains('hydration_bronze'), true);
+
+      state.logWater(200);
+      expect(state.totalWaterGoalDaysMet, 1);
+    });
+
+    test('a perfect ending day starts a 1-day streak on the next resume',
+        () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      await state.signIn('achieve-streak@bodyx.app', 'pw', rememberMe: true);
+
+      final yesterday = DateTime.now().subtract(const Duration(days: 1));
+      final endingDay =
+          DateTime(yesterday.year, yesterday.month, yesterday.day);
+      final updated = List<DailyStats>.from(state.dailyStats);
+      updated[updated.length - 1] = DailyStats(
+        date: endingDay,
+        steps: 0,
+        stepGoal: 10000,
+        calories: 0,
+        calorieGoal: 2200,
+        sleepMinutes: 0,
+        sleepGoalMinutes: 480,
+        waterMl: 3000,
+        waterGoalMl: 2500,
+        lightSleepMinutes: 0,
+        deepSleepMinutes: 0,
+        remSleepMinutes: 0,
+        awakeMinutes: 0,
+      );
+      state.dailyStats = updated;
+      state.logMeal(const MealEntry(
+        name: 'Dinner',
+        time: '19:00',
+        kcal: 500,
+        proteinG: 30,
+        carbsG: 40,
+        fatG: 15,
+        icon: Icons.restaurant_rounded,
+      ));
+      state.addMobilityActivity('Stretch', 5);
+      state.toggleMobilityActivity(0);
+
+      state.didChangeAppLifecycleState(AppLifecycleState.resumed);
+
+      expect(state.currentStreak, 1);
+      expect(state.longestStreak, 1);
+      expect(state.unlockedAchievementIds.contains('streak_bronze'), false);
+    });
+
+    test('a non-perfect ending day resets the streak back to 0', () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      await state.signIn('achieve-streak2@bodyx.app', 'pw', rememberMe: true);
+
+      final yesterday = DateTime.now().subtract(const Duration(days: 1));
+      final endingDay =
+          DateTime(yesterday.year, yesterday.month, yesterday.day);
+
+      final perfectDay = List<DailyStats>.from(state.dailyStats);
+      perfectDay[perfectDay.length - 1] = DailyStats(
+        date: endingDay,
+        steps: 0,
+        stepGoal: 10000,
+        calories: 0,
+        calorieGoal: 2200,
+        sleepMinutes: 0,
+        sleepGoalMinutes: 480,
+        waterMl: 3000,
+        waterGoalMl: 2500,
+        lightSleepMinutes: 0,
+        deepSleepMinutes: 0,
+        remSleepMinutes: 0,
+        awakeMinutes: 0,
+      );
+      state.dailyStats = perfectDay;
+      state.logMeal(const MealEntry(
+        name: 'Dinner',
+        time: '19:00',
+        kcal: 500,
+        proteinG: 30,
+        carbsG: 40,
+        fatG: 15,
+        icon: Icons.restaurant_rounded,
+      ));
+      state.addMobilityActivity('Stretch', 5);
+      state.toggleMobilityActivity(0);
+      state.didChangeAppLifecycleState(AppLifecycleState.resumed);
+      expect(state.currentStreak, 1);
+
+      // A later resume whose ending day has nothing logged (today's fields
+      // were already wiped empty by the rollover above) breaks the streak.
+      final furtherBack = DateTime.now().subtract(const Duration(days: 5));
+      final brokenDay = List<DailyStats>.from(state.dailyStats);
+      brokenDay[brokenDay.length - 1] = DailyStats(
+        date: DateTime(furtherBack.year, furtherBack.month, furtherBack.day),
+        steps: 0,
+        stepGoal: 10000,
+        calories: 0,
+        calorieGoal: 2200,
+        sleepMinutes: 0,
+        sleepGoalMinutes: 480,
+        waterMl: 0,
+        waterGoalMl: 2500,
+        lightSleepMinutes: 0,
+        deepSleepMinutes: 0,
+        remSleepMinutes: 0,
+        awakeMinutes: 0,
+      );
+      state.dailyStats = brokenDay;
+      state.didChangeAppLifecycleState(AppLifecycleState.resumed);
+
+      expect(state.currentStreak, 0);
+    });
+
+    test('achievementPoints sums unlocked tiers and rank derives from the total',
+        () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      await state.signIn('achieve-rank@bodyx.app', 'pw', rememberMe: true);
+
+      expect(state.achievementPoints, 0);
+      expect(state.rank, Rank.bronze);
+
+      state.unlockedAchievementIds.addAll(['streak_gold', 'workout_gold']);
+      expect(state.achievementPoints, 150);
+      expect(state.rank, Rank.silver);
+
+      state.unlockedAchievementIds.add('nutrition_platinum');
+      expect(state.achievementPoints, 350);
+      expect(state.rank, Rank.gold);
+    });
+
+    test('achievement progress survives a restart', () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      await state.signIn('achieve-restart@bodyx.app', 'pw', rememberMe: true);
+
+      state.logMeal(const MealEntry(
+        name: 'Oats',
+        time: '08:00',
+        kcal: 300,
+        proteinG: 10,
+        carbsG: 50,
+        fatG: 5,
+        icon: Icons.breakfast_dining_rounded,
+      ));
+      expect(state.unlockedAchievementIds.contains('nutrition_bronze'), true);
+
+      final restarted = newTestAppState();
+      await restarted.hydrate();
+
+      expect(restarted.totalMealsLogged, 1);
+      expect(
+          restarted.unlockedAchievementIds.contains('nutrition_bronze'), true);
     });
   });
 }

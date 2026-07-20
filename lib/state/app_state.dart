@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../data/mock_data.dart';
 import '../l10n/gen/app_localizations.dart';
 import '../logic/health_insights.dart';
+import '../models/achievements.dart';
 import '../models/models.dart';
 import '../network/announcement_repository.dart';
 import '../network/api_client.dart';
@@ -104,6 +105,8 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     if (dailyStats.last.date == today) return;
+
+    _evaluateStreakForEndingDay(dailyStats.last.date);
 
     dailyStats = MockData.emptyDailyStats();
     todayWaterLog = [];
@@ -270,6 +273,28 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
         await _persistence.loadHealthSyncEnabled() ?? healthSyncEnabled;
     publicProfile = await _persistence.loadPublicProfile() ?? publicProfile;
     shareAnonData = await _persistence.loadShareAnonData() ?? shareAnonData;
+
+    // Must load before [savedWaterLog] below — that triggers
+    // [_applyTodayWaterTotal], which checks the water-goal guard fields
+    // this restores.
+    final savedAchievements = await _persistence.loadAchievementProgress();
+    if (savedAchievements != null) {
+      totalWorkoutsCompleted = savedAchievements.totalWorkoutsCompleted;
+      totalMobilityCompleted = savedAchievements.totalMobilityCompleted;
+      totalMealsLogged = savedAchievements.totalMealsLogged;
+      totalWaterGoalDaysMet = savedAchievements.totalWaterGoalDaysMet;
+      currentStreak = savedAchievements.currentStreak;
+      longestStreak = savedAchievements.longestStreak;
+      _lastStreakDate = savedAchievements.lastStreakDate;
+      _lastWorkoutCompleteDate = savedAchievements.lastWorkoutCompleteDate;
+      _lastWaterGoalMetDate = savedAchievements.lastWaterGoalMetDate;
+      unlockedAchievementIds
+        ..clear()
+        ..addAll(savedAchievements.unlockedAchievementIds);
+      achievementUnlockedAt
+        ..clear()
+        ..addAll(savedAchievements.achievementUnlockedAt);
+    }
 
     final savedWaterLog = await _persistence.loadTodayWaterLog();
     if (savedWaterLog != null && savedWaterLog.isNotEmpty) {
@@ -811,6 +836,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     set.done = !set.done;
     if (set.done) {
       HapticFeedback.mediumImpact();
+      _checkWorkoutDayComplete();
     } else {
       // An un-done set was never actually performed — its rating shouldn't
       // linger and be shown as if it still applies.
@@ -818,6 +844,20 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     }
     _persistWorkoutSets();
     notifyListeners();
+  }
+
+  /// Counts a "full workout completed" at most once per calendar day, no
+  /// matter how many times sets are toggled that day.
+  void _checkWorkoutDayComplete() {
+    if (todayWorkoutSets.isEmpty ||
+        !todayWorkoutSets.every((s) => s.done)) {
+      return;
+    }
+    final key = _dateKey(DateTime.now());
+    if (_lastWorkoutCompleteDate == key) return;
+    _lastWorkoutCompleteDate = key;
+    totalWorkoutsCompleted += 1;
+    _checkAchievements();
   }
 
   /// Rate of Perceived Exertion for a completed set — see [WorkoutSet.rpe].
@@ -995,6 +1035,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     final activity = todayMobilityActivities[index];
     activity.done = true;
     HapticFeedback.heavyImpact();
+    _recordMobilityCompletion();
     _persistMobilityActivities();
     final l10n = lookupAppLocalizations(_effectiveLocale);
     unawaited(NotificationService.instance.showActivityCompleted(
@@ -1035,9 +1076,17 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   void toggleMobilityActivity(int index) {
     final activity = todayMobilityActivities[index];
     activity.done = !activity.done;
-    if (activity.done) HapticFeedback.mediumImpact();
+    if (activity.done) {
+      HapticFeedback.mediumImpact();
+      _recordMobilityCompletion();
+    }
     _persistMobilityActivities();
     notifyListeners();
+  }
+
+  void _recordMobilityCompletion() {
+    totalMobilityCompleted += 1;
+    _checkAchievements();
   }
 
   void _persistMobilityActivities() => unawaited(
@@ -1181,13 +1230,27 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       sleepStagesSynced: today.sleepStagesSynced,
     );
     dailyStats = updated;
+    _checkWaterGoalMet();
     _pushWidgetOverview();
+  }
+
+  /// Counts a "water goal met" day at most once per calendar day.
+  void _checkWaterGoalMet() {
+    final today = dailyStats.last;
+    if (today.waterGoalMl <= 0 || today.waterMl < today.waterGoalMl) return;
+    final key = _dateKey(DateTime.now());
+    if (_lastWaterGoalMetDate == key) return;
+    _lastWaterGoalMetDate = key;
+    totalWaterGoalDaysMet += 1;
+    _checkAchievements();
   }
 
   // ---- Meals --------------------------------------------------------------
 
   void logMeal(MealEntry meal) {
     meals = [...meals, meal];
+    totalMealsLogged += 1;
+    _checkAchievements();
     unawaited(_persistence.saveTodayMeals(meals));
     notifyListeners();
   }
@@ -1571,5 +1634,102 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       sleepStagesSynced:
           snapshot.totalSleepMinutes != null || base.sleepStagesSynced,
     );
+  }
+
+  // ---- Achievements / rank --------------------------------------------------
+  // Lifetime counters that unlock entries in [kAchievementCatalog] — daily
+  // app-engagement habits only. Body measurements are deliberately excluded
+  // (nobody wants to log those every day). Every counter here only ever
+  // increases: once earned, an achievement stays earned even if the user
+  // later undoes the thing that triggered it (e.g. un-checks a workout set).
+  int totalWorkoutsCompleted = 0;
+  int totalMobilityCompleted = 0;
+  int totalMealsLogged = 0;
+  int totalWaterGoalDaysMet = 0;
+  int currentStreak = 0;
+  int longestStreak = 0;
+  DateTime? _lastStreakDate;
+  String? _lastWorkoutCompleteDate;
+  String? _lastWaterGoalMetDate;
+  final Set<String> unlockedAchievementIds = {};
+  final Map<String, DateTime> achievementUnlockedAt = {};
+
+  String _dateKey(DateTime d) =>
+      '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
+  /// Sum of every unlocked achievement's tier points — the overall [Rank]
+  /// is derived from this total, separate from any single achievement's tier.
+  int get achievementPoints => unlockedAchievementIds.fold<int>(0, (sum, id) {
+        final def = kAchievementCatalog.firstWhere((d) => d.id == id);
+        return sum + pointsForTier(def.tier);
+      });
+
+  Rank get rank => rankForPoints(achievementPoints);
+
+  void _checkAchievements() {
+    final counters = <AchievementFamily, int>{
+      AchievementFamily.streak: longestStreak,
+      AchievementFamily.workout: totalWorkoutsCompleted,
+      AchievementFamily.mobility: totalMobilityCompleted,
+      AchievementFamily.hydration: totalWaterGoalDaysMet,
+      AchievementFamily.nutrition: totalMealsLogged,
+    };
+    var unlockedNew = false;
+    for (final def in kAchievementCatalog) {
+      if (unlockedAchievementIds.contains(def.id)) continue;
+      if (counters[def.family]! >= def.threshold) {
+        unlockedAchievementIds.add(def.id);
+        achievementUnlockedAt[def.id] = DateTime.now();
+        unlockedNew = true;
+      }
+    }
+    if (unlockedNew) HapticFeedback.mediumImpact();
+    _persistAchievements();
+  }
+
+  void _persistAchievements() =>
+      unawaited(_persistence.saveAchievementProgress(AchievementProgress(
+        totalWorkoutsCompleted: totalWorkoutsCompleted,
+        totalMobilityCompleted: totalMobilityCompleted,
+        totalMealsLogged: totalMealsLogged,
+        totalWaterGoalDaysMet: totalWaterGoalDaysMet,
+        currentStreak: currentStreak,
+        longestStreak: longestStreak,
+        lastStreakDate: _lastStreakDate,
+        lastWorkoutCompleteDate: _lastWorkoutCompleteDate,
+        lastWaterGoalMetDate: _lastWaterGoalMetDate,
+        unlockedAchievementIds: unlockedAchievementIds,
+        achievementUnlockedAt: achievementUnlockedAt,
+      )));
+
+  /// A "perfect day": water goal met, at least one meal logged, and either
+  /// a full workout or a mobility activity completed. Deliberately excludes
+  /// body measurements — nobody wants to measure themselves every day.
+  bool get _wasTodaySoFarPerfect =>
+      dailyStats.last.waterGoalMl > 0 &&
+      dailyStats.last.waterMl >= dailyStats.last.waterGoalMl &&
+      meals.isNotEmpty &&
+      ((todayWorkoutSets.isNotEmpty &&
+              todayWorkoutSets.every((s) => s.done)) ||
+          todayMobilityActivities.any((a) => a.done));
+
+  /// Called from [_rolloverToNewDayIfNeeded] BEFORE today's fields are
+  /// wiped — this is the only point with access to the ending day's actual
+  /// logged data (see that method's doc comment).
+  void _evaluateStreakForEndingDay(DateTime endingDay) {
+    if (!_wasTodaySoFarPerfect) {
+      currentStreak = 0;
+      _persistAchievements();
+      return;
+    }
+    if (_lastStreakDate != null &&
+        endingDay.difference(_lastStreakDate!).inDays == 1) {
+      currentStreak += 1;
+    } else {
+      currentStreak = 1;
+    }
+    _lastStreakDate = endingDay;
+    if (currentStreak > longestStreak) longestStreak = currentStreak;
+    _checkAchievements();
   }
 }

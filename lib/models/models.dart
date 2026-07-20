@@ -497,3 +497,79 @@ class Announcement {
         createdAt: DateTime.parse(json['createdAt'] as String),
       );
 }
+
+/// Lifetime achievement/rank progress — a single persisted blob (like
+/// [BodyMeasurement], not day-scoped) since it tracks totals across the
+/// account's whole history, not just today.
+class AchievementProgress {
+  const AchievementProgress({
+    this.totalWorkoutsCompleted = 0,
+    this.totalMobilityCompleted = 0,
+    this.totalMealsLogged = 0,
+    this.totalWaterGoalDaysMet = 0,
+    this.currentStreak = 0,
+    this.longestStreak = 0,
+    this.lastStreakDate,
+    this.lastWorkoutCompleteDate,
+    this.lastWaterGoalMetDate,
+    this.unlockedAchievementIds = const {},
+    this.achievementUnlockedAt = const {},
+  });
+
+  final int totalWorkoutsCompleted;
+  final int totalMobilityCompleted;
+  final int totalMealsLogged;
+  final int totalWaterGoalDaysMet;
+  final int currentStreak;
+  final int longestStreak;
+
+  /// Calendar date (midnight) of the last day counted toward [currentStreak].
+  final DateTime? lastStreakDate;
+
+  /// 'yyyy-MM-dd' guard so a full-workout completion only counts once per
+  /// calendar day no matter how many times sets are toggled that day.
+  final String? lastWorkoutCompleteDate;
+
+  /// Same guard as [lastWorkoutCompleteDate], for the water goal.
+  final String? lastWaterGoalMetDate;
+
+  final Set<String> unlockedAchievementIds;
+  final Map<String, DateTime> achievementUnlockedAt;
+
+  Map<String, dynamic> toJson() => {
+        'totalWorkoutsCompleted': totalWorkoutsCompleted,
+        'totalMobilityCompleted': totalMobilityCompleted,
+        'totalMealsLogged': totalMealsLogged,
+        'totalWaterGoalDaysMet': totalWaterGoalDaysMet,
+        'currentStreak': currentStreak,
+        'longestStreak': longestStreak,
+        'lastStreakDate': lastStreakDate?.toIso8601String(),
+        'lastWorkoutCompleteDate': lastWorkoutCompleteDate,
+        'lastWaterGoalMetDate': lastWaterGoalMetDate,
+        'unlockedAchievementIds': unlockedAchievementIds.toList(),
+        'achievementUnlockedAt': achievementUnlockedAt
+            .map((id, date) => MapEntry(id, date.toIso8601String())),
+      };
+
+  factory AchievementProgress.fromJson(Map<String, dynamic> json) =>
+      AchievementProgress(
+        totalWorkoutsCompleted: json['totalWorkoutsCompleted'] as int? ?? 0,
+        totalMobilityCompleted: json['totalMobilityCompleted'] as int? ?? 0,
+        totalMealsLogged: json['totalMealsLogged'] as int? ?? 0,
+        totalWaterGoalDaysMet: json['totalWaterGoalDaysMet'] as int? ?? 0,
+        currentStreak: json['currentStreak'] as int? ?? 0,
+        longestStreak: json['longestStreak'] as int? ?? 0,
+        lastStreakDate: json['lastStreakDate'] == null
+            ? null
+            : DateTime.parse(json['lastStreakDate'] as String),
+        lastWorkoutCompleteDate: json['lastWorkoutCompleteDate'] as String?,
+        lastWaterGoalMetDate: json['lastWaterGoalMetDate'] as String?,
+        unlockedAchievementIds:
+            ((json['unlockedAchievementIds'] as List?) ?? const [])
+                .cast<String>()
+                .toSet(),
+        achievementUnlockedAt:
+            ((json['achievementUnlockedAt'] as Map<String, dynamic>?) ?? {})
+                .map((id, date) => MapEntry(id, DateTime.parse(date as String))),
+      );
+}

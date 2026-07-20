@@ -34,6 +34,7 @@ class PersistenceService {
   static const _kPublicProfile = 'bodyx.public_profile';
   static const _kShareAnonData = 'bodyx.share_anon_data';
   static const _kDismissedAnnouncementIds = 'bodyx.dismissed_announcement_ids';
+  static const _kAchievementProgress = 'bodyx.achievement_progress';
 
   Future<SharedPreferences> get _prefs => SharedPreferences.getInstance();
 
@@ -259,6 +260,17 @@ class PersistenceService {
     await prefs.setString(_kMobilityActivities,
         jsonEncode(activities.map((a) => a.toJson()).toList()));
   }
+
+  Future<AchievementProgress?> loadAchievementProgress() async {
+    final raw = (await _prefs).getString(_kAchievementProgress);
+    if (raw == null) return null;
+    return AchievementProgress.fromJson(
+        jsonDecode(raw) as Map<String, dynamic>);
+  }
+
+  Future<void> saveAchievementProgress(AchievementProgress progress) async =>
+      (await _prefs)
+          .setString(_kAchievementProgress, jsonEncode(progress.toJson()));
 
   Future<bool?> loadPublicProfile() async =>
       (await _prefs).getBool(_kPublicProfile);
