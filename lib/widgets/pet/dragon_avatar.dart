@@ -179,19 +179,59 @@ const Map<PetStage, DragonTraits> kDragonTraits = {
 };
 
 /// Renders the pet as a small custom-drawn dragon (or egg) — no emoji/stock
-/// art, just vector shapes so every stage shares one consistent look.
-class DragonAvatar extends StatelessWidget {
-  const DragonAvatar({super.key, required this.stage, this.size = 96});
+/// art, just vector shapes so every stage shares one consistent look. Plays
+/// a small looping idle animation (bob, blink, wing flutter, flame flicker,
+/// tail swish, aura pulse) — set [animate] to false for a still frame.
+class DragonAvatar extends StatefulWidget {
+  const DragonAvatar({super.key, required this.stage, this.size = 96, this.animate = true});
 
   final PetStage stage;
   final double size;
+  final bool animate;
+
+  @override
+  State<DragonAvatar> createState() => _DragonAvatarState();
+}
+
+class _DragonAvatarState extends State<DragonAvatar> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this, duration: const Duration(seconds: 4));
+    if (widget.animate) _controller.repeat();
+  }
+
+  @override
+  void didUpdateWidget(covariant DragonAvatar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.animate && !_controller.isAnimating) {
+      _controller.repeat();
+    } else if (!widget.animate && _controller.isAnimating) {
+      _controller
+        ..stop()
+        ..value = 0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: size,
-      height: size,
-      child: CustomPaint(painter: DragonPainter(kDragonTraits[stage]!)),
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) => SizedBox(
+        width: widget.size,
+        height: widget.size,
+        child: CustomPaint(
+          painter: DragonPainter(kDragonTraits[widget.stage]!, _controller.value),
+        ),
+      ),
     );
   }
 }
@@ -203,9 +243,27 @@ class DragonAvatar extends StatelessWidget {
 /// has no access to real 3D lighting; the gradients/highlights below are a
 /// cheap approximation of that "soft render" look.
 class DragonPainter extends CustomPainter {
-  DragonPainter(this.traits);
+  DragonPainter(this.traits, this.t);
 
   final DragonTraits traits;
+
+  /// Idle-animation phase, looping 0..1 every 4 seconds. Drives the bob,
+  /// blink, wing flutter, tail swish, flame flicker and aura pulse below —
+  /// everything is a plain function of [t], no stored animation state.
+  final double t;
+
+  double get _bob => math.sin(t * 2 * math.pi) * 1.6;
+
+  /// A single quick blink near the midpoint of each loop — a short
+  /// triangular pulse rather than a constant sine so it reads as a blink
+  /// and not a rhythmic flutter.
+  double get _blink {
+    const center = 0.5;
+    const halfWidth = 0.045;
+    final d = (t - center).abs();
+    if (d > halfWidth) return 0;
+    return 1 - (d / halfWidth);
+  }
 
   /// Ink-style outline used around every filled shape — cheap but does a lot
   /// of work to make the illustration read as "detailed" rather than flat.
@@ -240,7 +298,15 @@ class DragonPainter extends CustomPainter {
     _paintAura(canvas);
     _paintGroundShadow(canvas);
 
+    canvas.save();
+    canvas.translate(0, _bob);
+
     if (traits.eggStage > 0) {
+      // A gentle rock instead of a bob — reads as "about to hatch" rather
+      // than floating.
+      canvas.translate(50, 52);
+      canvas.rotate(math.sin(t * 2 * math.pi) * 0.045);
+      canvas.translate(-50, -52);
       _paintEgg(canvas);
     } else {
       _paintTail(canvas);
@@ -256,6 +322,7 @@ class DragonPainter extends CustomPainter {
     }
 
     canvas.restore();
+    canvas.restore();
   }
 
   void _paintGroundShadow(Canvas canvas) {
@@ -265,10 +332,25 @@ class DragonPainter extends CustomPainter {
     );
   }
 
+  double get _auraPulse => 0.8 + 0.2 * math.sin(t * 2 * math.pi);
+
+  /// Two brief strobes per loop instead of a constant glow — reads as a
+  /// crackle rather than a steady light.
+  double get _lightningFlash {
+    double pulseAt(double center) {
+      const halfWidth = 0.035;
+      final d = (t - center).abs();
+      if (d > halfWidth) return 0;
+      return 1 - (d / halfWidth);
+    }
+
+    return math.max(pulseAt(0.2), pulseAt(0.7));
+  }
+
   void _glow(Canvas canvas, Color color) {
     final paint = Paint()
       ..shader = RadialGradient(
-        colors: [color.withOpacity(0.35), color.withOpacity(0)],
+        colors: [color.withOpacity(0.35 * _auraPulse), color.withOpacity(0)],
       ).createShader(Rect.fromCircle(center: const Offset(50, 48), radius: 52));
     canvas.drawCircle(const Offset(50, 48), 52, paint);
   }
@@ -282,7 +364,9 @@ class DragonPainter extends CustomPainter {
         final rand = math.Random(7);
         for (var i = 0; i < 6; i++) {
           final dx = 12 + rand.nextDouble() * 76;
-          final dy = 6 + rand.nextDouble() * 84;
+          final baseDy = 6 + rand.nextDouble() * 84;
+          // embers drift slowly upward and wrap, instead of sitting still.
+          final dy = (baseDy - t * 18 + 90) % 90;
           canvas.drawCircle(
             Offset(dx, dy),
             1.6,
@@ -295,7 +379,7 @@ class DragonPainter extends CustomPainter {
       case DragonAura.lightning:
         _glow(canvas, const Color(0xFF7C8CFF));
         final boltPaint = Paint()
-          ..color = Colors.white.withOpacity(0.85)
+          ..color = Colors.white.withOpacity(0.85 * _lightningFlash)
           ..style = PaintingStyle.stroke
           ..strokeWidth = 1.4
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 0.6);
@@ -416,24 +500,34 @@ class DragonPainter extends CustomPainter {
       canvas.drawPath(mainCrack, crackPaint);
       canvas.drawPath(Path()..moveTo(45, 34)..lineTo(55, 32), crackPaint);
       canvas.drawPath(Path()..moveTo(50, 56)..lineTo(59, 52), crackPaint);
+      // the light leaking through the cracks pulses, like something inside
+      // is stirring.
+      final glowPulse = 0.7 + 0.3 * math.sin(t * 2 * math.pi * 1.5);
       canvas.drawCircle(
         const Offset(45, 42),
         4,
         Paint()
-          ..color = const Color(0xFFFFC873).withOpacity(0.85)
+          ..color = const Color(0xFFFFC873).withOpacity(0.85 * glowPulse)
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2.2),
       );
       canvas.drawCircle(
         const Offset(50, 58),
         2.4,
         Paint()
-          ..color = const Color(0xFFFFC873).withOpacity(0.7)
+          ..color = const Color(0xFFFFC873).withOpacity(0.7 * glowPulse)
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.6),
       );
     }
   }
 
   void _paintTail(Canvas canvas) {
+    // a slow side-to-side swish, anchored at the base where it meets the body.
+    const tailBase = Offset(64, 80);
+    canvas.save();
+    canvas.translate(tailBase.dx, tailBase.dy);
+    canvas.rotate(math.sin(t * 2 * math.pi * 0.5) * 0.06);
+    canvas.translate(-tailBase.dx, -tailBase.dy);
+
     final path = Path()
       ..moveTo(64, 80)
       ..cubicTo(80, 84, 94, 76, 92, 58)
@@ -463,6 +557,8 @@ class DragonPainter extends CustomPainter {
         spike,
       );
     }
+
+    canvas.restore();
   }
 
   void _paintLegs(Canvas canvas) {
@@ -536,12 +632,12 @@ class DragonPainter extends CustomPainter {
         ..close();
       canvas.drawPath(path, _shaded(armColor, path.getBounds()));
       canvas.drawPath(path, _ink);
-      for (final t in const [0.15, 0.0, -0.15]) {
+      for (final frac in const [0.15, 0.0, -0.15]) {
         canvas.drawPath(
           Path()
-            ..moveTo(76 + t * 8, 79)
-            ..lineTo(78 + t * 8, 84)
-            ..lineTo(79 + t * 8, 79)
+            ..moveTo(76 + frac * 8, 79)
+            ..lineTo(78 + frac * 8, 84)
+            ..lineTo(79 + frac * 8, 79)
             ..close(),
           claw,
         );
@@ -718,6 +814,19 @@ class DragonPainter extends CustomPainter {
         ..style = PaintingStyle.stroke
         ..strokeWidth = 0.8,
     );
+
+    // A quick eyelid-closing blink, clipped to the eye's own oval so it
+    // never spills onto the surrounding scales.
+    if (_blink > 0.02) {
+      canvas.save();
+      canvas.clipPath(Path()..addOval(eyeRect));
+      canvas.drawRect(
+        Rect.fromLTRB(eyeRect.left, eyeRect.top, eyeRect.right,
+            eyeRect.top + eyeRect.height * _blink),
+        Paint()..color = traits.bodyColor,
+      );
+      canvas.restore();
+    }
   }
 
   void _paintHorns(Canvas canvas) {
@@ -738,8 +847,8 @@ class DragonPainter extends CustomPainter {
         ..color = Colors.black.withOpacity(0.2)
         ..strokeWidth = 0.8
         ..style = PaintingStyle.stroke;
-      for (final t in const [0.35, 0.62]) {
-        final p = Offset.lerp(base, tip, t)!;
+      for (final frac in const [0.35, 0.62]) {
+        final p = Offset.lerp(base, tip, frac)!;
         canvas.drawLine(p.translate(-2, 0), p.translate(2, 0), ridgePaint);
       }
     }
@@ -791,8 +900,12 @@ class DragonPainter extends CustomPainter {
   }
 
   void _paintFlame(Canvas canvas) {
-    final t = traits.flameIntensity.clamp(0.0, 1.0);
-    final h = 9 + 12 * t;
+    final intensity = traits.flameIntensity.clamp(0.0, 1.0);
+    // a quick, slightly irregular flicker instead of a static puff.
+    final flicker = 0.85 +
+        0.1 * math.sin(t * 2 * math.pi * 6) +
+        0.05 * math.sin(t * 2 * math.pi * 13.7);
+    final h = (9 + 12 * intensity) * flicker;
     canvas.drawPath(
       Path()
         ..moveTo(50, 67)
@@ -852,15 +965,15 @@ class DragonPainter extends CustomPainter {
       for (final tip in tips) {
         canvas.drawLine(shoulder, tip, membrane);
       }
-      for (final t in const [0.35, 0.6, 0.85]) {
+      for (final frac in const [0.35, 0.6, 0.85]) {
         canvas.drawLine(
-          Offset.lerp(shoulder, tips[0], t)!,
-          Offset.lerp(shoulder, tips[1], t)!,
+          Offset.lerp(shoulder, tips[0], frac)!,
+          Offset.lerp(shoulder, tips[1], frac)!,
           rib,
         );
         canvas.drawLine(
-          Offset.lerp(shoulder, tips[1], t)!,
-          Offset.lerp(shoulder, tips[2], t)!,
+          Offset.lerp(shoulder, tips[1], frac)!,
+          Offset.lerp(shoulder, tips[2], frac)!,
           rib,
         );
       }
@@ -871,14 +984,28 @@ class DragonPainter extends CustomPainter {
       }
     }
 
-    drawOneWing();
+    // a gentle up/down flap, anchored at the shoulder so the membrane
+    // doesn't slide around — two flaps per idle loop.
+    final flap = math.sin(t * 2 * math.pi * 2) * 0.1;
+
+    void withFlap(void Function() draw) {
+      canvas.save();
+      canvas.translate(shoulder.dx, shoulder.dy);
+      canvas.rotate(flap);
+      canvas.translate(-shoulder.dx, -shoulder.dy);
+      draw();
+      canvas.restore();
+    }
+
+    withFlap(drawOneWing);
     canvas.save();
     canvas.translate(100, 0);
     canvas.scale(-1, 1);
-    drawOneWing();
+    withFlap(drawOneWing);
     canvas.restore();
   }
 
   @override
-  bool shouldRepaint(covariant DragonPainter oldDelegate) => oldDelegate.traits != traits;
+  bool shouldRepaint(covariant DragonPainter oldDelegate) =>
+      oldDelegate.traits != traits || oldDelegate.t != t;
 }
