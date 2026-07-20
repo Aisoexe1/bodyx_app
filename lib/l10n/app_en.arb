@@ -199,6 +199,9 @@
   "dashboardLoggedToday": "Logged today",
   "dashboardMorningCheckIn": "Morning check-in",
   "dashboardGoodMorning": "Good morning",
+  "dashboardGoodAfternoon": "Good afternoon",
+  "dashboardGoodEvening": "Good evening",
+  "dashboardGoodNight": "Good night",
   "dashboardDailyOverview": "Daily overview",
   "dashboardStepsLabel": "Steps",
   "dashboardStepGoalSuffix": " / {stepGoal}",
@@ -351,12 +354,6 @@
   "profileTitle": "Profile",
   "profileDefaultAvatarInitial": "A",
   "profileDefaultName": "Athlete",
-  "profileUsernameHandle": "@{username}",
-  "@profileUsernameHandle": {
-    "placeholders": {
-      "username": {}
-    }
-  },
   "profileHeightLabel": "Height",
   "profileWeightLabel": "Weight",
   "profileAgeLabel": "Age",
@@ -403,13 +400,7 @@
   },
   "progressWeightEmptyTitle": "No weigh-ins yet",
   "progressWeightEmptySubtitle": "Log your weight to start tracking your trend",
-  "progressBodyFatLabel": "Body fat",
-  "progressBodyFatValue": "{value}%",
-  "@progressBodyFatValue": {
-    "placeholders": {
-      "value": {}
-    }
-  },
+  "progressWeightChangeLabel": "7-day change",
   "progressBmiLabel": "BMI",
   "progressActivityTitle": "Activity",
   "progressActivitySubtitle": "{days}-day step history",
@@ -453,7 +444,6 @@
   },
   "contactSupportAskHint": "Ask a question…",
   "settingsEditProfileTitle": "Edit profile",
-  "settingsFullNameLabel": "Full name",
   "settingsUsernameLabel": "Username",
   "settingsSaveChangesButton": "Save changes",
   "settingsPersonalDataTitle": "Personal data",

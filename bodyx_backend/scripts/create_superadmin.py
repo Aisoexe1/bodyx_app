@@ -35,7 +35,6 @@ async def main() -> None:
             "email": email,
             "username": username,
             "password_hash": hash_password(password),
-            "name": username,
             "gender": "male",
             "height_cm": 190,
             "weight_kg": 75,

@@ -199,6 +199,9 @@
   "dashboardLoggedToday": "Записано сьогодні",
   "dashboardMorningCheckIn": "Ранковий чек-ін",
   "dashboardGoodMorning": "Доброго ранку",
+  "dashboardGoodAfternoon": "Доброго дня",
+  "dashboardGoodEvening": "Доброго вечора",
+  "dashboardGoodNight": "Доброї ночі",
   "dashboardDailyOverview": "Огляд дня",
   "dashboardStepsLabel": "Кроки",
   "dashboardStepGoalSuffix": " / {stepGoal}",
@@ -351,12 +354,6 @@
   "profileTitle": "Профіль",
   "profileDefaultAvatarInitial": "А",
   "profileDefaultName": "Атлет",
-  "profileUsernameHandle": "@{username}",
-  "@profileUsernameHandle": {
-    "placeholders": {
-      "username": {}
-    }
-  },
   "profileHeightLabel": "Зріст",
   "profileWeightLabel": "Вага",
   "profileAgeLabel": "Вік",
@@ -403,13 +400,7 @@
   },
   "progressWeightEmptyTitle": "Поки немає відміток ваги",
   "progressWeightEmptySubtitle": "Запишіть вагу, щоб почати відстежувати динаміку",
-  "progressBodyFatLabel": "Жир у тілі",
-  "progressBodyFatValue": "{value}%",
-  "@progressBodyFatValue": {
-    "placeholders": {
-      "value": {}
-    }
-  },
+  "progressWeightChangeLabel": "Зміна за 7 днів",
   "progressBmiLabel": "ІМТ",
   "progressActivityTitle": "Активність",
   "progressActivitySubtitle": "Історія кроків за {days} днів",
@@ -453,7 +444,6 @@
   },
   "contactSupportAskHint": "Задайте питання…",
   "settingsEditProfileTitle": "Редагувати профіль",
-  "settingsFullNameLabel": "Повне ім'я",
   "settingsUsernameLabel": "Ім'я користувача",
   "settingsSaveChangesButton": "Зберегти зміни",
   "settingsPersonalDataTitle": "Особисті дані",

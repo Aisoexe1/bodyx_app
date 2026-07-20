@@ -33,7 +33,7 @@ def verify_google_id_token(token: str) -> dict:
     email = claims.get("email")
     if not email:
         raise OAuthVerificationError("Google token did not include an email")
-    return {"email": email, "name": claims.get("name") or email.split("@")[0]}
+    return {"email": email}
 
 
 def verify_apple_identity_token(token: str) -> dict:
@@ -57,4 +57,4 @@ def verify_apple_identity_token(token: str) -> dict:
     email = claims.get("email")
     if not email:
         raise OAuthVerificationError("Apple token did not include an email")
-    return {"email": email, "name": email.split("@")[0]}
+    return {"email": email}

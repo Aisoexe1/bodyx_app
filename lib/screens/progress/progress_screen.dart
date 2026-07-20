@@ -13,6 +13,8 @@ import '../../widgets/charts/steps_bar_chart.dart';
 import '../../widgets/charts/weight_line_chart.dart';
 import '../../widgets/common/glow_card.dart';
 import '../../widgets/common/progress_ring.dart';
+import '../../widgets/common/scale_tap.dart';
+import '../body_metrics/log_metrics_sheet.dart';
 
 class ProgressScreen extends StatefulWidget {
   const ProgressScreen({super.key});
@@ -34,6 +36,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
     final lastWeight = hasWeightHistory ? weightHistory.last : null;
     final delta =
         hasWeightHistory ? lastWeight!.kg - weightHistory.first.kg : 0.0;
+    final weightChange7d = _weightChangeLast7Days(weightHistory);
     final stats = state.dailyStats;
     final windowed = _rangeIndex == 0
         ? _calendarWeek(stats)
@@ -104,33 +107,43 @@ class _ProgressScreenState extends State<ProgressScreen> {
                             WeightLineChart(entries: weightHistory),
                           ],
                         )
-                      : Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                const Icon(Icons.monitor_weight_outlined,
-                                    color: AppColors.textMuted, size: 20),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                      AppLocalizations.of(context)!
-                                          .progressWeightEmptyTitle,
-                                      style: const TextStyle(
-                                          color: AppColors.textPrimary,
-                                          fontWeight: FontWeight.w700,
-                                          fontSize: 14)),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                                AppLocalizations.of(context)!
-                                    .progressWeightEmptySubtitle,
-                                style: const TextStyle(
-                                    color: AppColors.textMuted,
-                                    fontSize: 12.5)),
-                          ],
+                      : ScaleTap(
+                          onTap: () => showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            backgroundColor: Colors.transparent,
+                            builder: (_) => const LogMetricsSheet(),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  const Icon(Icons.monitor_weight_outlined,
+                                      color: AppColors.textMuted, size: 20),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                        AppLocalizations.of(context)!
+                                            .progressWeightEmptyTitle,
+                                        style: const TextStyle(
+                                            color: AppColors.textPrimary,
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: 14)),
+                                  ),
+                                  const Icon(Icons.chevron_right_rounded,
+                                      color: AppColors.textMuted, size: 20),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                  AppLocalizations.of(context)!
+                                      .progressWeightEmptySubtitle,
+                                  style: const TextStyle(
+                                      color: AppColors.textMuted,
+                                      fontSize: 12.5)),
+                            ],
+                          ),
                         ),
                 ),
                 if (state.user?.goal == 'Build muscle') ...[
@@ -142,16 +155,18 @@ class _ProgressScreenState extends State<ProgressScreen> {
                   children: [
                     Expanded(
                       child: _RingStatCard(
-                        label: AppLocalizations.of(context)!.progressBodyFatLabel,
-                        value: hasWeightHistory
-                            ? AppLocalizations.of(context)!
-                                .progressBodyFatValue(
-                                    lastWeight!.bodyFatPct.toStringAsFixed(1))
+                        label: AppLocalizations.of(context)!
+                            .progressWeightChangeLabel,
+                        value: weightChange7d != null
+                            ? AppLocalizations.of(context)!.progressWeightDelta(
+                                '${weightChange7d <= 0 ? '' : '+'}${weightChange7d.toStringAsFixed(1)}')
                             : '—',
-                        progress: hasWeightHistory
-                            ? (lastWeight!.bodyFatPct / 30).clamp(0, 1)
+                        progress: weightChange7d != null
+                            ? (weightChange7d.abs() / 3).clamp(0, 1)
                             : 0.0,
-                        color: AppColors.warning,
+                        color: (weightChange7d ?? 0) <= 0
+                            ? AppColors.success
+                            : AppColors.warning,
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -259,6 +274,24 @@ class _ProgressScreenState extends State<ProgressScreen> {
         ),
       );
     });
+  }
+
+  /// Change since the most recent entry at least 7 days before the latest
+  /// one, so the ring shows a recent trend rather than the same
+  /// since-the-beginning delta already shown in the weight card above.
+  /// Null when there isn't a week of history yet.
+  double? _weightChangeLast7Days(List<WeightEntry> history) {
+    if (history.length < 2) return null;
+    final last = history.last;
+    final cutoff = last.date.subtract(const Duration(days: 7));
+    WeightEntry? weekAgo;
+    for (final entry in history) {
+      if (!entry.date.isAfter(cutoff)) {
+        weekAgo = entry;
+      }
+    }
+    if (weekAgo == null || identical(weekAgo, last)) return null;
+    return last.kg - weekAgo.kg;
   }
 }
 

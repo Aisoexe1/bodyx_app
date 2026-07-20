@@ -64,8 +64,6 @@ class EditProfileScreen extends StatefulWidget {
 }
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
-  late final _name =
-      TextEditingController(text: context.read<AppState>().user?.name ?? '');
   late final _username = TextEditingController(
       text: context.read<AppState>().user?.username ?? '');
 
@@ -77,10 +75,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           PrimaryTextField(
-              label: AppLocalizations.of(context)!.settingsFullNameLabel,
-              controller: _name),
-          const SizedBox(height: 14),
-          PrimaryTextField(
               label: AppLocalizations.of(context)!.settingsUsernameLabel,
               controller: _username,
               prefixIcon: Icons.alternate_email_rounded),
@@ -88,8 +82,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           PrimaryButton(
             label: AppLocalizations.of(context)!.settingsSaveChangesButton,
             onPressed: () {
-              context.read<AppState>().updateProfile(
-                  name: _name.text, username: _username.text);
+              context
+                  .read<AppState>()
+                  .updateProfile(username: _username.text);
               Navigator.pop(context);
             },
           ),

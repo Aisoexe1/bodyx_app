@@ -52,8 +52,8 @@ class ProfileScreen extends StatelessWidget {
                         ),
                         child: Center(
                           child: Text(
-                            (user?.name.isNotEmpty ?? false)
-                                ? user!.name[0].toUpperCase()
+                            (user?.username.isNotEmpty ?? false)
+                                ? user!.username[0].toUpperCase()
                                 : AppLocalizations.of(context)!
                                     .profileDefaultAvatarInitial,
                             style: const TextStyle(
@@ -65,17 +65,12 @@ class ProfileScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                          user?.name ??
+                          user?.username ??
                               AppLocalizations.of(context)!.profileDefaultName,
                           style: const TextStyle(
                               color: AppColors.textPrimary,
                               fontWeight: FontWeight.w800,
                               fontSize: 18)),
-                      Text(
-                          AppLocalizations.of(context)!.profileUsernameHandle(
-                              user?.username ?? 'athlete'),
-                          style: const TextStyle(
-                              color: AppColors.textMuted, fontSize: 12.5)),
                       const SizedBox(height: 16),
                       Row(
                         children: [

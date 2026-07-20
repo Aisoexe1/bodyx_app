@@ -37,7 +37,7 @@ class DashboardScreen extends StatelessWidget {
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 _GreetingRow(
-                    name: user?.name ??
+                    name: user?.username ??
                         AppLocalizations.of(context)!.dashboardAthlete),
                 for (final announcement in state.activeAnnouncements) ...[
                   const SizedBox(height: 14),
@@ -359,7 +359,7 @@ class _GreetingRow extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(AppLocalizations.of(context)!.dashboardGoodMorning,
+              Text(_greeting(AppLocalizations.of(context)!),
                   style: const TextStyle(
                       color: AppColors.textMuted, fontSize: 12.5)),
               Text(name,
@@ -372,6 +372,17 @@ class _GreetingRow extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  /// Time-of-day greeting so it doesn't say "good morning" at 9pm — bucketed
+  /// by the device's local hour, re-evaluated on every rebuild rather than
+  /// cached, since the dashboard can stay open across a bucket boundary.
+  String _greeting(AppLocalizations l10n) {
+    final hour = DateTime.now().hour;
+    if (hour >= 5 && hour < 12) return l10n.dashboardGoodMorning;
+    if (hour >= 12 && hour < 17) return l10n.dashboardGoodAfternoon;
+    if (hour >= 17 && hour < 22) return l10n.dashboardGoodEvening;
+    return l10n.dashboardGoodNight;
   }
 }
 

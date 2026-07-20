@@ -47,7 +47,6 @@ class UserProfile {
   UserProfile({
     required this.email,
     required this.username,
-    this.name = 'Alex',
     this.gender = Gender.male,
     this.heightCm = 190,
     this.weightKg = 75,
@@ -60,7 +59,6 @@ class UserProfile {
 
   final String email;
   String username;
-  String name;
   Gender gender;
   double heightCm;
   double weightKg;
@@ -75,7 +73,6 @@ class UserProfile {
   Map<String, dynamic> toJson() => {
         'email': email,
         'username': username,
-        'name': name,
         'gender': gender.name,
         'heightCm': heightCm,
         'weightKg': weightKg,
@@ -89,7 +86,6 @@ class UserProfile {
   factory UserProfile.fromJson(Map<String, dynamic> json) => UserProfile(
         email: json['email'] as String,
         username: json['username'] as String,
-        name: json['name'] as String,
         gender: Gender.values.byName(json['gender'] as String),
         heightCm: (json['heightCm'] as num).toDouble(),
         weightKg: (json['weightKg'] as num).toDouble(),

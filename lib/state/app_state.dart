@@ -386,7 +386,6 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     try {
       await _profileRepository.updateMe({
         'username': user!.username,
-        'name': user!.name,
         'gender': user!.gender.name,
         'heightCm': user!.heightCm,
         'weightKg': user!.weightKg,
@@ -578,7 +577,6 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       user = UserProfile(
         email: _pendingEmail ?? 'you@bodyx.app',
         username: resolvedUsername,
-        name: resolvedUsername.isEmpty ? 'Athlete' : resolvedUsername,
       );
     }
     authStage = AuthStage.bodyData;
@@ -1301,13 +1299,11 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   void updateProfile({
-    String? name,
     String? username,
     String? goal,
     String? activityLevel,
   }) {
     if (user == null) return;
-    if (name != null) user!.name = name;
     if (username != null) user!.username = username;
     if (goal != null) user!.goal = goal;
     if (activityLevel != null) user!.activityLevel = activityLevel;

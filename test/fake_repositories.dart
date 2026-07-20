@@ -38,7 +38,6 @@ class FakeAuthRepository implements AuthRepository {
     return UserProfile(
       email: email,
       username: resolvedUsername,
-      name: resolvedUsername.isEmpty ? 'Athlete' : resolvedUsername,
     );
   }
 

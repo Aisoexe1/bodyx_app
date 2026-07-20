@@ -118,7 +118,7 @@ async def oauth_google(payload: GoogleAuthRequest, db: AsyncIOMotorDatabase = De
     except OAuthVerificationError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Google token")
 
-    user = await user_repo.find_or_create_oauth_user(db, info["email"], info["name"], "google")
+    user = await user_repo.find_or_create_oauth_user(db, info["email"], "google")
     if user.get("is_banned"):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="This account has been banned")
     await measurement_repo.seed_measurements(db, user["_id"], user.get("gender", "male"))
@@ -134,7 +134,7 @@ async def oauth_apple(payload: AppleAuthRequest, db: AsyncIOMotorDatabase = Depe
     except OAuthVerificationError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Apple token")
 
-    user = await user_repo.find_or_create_oauth_user(db, info["email"], info["name"], "apple")
+    user = await user_repo.find_or_create_oauth_user(db, info["email"], "apple")
     if user.get("is_banned"):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="This account has been banned")
     await measurement_repo.seed_measurements(db, user["_id"], user.get("gender", "male"))

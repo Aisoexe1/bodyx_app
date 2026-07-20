@@ -200,7 +200,7 @@ async def test_oauth_apple_not_configured_501(client):
 async def test_oauth_google_creates_new_user(client, monkeypatch):
     monkeypatch.setattr(
         "app.routers.auth.verify_google_id_token",
-        lambda token: {"email": "newgoogle@bodyx.dev", "name": "New Google User"},
+        lambda token: {"email": "newgoogle@bodyx.dev"},
     )
     resp = await client.post("/api/v1/auth/oauth/google", json={"idToken": "fake-token"})
     assert resp.status_code == 200
@@ -212,7 +212,7 @@ async def test_oauth_google_creates_new_user(client, monkeypatch):
 async def test_oauth_google_logs_in_existing_user_by_email(client, registered_user, monkeypatch):
     monkeypatch.setattr(
         "app.routers.auth.verify_google_id_token",
-        lambda token: {"email": "alex@bodyx.dev", "name": "Alex"},
+        lambda token: {"email": "alex@bodyx.dev"},
     )
     resp = await client.post("/api/v1/auth/oauth/google", json={"idToken": "fake-token"})
     assert resp.status_code == 200
@@ -233,7 +233,7 @@ async def test_oauth_google_invalid_token_401(client, monkeypatch):
 async def test_oauth_apple_creates_new_user(client, monkeypatch):
     monkeypatch.setattr(
         "app.routers.auth.verify_apple_identity_token",
-        lambda token: {"email": "newapple@bodyx.dev", "name": "newapple"},
+        lambda token: {"email": "newapple@bodyx.dev"},
     )
     resp = await client.post("/api/v1/auth/oauth/apple", json={"identityToken": "fake-token"})
     assert resp.status_code == 200
@@ -250,7 +250,7 @@ async def test_oauth_banned_user_rejected(client, registered_user, monkeypatch):
     )
     monkeypatch.setattr(
         "app.routers.auth.verify_google_id_token",
-        lambda token: {"email": "alex@bodyx.dev", "name": "Alex"},
+        lambda token: {"email": "alex@bodyx.dev"},
     )
     resp = await client.post("/api/v1/auth/oauth/google", json={"idToken": "fake-token"})
     assert resp.status_code == 403
@@ -261,7 +261,7 @@ async def test_oauth_username_collision_gets_disambiguated(client, registered_us
     # deriving the same base username from its email must not collide.
     monkeypatch.setattr(
         "app.routers.auth.verify_google_id_token",
-        lambda token: {"email": "alex@gmail.com", "name": "Alex Gmail"},
+        lambda token: {"email": "alex@gmail.com"},
     )
     resp = await client.post("/api/v1/auth/oauth/google", json={"idToken": "fake-token"})
     assert resp.status_code == 200

@@ -54,6 +54,11 @@ class DailyPlanScreen extends StatelessWidget {
               label: AppLocalizations.of(context)!.dailyPlanStepsLabel,
               value: '${today.steps}',
               color: AppColors.primaryBright,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (_) => DailySummaryScreen(stats: today)),
+              ),
             ),
             const SizedBox(height: 10),
             _StatRow(
@@ -61,6 +66,11 @@ class DailyPlanScreen extends StatelessWidget {
               label: AppLocalizations.of(context)!.dailyPlanCaloriesLabel,
               value: '${today.calories}',
               color: AppColors.warning,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (_) => DailySummaryScreen(stats: today)),
+              ),
             ),
             const SizedBox(height: 10),
             _StatRow(
@@ -68,6 +78,11 @@ class DailyPlanScreen extends StatelessWidget {
               label: AppLocalizations.of(context)!.dailyPlanSleepLabel,
               value: today.sleepLabel,
               color: AppColors.info,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (_) => DailySummaryScreen(stats: today)),
+              ),
             ),
             const SizedBox(height: 28),
             Text(AppLocalizations.of(context)!.dailyPlanSelectDate,
@@ -97,32 +112,37 @@ class _StatRow extends StatelessWidget {
     required this.label,
     required this.value,
     required this.color,
+    required this.onTap,
   });
 
   final IconData icon;
   final String label;
   final String value;
   final Color color;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return GlowCard(
-      child: Row(
-        children: [
-          GlowIconBadge(icon: icon, color: color),
-          const SizedBox(width: 12),
-          Text(label,
-              style: const TextStyle(
-                  color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
-          const Spacer(),
-          Text(value,
-              style: const TextStyle(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 15)),
-          const SizedBox(width: 6),
-          const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
-        ],
+    return ScaleTap(
+      onTap: onTap,
+      child: GlowCard(
+        child: Row(
+          children: [
+            GlowIconBadge(icon: icon, color: color),
+            const SizedBox(width: 12),
+            Text(label,
+                style: const TextStyle(
+                    color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
+            const Spacer(),
+            Text(value,
+                style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 15)),
+            const SizedBox(width: 6),
+            const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
+          ],
+        ),
       ),
     );
   }

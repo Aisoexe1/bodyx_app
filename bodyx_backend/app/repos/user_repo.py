@@ -73,7 +73,7 @@ async def set_password_hash(db: AsyncIOMotorDatabase, user_id: ObjectId, passwor
 
 
 async def find_or_create_oauth_user(
-    db: AsyncIOMotorDatabase, email: str, name: str, auth_provider: str
+    db: AsyncIOMotorDatabase, email: str, auth_provider: str
 ) -> dict:
     """Logs an OAuth (Google/Apple) identity into an existing local account
     with the same email, or creates a new one. OAuth-created accounts get a
@@ -94,7 +94,6 @@ async def find_or_create_oauth_user(
         "email": email,
         "username": username,
         "password_hash": hash_password(secrets.token_urlsafe(32)),
-        "name": name,
         "gender": "male",
         "height_cm": 190,
         "weight_kg": 75,

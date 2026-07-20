@@ -620,9 +620,9 @@ void main() {
       await state.signIn('profile@bodyx.app', 'pw');
       final originalUsername = state.user!.username;
 
-      state.updateProfile(name: 'New Name');
+      state.updateProfile(goal: 'New Goal');
 
-      expect(state.user!.name, 'New Name');
+      expect(state.user!.goal, 'New Goal');
       expect(state.user!.username, originalUsername);
     });
 
@@ -866,7 +866,6 @@ void main() {
       final user = UserProfile(
         email: 'json@bodyx.app',
         username: 'jsonuser',
-        name: 'JSON Tester',
         gender: Gender.female,
         heightCm: 172.5,
         weightKg: 63.2,
@@ -880,7 +879,6 @@ void main() {
 
       expect(restored.email, user.email);
       expect(restored.username, user.username);
-      expect(restored.name, user.name);
       expect(restored.gender, user.gender);
       expect(restored.heightCm, user.heightCm);
       expect(restored.weightKg, user.weightKg);

@@ -199,6 +199,9 @@
   "dashboardLoggedToday": "Записано сегодня",
   "dashboardMorningCheckIn": "Утренняя отметка",
   "dashboardGoodMorning": "Доброе утро",
+  "dashboardGoodAfternoon": "Добрый день",
+  "dashboardGoodEvening": "Добрый вечер",
+  "dashboardGoodNight": "Доброй ночи",
   "dashboardDailyOverview": "Обзор за день",
   "dashboardStepsLabel": "Шаги",
   "dashboardStepGoalSuffix": " / {stepGoal}",
@@ -351,12 +354,6 @@
   "profileTitle": "Профиль",
   "profileDefaultAvatarInitial": "А",
   "profileDefaultName": "Атлет",
-  "profileUsernameHandle": "@{username}",
-  "@profileUsernameHandle": {
-    "placeholders": {
-      "username": {}
-    }
-  },
   "profileHeightLabel": "Рост",
   "profileWeightLabel": "Вес",
   "profileAgeLabel": "Возраст",
@@ -403,13 +400,7 @@
   },
   "progressWeightEmptyTitle": "Пока нет отметок веса",
   "progressWeightEmptySubtitle": "Запишите вес, чтобы начать отслеживать динамику",
-  "progressBodyFatLabel": "Процент жира",
-  "progressBodyFatValue": "{value}%",
-  "@progressBodyFatValue": {
-    "placeholders": {
-      "value": {}
-    }
-  },
+  "progressWeightChangeLabel": "Изменение за 7 дней",
   "progressBmiLabel": "ИМТ",
   "progressActivityTitle": "Активность",
   "progressActivitySubtitle": "История шагов за {days} дней",
@@ -453,7 +444,6 @@
   },
   "contactSupportAskHint": "Задайте вопрос…",
   "settingsEditProfileTitle": "Редактировать профиль",
-  "settingsFullNameLabel": "Полное имя",
   "settingsUsernameLabel": "Имя пользователя",
   "settingsSaveChangesButton": "Сохранить изменения",
   "settingsPersonalDataTitle": "Личные данные",
