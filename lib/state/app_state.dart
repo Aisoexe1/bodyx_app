@@ -514,12 +514,13 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   /// feature here already has (health sync, profile/weight/measurement
   /// sync all swallow connectivity failures rather than erroring out).
   /// [rememberMe] controls whether the session survives an app restart —
-  /// when false, the sign-in still succeeds for the current app run, but
+  /// when false (the default — an explicit opt-in is required to stay
+  /// signed in), the sign-in still succeeds for the current app run, but
   /// neither the "onboarding done" flag nor the Keychain token are kept, so
   /// [hydrate] finds no session next launch and the user has to sign in
   /// again (see [hydrate]'s `onboardingDone` gate).
   Future<void> signIn(String email, String password,
-      {bool rememberMe = true}) async {
+      {bool rememberMe = false}) async {
     final resolvedEmail = email.trim().isEmpty ? 'alex@bodyx.app' : email.trim();
     try {
       user = await _authRepository.login(email: resolvedEmail, password: password);
@@ -1286,9 +1287,14 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     notifyListeners();
   }
 
-  /// Null means "follow system locale". Only set once the user picks a
-  /// language explicitly in Settings.
-  Locale? locale;
+  /// Defaults to English regardless of the device's system language — the
+  /// app used to fall back to "follow system locale" when unset, which
+  /// silently showed Russian/Ukrainian on a matching system even after the
+  /// user picked "English" (that previously mapped to `null` instead of an
+  /// explicit locale). Overwritten by [hydrate] if a choice was persisted,
+  /// and by [setLocale] whenever the user picks one explicitly (in Settings
+  /// or on the sign-in screen).
+  Locale? locale = const Locale('en');
 
   void setLocale(Locale? value) {
     locale = value;

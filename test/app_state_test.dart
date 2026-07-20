@@ -28,7 +28,7 @@ void main() {
     test('logging water is what first raises today above 0', () async {
       final state = newTestAppState();
       await state.hydrate();
-      await state.signIn('water@bodyx.app', 'pw');
+      await state.signIn('water@bodyx.app', 'pw', rememberMe: true);
 
       expect(state.dailyStats.last.waterMl, 0);
 
@@ -40,7 +40,7 @@ void main() {
         () async {
       final state = newTestAppState();
       await state.hydrate();
-      await state.signIn('water2@bodyx.app', 'pw');
+      await state.signIn('water2@bodyx.app', 'pw', rememberMe: true);
 
       state.logWater(200);
       state.logWater(500);
@@ -70,7 +70,7 @@ void main() {
       final state = newTestAppState();
       await state.hydrate();
 
-      await state.signIn('taylor@bodyx.app', 'whatever');
+      await state.signIn('taylor@bodyx.app', 'whatever', rememberMe: true);
 
       expect(state.authStage, AuthStage.done);
       expect(state.user, isNotNull);
@@ -128,7 +128,7 @@ void main() {
         () async {
       final state = newTestAppState();
       await state.hydrate();
-      await state.signIn('taylor@bodyx.app', 'whatever');
+      await state.signIn('taylor@bodyx.app', 'whatever', rememberMe: true);
 
       state.signOut();
       expect(state.user, isNull);
@@ -151,7 +151,7 @@ void main() {
       // even though every call to the fake backend throws a connectivity
       // error — this is what keeps the app usable before/without a live
       // server, matching every other network feature's offline fallback.
-      await state.signIn('offline@bodyx.app', 'pw');
+      await state.signIn('offline@bodyx.app', 'pw', rememberMe: true);
 
       expect(state.authStage, AuthStage.done);
       expect(state.user, isNotNull);
@@ -289,7 +289,7 @@ void main() {
     test('user profile and onboarding survive a restart', () async {
       final state = newTestAppState();
       await state.hydrate();
-      await state.signIn('persist@bodyx.app', 'pw');
+      await state.signIn('persist@bodyx.app', 'pw', rememberMe: true);
 
       final restarted = newTestAppState();
       await restarted.hydrate();
@@ -303,7 +303,7 @@ void main() {
     test('logged weight entries survive a restart', () async {
       final state = newTestAppState();
       await state.hydrate();
-      await state.signIn('weight@bodyx.app', 'pw');
+      await state.signIn('weight@bodyx.app', 'pw', rememberMe: true);
       final before = state.weightHistory.length;
 
       state.logWeight(81.4, 19.5);
@@ -322,7 +322,7 @@ void main() {
     test('logged body measurements survive a restart', () async {
       final state = newTestAppState();
       await state.hydrate();
-      await state.signIn('measure@bodyx.app', 'pw');
+      await state.signIn('measure@bodyx.app', 'pw', rememberMe: true);
 
       state.logMeasurement(MuscleZone.chest, 106.5);
       final expectedHistoryLength =
@@ -351,7 +351,7 @@ void main() {
     test('alert read-state survives a restart', () async {
       final state = newTestAppState();
       await state.hydrate();
-      await state.signIn('alerts@bodyx.app', 'pw');
+      await state.signIn('alerts@bodyx.app', 'pw', rememberMe: true);
 
       final unreadBefore = state.unreadAlertCount;
       expect(unreadBefore, greaterThan(0));
@@ -369,7 +369,7 @@ void main() {
         () async {
       final state = newTestAppState(authRepository: UnreachableAuthRepository());
       await state.hydrate();
-      await state.signIn('delete@bodyx.app', 'pw');
+      await state.signIn('delete@bodyx.app', 'pw', rememberMe: true);
 
       await state.deleteAccount(); // server DELETE throws → flag persisted
 
@@ -387,7 +387,7 @@ void main() {
     test('notification settings survive a restart', () async {
       final state = newTestAppState();
       await state.hydrate();
-      await state.signIn('settings@bodyx.app', 'pw');
+      await state.signIn('settings@bodyx.app', 'pw', rememberMe: true);
 
       state.toggleNotifications(false);
       state.toggleWorkoutReminders(false);
@@ -403,7 +403,7 @@ void main() {
         () async {
       final state = newTestAppState();
       await state.hydrate();
-      await state.signIn('meals@bodyx.app', 'pw');
+      await state.signIn('meals@bodyx.app', 'pw', rememberMe: true);
 
       expect(state.meals, isEmpty);
       state.logMeal(const MealEntry(
@@ -429,7 +429,7 @@ void main() {
     test('removeMeal drops just that entry', () async {
       final state = newTestAppState();
       await state.hydrate();
-      await state.signIn('removemeal@bodyx.app', 'pw');
+      await state.signIn('removemeal@bodyx.app', 'pw', rememberMe: true);
 
       state.logMeal(const MealEntry(
         name: 'Oats',
@@ -468,7 +468,7 @@ void main() {
         () async {
       final state = newTestAppState();
       await state.hydrate();
-      await state.signIn('workout@bodyx.app', 'pw');
+      await state.signIn('workout@bodyx.app', 'pw', rememberMe: true);
 
       state.addExercise('Bench Press', 4, 8);
       expect(state.todayWorkoutSets.length, 4);
@@ -485,7 +485,7 @@ void main() {
     test('removeExercise drops only that exercise\'s sets', () async {
       final state = newTestAppState();
       await state.hydrate();
-      await state.signIn('workout2@bodyx.app', 'pw');
+      await state.signIn('workout2@bodyx.app', 'pw', rememberMe: true);
 
       state.addExercise('Bench Press', 2, 8);
       state.addExercise('Squats', 3, 10);
@@ -501,7 +501,7 @@ void main() {
         () async {
       final state = newTestAppState();
       await state.hydrate();
-      await state.signIn('workout3@bodyx.app', 'pw');
+      await state.signIn('workout3@bodyx.app', 'pw', rememberMe: true);
       state.addExercise('Squats', 3, 10);
 
       expect(state.todayWorkoutCompletedSets, 0);
@@ -525,7 +525,7 @@ void main() {
         () async {
       final state = newTestAppState();
       await state.hydrate();
-      await state.signIn('workout4@bodyx.app', 'pw');
+      await state.signIn('workout4@bodyx.app', 'pw', rememberMe: true);
 
       expect(state.isWorkoutTimerRunning, false);
       expect(state.todayWorkoutElapsed, Duration.zero);
@@ -546,7 +546,7 @@ void main() {
         () async {
       final state = newTestAppState();
       await state.hydrate();
-      await state.signIn('workout5@bodyx.app', 'pw');
+      await state.signIn('workout5@bodyx.app', 'pw', rememberMe: true);
 
       state.toggleWorkoutTimer();
       state.toggleWorkoutTimer();
@@ -576,7 +576,7 @@ void main() {
     test('addMobilityActivity, toggle, and removeMobilityActivity', () async {
       final state = newTestAppState();
       await state.hydrate();
-      await state.signIn('mobility@bodyx.app', 'pw');
+      await state.signIn('mobility@bodyx.app', 'pw', rememberMe: true);
 
       state.addMobilityActivity('Hip flexor stretch', 5);
       state.addMobilityActivity('Foam rolling', 10);
@@ -603,7 +603,7 @@ void main() {
         () async {
       final state = newTestAppState();
       await state.hydrate();
-      await state.signIn('photos@bodyx.app', 'pw');
+      await state.signIn('photos@bodyx.app', 'pw', rememberMe: true);
 
       expect(state.progressPhotos, isEmpty);
 
@@ -634,7 +634,7 @@ void main() {
     test('updateProfile only touches provided fields', () async {
       final state = newTestAppState();
       await state.hydrate();
-      await state.signIn('profile@bodyx.app', 'pw');
+      await state.signIn('profile@bodyx.app', 'pw', rememberMe: true);
       final originalUsername = state.user!.username;
 
       state.updateProfile(goal: 'New Goal');
@@ -646,7 +646,7 @@ void main() {
     test('updateGender regenerates measurements for every zone', () async {
       final state = newTestAppState();
       await state.hydrate();
-      await state.signIn('gender@bodyx.app', 'pw');
+      await state.signIn('gender@bodyx.app', 'pw', rememberMe: true);
 
       state.updateGender(Gender.female);
 
@@ -658,7 +658,7 @@ void main() {
     test('updateHeightWeightAge applies only non-null fields', () async {
       final state = newTestAppState();
       await state.hydrate();
-      await state.signIn('hwage@bodyx.app', 'pw');
+      await state.signIn('hwage@bodyx.app', 'pw', rememberMe: true);
       final originalHeight = state.user!.heightCm;
 
       state.updateHeightWeightAge(weightKg: 70, age: 30);
@@ -671,7 +671,7 @@ void main() {
     test('toggleUnits flips the metric flag', () async {
       final state = newTestAppState();
       await state.hydrate();
-      await state.signIn('units@bodyx.app', 'pw');
+      await state.signIn('units@bodyx.app', 'pw', rememberMe: true);
       final before = state.user!.unitsMetric;
 
       state.toggleUnits();
@@ -773,7 +773,7 @@ void main() {
         () async {
       final onboarding = newTestAppState();
       await onboarding.hydrate();
-      await onboarding.signIn('announce@bodyx.app', 'pw');
+      await onboarding.signIn('announce@bodyx.app', 'pw', rememberMe: true);
 
       final announcement = Announcement(
         id: 'ann-1',
@@ -797,7 +797,7 @@ void main() {
     test('dismissAnnouncement removes it from activeAnnouncements', () async {
       final onboarding = newTestAppState();
       await onboarding.hydrate();
-      await onboarding.signIn('announce2@bodyx.app', 'pw');
+      await onboarding.signIn('announce2@bodyx.app', 'pw', rememberMe: true);
 
       final announcement = Announcement(
         id: 'ann-2',
@@ -823,7 +823,7 @@ void main() {
     test('a dismissed announcement stays dismissed across a restart', () async {
       final onboarding = newTestAppState();
       await onboarding.hydrate();
-      await onboarding.signIn('announce3@bodyx.app', 'pw');
+      await onboarding.signIn('announce3@bodyx.app', 'pw', rememberMe: true);
 
       final announcement = Announcement(
         id: 'ann-3',

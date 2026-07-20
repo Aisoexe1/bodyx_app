@@ -12,6 +12,7 @@ import '../../widgets/common/confirm_dialog.dart';
 import '../../widgets/common/editable_number_label.dart';
 import '../../widgets/common/glow_card.dart';
 import '../../widgets/common/inputs_buttons.dart';
+import '../../widgets/common/language_picker.dart';
 import '../../widgets/common/scale_tap.dart';
 import 'contact_support_screen.dart';
 
@@ -626,17 +627,12 @@ class _LanguageRow extends StatelessWidget {
   const _LanguageRow({required this.locale});
   final Locale? locale;
 
-  static const _options = <String, String>{
-    'en': 'English (US)',
-    'ru': 'Русский',
-    'uk': 'Українська',
-  };
-
   @override
   Widget build(BuildContext context) {
-    final label = _options[locale?.languageCode] ?? _options['en']!;
+    final label = kSupportedLocaleLabels[locale?.languageCode] ??
+        kSupportedLocaleLabels['en']!;
     return ScaleTap(
-      onTap: () => _showPicker(context),
+      onTap: () => showLanguagePicker(context),
       child: GlowCard(
         child: Row(
           children: [
@@ -653,37 +649,6 @@ class _LanguageRow extends StatelessWidget {
             const Icon(Icons.chevron_right_rounded,
                 color: AppColors.textMuted, size: 18),
           ],
-        ),
-      ),
-    );
-  }
-
-  void _showPicker(BuildContext context) {
-    final appState = context.read<AppState>();
-    final currentCode = locale?.languageCode ?? 'en';
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: _options.entries.map((entry) {
-            final selected = currentCode == entry.key;
-            return ListTile(
-              title: Text(entry.value,
-                  style: const TextStyle(color: AppColors.textPrimary)),
-              trailing: selected
-                  ? const Icon(Icons.check_rounded,
-                      color: AppColors.primaryBright)
-                  : null,
-              onTap: () {
-                appState.setLocale(entry.key == 'en' ? null : Locale(entry.key));
-                Navigator.pop(sheetContext);
-              },
-            );
-          }).toList(),
         ),
       ),
     );

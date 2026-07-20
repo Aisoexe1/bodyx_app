@@ -7,6 +7,8 @@ import '../../state/app_state.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/inputs_buttons.dart';
+import '../../widgets/common/language_picker.dart';
+import '../../widgets/common/scale_tap.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -20,7 +22,7 @@ class _SignInScreenState extends State<SignInScreen> {
   final _password = TextEditingController();
   bool _obscure = true;
   bool _loading = false;
-  bool _rememberMe = true;
+  bool _rememberMe = false;
 
   @override
   void dispose() {
@@ -78,6 +80,7 @@ class _SignInScreenState extends State<SignInScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final languageCode = context.watch<AppState>().locale?.languageCode ?? 'en';
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -87,7 +90,35 @@ class _SignInScreenState extends State<SignInScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 24),
+              Align(
+                alignment: Alignment.topRight,
+                child: ScaleTap(
+                  onTap: () => showLanguagePicker(context),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceElevated,
+                      borderRadius: BorderRadius.circular(AppRadius.pill),
+                      border: Border.all(color: AppColors.cardBorder),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.language_rounded,
+                            size: 16, color: AppColors.textMuted),
+                        const SizedBox(width: 6),
+                        Text(languageCode.toUpperCase(),
+                            style: const TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w700)),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
               Text(AppLocalizations.of(context)!.signInWelcomeBack,
                   style: const TextStyle(
                       fontSize: 30,
