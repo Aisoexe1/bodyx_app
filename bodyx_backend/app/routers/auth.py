@@ -1,5 +1,6 @@
 import logging
 import asyncio
+from typing import Union
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from motor.motor_asyncio import AsyncIOMotorDatabase
@@ -10,10 +11,13 @@ from app.email_service import send_password_reset_email
 from app.oauth import OAuthVerificationError, verify_apple_identity_token, verify_google_id_token
 from app.repos import measurement_repo, password_reset_repo, user_repo
 from app.schemas.user import (
+    AppleAuthCompleteRequest,
     AppleAuthRequest,
     ForgotPasswordRequest,
     ForgotPasswordResponse,
+    GoogleAuthCompleteRequest,
     GoogleAuthRequest,
+    OAuthNeedsUsernameResponse,
     ResetPasswordRequest,
     Token,
     UserCreate,
@@ -111,33 +115,83 @@ async def reset_password(
     return Token(access_token=token, user=user_doc_to_public(updated_user))
 
 
-@router.post("/oauth/google", response_model=Token)
+async def _oauth_login_or_needs_username(
+    db: AsyncIOMotorDatabase, email: str, auth_provider: str
+) -> Union[Token, OAuthNeedsUsernameResponse]:
+    """Shared by both providers' plain sign-in endpoint: logs a *returning*
+    same-provider user in, tells the client a brand-new email needs a
+    username (see [OAuthNeedsUsernameResponse]), or rejects outright when
+    the email already belongs to a different auth method — auto-linking
+    that silently would mean a Google sign-in could walk straight into an
+    existing password account without ever proving the password."""
+    existing = await user_repo.find_by_email(db, email)
+    if existing is None:
+        return OAuthNeedsUsernameResponse(email=email)
+    if existing.get("auth_provider") != auth_provider:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="An account with this email already exists",
+        )
+    if existing.get("is_banned"):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="This account has been banned")
+
+    token = create_access_token(str(existing["_id"]))
+    return Token(access_token=token, user=user_doc_to_public(existing))
+
+
+async def _complete_oauth_signup(
+    db: AsyncIOMotorDatabase, email: str, username: str, auth_provider: str
+) -> Token:
+    if await user_repo.find_by_email(db, email):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="An account with this email already exists",
+        )
+    if await user_repo.find_by_username(db, username):
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Username already taken")
+
+    user = await user_repo.create_oauth_user(db, email, username, auth_provider)
+    await measurement_repo.seed_measurements(db, user["_id"], user.get("gender", "male"))
+
+    token = create_access_token(str(user["_id"]))
+    return Token(access_token=token, user=user_doc_to_public(user))
+
+
+@router.post("/oauth/google", response_model=Union[Token, OAuthNeedsUsernameResponse])
 async def oauth_google(payload: GoogleAuthRequest, db: AsyncIOMotorDatabase = Depends(_get_db)):
     try:
         info = verify_google_id_token(payload.id_token)
     except OAuthVerificationError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Google token")
-
-    user = await user_repo.find_or_create_oauth_user(db, info["email"], "google")
-    if user.get("is_banned"):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="This account has been banned")
-    await measurement_repo.seed_measurements(db, user["_id"], user.get("gender", "male"))
-
-    token = create_access_token(str(user["_id"]))
-    return Token(access_token=token, user=user_doc_to_public(user))
+    return await _oauth_login_or_needs_username(db, info["email"], "google")
 
 
-@router.post("/oauth/apple", response_model=Token)
+@router.post("/oauth/google/complete", response_model=Token, status_code=status.HTTP_201_CREATED)
+async def oauth_google_complete(
+    payload: GoogleAuthCompleteRequest, db: AsyncIOMotorDatabase = Depends(_get_db)
+):
+    try:
+        info = verify_google_id_token(payload.id_token)
+    except OAuthVerificationError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Google token")
+    return await _complete_oauth_signup(db, info["email"], payload.username, "google")
+
+
+@router.post("/oauth/apple", response_model=Union[Token, OAuthNeedsUsernameResponse])
 async def oauth_apple(payload: AppleAuthRequest, db: AsyncIOMotorDatabase = Depends(_get_db)):
     try:
         info = verify_apple_identity_token(payload.identity_token)
     except OAuthVerificationError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Apple token")
+    return await _oauth_login_or_needs_username(db, info["email"], "apple")
 
-    user = await user_repo.find_or_create_oauth_user(db, info["email"], "apple")
-    if user.get("is_banned"):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="This account has been banned")
-    await measurement_repo.seed_measurements(db, user["_id"], user.get("gender", "male"))
 
-    token = create_access_token(str(user["_id"]))
-    return Token(access_token=token, user=user_doc_to_public(user))
+@router.post("/oauth/apple/complete", response_model=Token, status_code=status.HTTP_201_CREATED)
+async def oauth_apple_complete(
+    payload: AppleAuthCompleteRequest, db: AsyncIOMotorDatabase = Depends(_get_db)
+):
+    try:
+        info = verify_apple_identity_token(payload.identity_token)
+    except OAuthVerificationError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Apple token")
+    return await _complete_oauth_signup(db, info["email"], payload.username, "apple")

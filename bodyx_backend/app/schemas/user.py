@@ -65,8 +65,27 @@ class GoogleAuthRequest(CamelModel):
     id_token: str
 
 
+class GoogleAuthCompleteRequest(CamelModel):
+    id_token: str
+    username: str = Field(min_length=3, max_length=32)
+
+
 class AppleAuthRequest(CamelModel):
     identity_token: str
+
+
+class AppleAuthCompleteRequest(CamelModel):
+    identity_token: str
+    username: str = Field(min_length=3, max_length=32)
+
+
+class OAuthNeedsUsernameResponse(CamelModel):
+    """Returned instead of a [Token] when an OAuth sign-in's email has no
+    existing account yet — the client must collect a username and call the
+    matching `/oauth/{provider}/complete` endpoint to actually create it."""
+
+    needs_username: bool = True
+    email: EmailStr
 
 
 class UserUpdate(CamelModel):

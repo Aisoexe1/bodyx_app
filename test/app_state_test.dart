@@ -192,6 +192,26 @@ void main() {
       expect(state.user!.email, 'google-user@bodyx.app');
     });
 
+    test(
+        'signInWithGoogle moves to chooseUsername for a brand-new email instead of auto-creating',
+        () async {
+      final authRepo = FakeAuthRepository()..googleNeedsUsername = true;
+      final state = newTestAppState(authRepository: authRepo);
+      await state.hydrate();
+
+      await state.signInWithGoogle('fake-id-token');
+
+      expect(state.authStage, AuthStage.chooseUsername);
+      expect(state.user, isNull,
+          reason: 'no account should exist yet — only after submitUsername');
+
+      await state.submitUsername('chosenhandle');
+
+      expect(state.authStage, AuthStage.done);
+      expect(state.user!.email, 'google-user@bodyx.app');
+      expect(state.user!.username, 'chosenhandle');
+    });
+
     test('signInWithApple logs the user in on success', () async {
       final state = newTestAppState();
       await state.hydrate();

@@ -441,6 +441,14 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   String? _pendingPassword;
   String? _pendingResetEmail;
   String? get pendingResetEmail => _pendingResetEmail;
+
+  // Set instead of _pendingPassword when [AuthStage.chooseUsername] was
+  // reached via Google/Apple sign-in rather than local sign-up — tells
+  // [submitUsername] which repository call to make, and carries the
+  // provider's token through to the matching `complete` call.
+  String? _pendingOAuthProvider; // 'google' | 'apple' | null
+  String? _pendingOAuthToken;
+
   UserProfile? user;
 
   /// Dev-mode only: the raw reset code echoed back by the backend when no
@@ -501,6 +509,8 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   void submitSignUp(String email, String password) {
     _pendingEmail = email.trim().isEmpty ? 'you@bodyx.app' : email.trim();
     _pendingPassword = password;
+    _pendingOAuthProvider = null;
+    _pendingOAuthToken = null;
     authStage = AuthStage.chooseUsername;
     notifyListeners();
   }
@@ -545,11 +555,24 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     notifyListeners();
   }
 
-  /// Verifies [idToken] server-side and logs in, creating the account on
-  /// first sign-in. Throws [ApiException] on an invalid token or if the
+  /// Verifies [idToken] server-side and logs in an existing account. If
+  /// this email has no account yet, moves to [AuthStage.chooseUsername]
+  /// instead (see [OAuthNeedsUsername]) rather than creating one with an
+  /// auto-generated handle. Throws [ApiException] on an invalid token, a
+  /// 409 (email already used by a different sign-in method), or if the
   /// backend's Google client ID isn't configured yet (501).
   Future<void> signInWithGoogle(String idToken) async {
-    user = await _authRepository.loginWithGoogle(idToken);
+    try {
+      user = await _authRepository.loginWithGoogle(idToken);
+    } on OAuthNeedsUsername catch (e) {
+      _pendingOAuthProvider = 'google';
+      _pendingOAuthToken = e.token;
+      _pendingEmail = e.email;
+      _pendingPassword = null;
+      authStage = AuthStage.chooseUsername;
+      notifyListeners();
+      return;
+    }
     authStage = AuthStage.done;
     _hasSession = true;
     _persistUser();
@@ -557,11 +580,24 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     notifyListeners();
   }
 
-  /// Verifies [identityToken] server-side and logs in, creating the account
-  /// on first sign-in. Throws [ApiException] on an invalid token or if the
+  /// Verifies [identityToken] server-side and logs in an existing account.
+  /// If this email has no account yet, moves to [AuthStage.chooseUsername]
+  /// instead (see [OAuthNeedsUsername]) rather than creating one with an
+  /// auto-generated handle. Throws [ApiException] on an invalid token, a
+  /// 409 (email already used by a different sign-in method), or if the
   /// backend's Apple client ID isn't configured yet (501).
   Future<void> signInWithApple(String identityToken) async {
-    user = await _authRepository.loginWithApple(identityToken);
+    try {
+      user = await _authRepository.loginWithApple(identityToken);
+    } on OAuthNeedsUsername catch (e) {
+      _pendingOAuthProvider = 'apple';
+      _pendingOAuthToken = e.token;
+      _pendingEmail = e.email;
+      _pendingPassword = null;
+      authStage = AuthStage.chooseUsername;
+      notifyListeners();
+      return;
+    }
     authStage = AuthStage.done;
     _hasSession = true;
     _persistUser();
@@ -569,13 +605,33 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     notifyListeners();
   }
 
-  /// Creates the account against the real backend when one is reachable.
-  /// A real rejection from the server ([ApiException] — duplicate email/
-  /// username) is re-thrown so the username screen can show it. An
-  /// unreachable server falls back to a local-only profile, same as
+  /// Completes whichever sign-up is in progress — local email/password (the
+  /// default) or, if [signInWithGoogle]/[signInWithApple] just moved here
+  /// via [OAuthNeedsUsername], the matching OAuth provider's `complete`
+  /// call. A real rejection from the server ([ApiException] — duplicate
+  /// email/username) is re-thrown so the username screen can show it.
+  /// OAuth completions have no offline fallback (they need the real
+  /// backend to re-verify the token); local sign-up falls back to a
+  /// local-only profile when the server is simply unreachable, same as
   /// [signIn].
   Future<void> submitUsername(String username) async {
     final resolvedUsername = username.trim().isEmpty ? 'newuser' : username.trim();
+    final oauthProvider = _pendingOAuthProvider;
+    final oauthToken = _pendingOAuthToken;
+    if (oauthProvider != null && oauthToken != null) {
+      user = oauthProvider == 'google'
+          ? await _authRepository.completeGoogleSignUp(oauthToken, resolvedUsername)
+          : await _authRepository.completeAppleSignUp(oauthToken, resolvedUsername);
+      _pendingOAuthProvider = null;
+      _pendingOAuthToken = null;
+      authStage = AuthStage.done;
+      _hasSession = true;
+      _persistUser();
+      unawaited(_persistence.setOnboardingDone(true));
+      notifyListeners();
+      return;
+    }
+
     try {
       user = await _authRepository.register(
         email: _pendingEmail ?? 'you@bodyx.app',
