@@ -577,11 +577,9 @@ class _HealthSyncScreenState extends State<HealthSyncScreen> {
             onChanged: (v) => _handleToggle(v),
           ),
           const SizedBox(height: 14),
-          const Text(
-            'Reads steps, calories, sleep, water, weight and body fat '
-            'percentage to keep your dashboard accurate. BodyX never '
-            'writes data back.',
-            style: TextStyle(
+          Text(
+            AppLocalizations.of(context)!.settingsHealthSyncDescription,
+            style: const TextStyle(
               color: AppColors.textMuted,
               fontSize: 12.5,
               height: 1.4,
@@ -759,49 +757,29 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
 class HelpSupportScreen extends StatelessWidget {
   const HelpSupportScreen({super.key});
 
-  static const _faqs = [
-    (
-      q: 'How is my body scan calculated?',
-      a: 'Log your weight and body-fat % from "Log body weight" on the '
-          'dashboard checklist. We combine the weight trend with the '
-          "body-fat trend so we can tell muscle gain from fat gain, "
-          "instead of just watching the scale number move.",
-    ),
-    (
-      q: 'How do I sync a wearable device?',
-      a: 'Go to Settings → toggle "Sync with Health". Once enabled, BodyX '
-          'pulls steps, active calories burned and sleep from Apple '
-          'Health or Health Connect automatically. No wearable? '
-          'Everything still works with data you log by hand.',
-    ),
-    (
-      q: 'Where do my calorie and protein targets come from?',
-      a: 'Your calorie target (TDEE) is calculated from your age, weight, '
-          'height, gender and activity level using the Mifflin-St Jeor '
-          'formula. Protein target is 1.8g per kg of body weight. Both '
-          'update automatically if you edit your profile.',
-    ),
-    (
-      q: 'How do I track a workout?',
-      a: "Open the Plan tab and tap the workout card — it opens a "
-          "set-by-set checklist. Tap each set as you finish it; progress "
-          "saves automatically, even if you close the app mid-workout.",
-    ),
-    (
-      q: 'Can I export my progress data?',
-      a: "Not yet — that's on the roadmap. Your profile, weight and body "
-          "measurements sync to your account when you're signed in and a "
-          "server is reachable; progress photos, meals, and workouts stay "
-          "on this device only.",
-    ),
-    (
-      q: 'How do I change my daily goals?',
-      a: 'Step and calorie goals are derived from your profile in Profile '
-          '→ Edit profile. Update your weight, height, age or activity '
-          "level and your targets recalculate automatically — there's no "
-          'manual override yet.',
-    ),
-  ];
+  static List<({String q, String a})> _faqs(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return [
+      (q: l10n.settingsFaqBodyScanQuestion, a: l10n.settingsFaqBodyScanAnswer),
+      (
+        q: l10n.settingsFaqSyncWearableQuestion,
+        a: l10n.settingsFaqSyncWearableAnswer
+      ),
+      (q: l10n.settingsFaqTargetsQuestion, a: l10n.settingsFaqTargetsAnswer),
+      (
+        q: l10n.settingsFaqTrackWorkoutQuestion,
+        a: l10n.settingsFaqTrackWorkoutAnswer
+      ),
+      (
+        q: l10n.settingsFaqExportDataQuestion,
+        a: l10n.settingsFaqExportDataAnswer
+      ),
+      (
+        q: l10n.settingsFaqDailyGoalsQuestion,
+        a: l10n.settingsFaqDailyGoalsAnswer
+      ),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -857,7 +835,7 @@ class HelpSupportScreen extends StatelessWidget {
                     letterSpacing: 1)),
           ),
           const SizedBox(height: 10),
-          ..._faqs.map((faq) => Padding(
+          ..._faqs(context).map((faq) => Padding(
                 padding: const EdgeInsets.only(bottom: 10),
                 child: _FaqTile(question: faq.q, answer: faq.a),
               )),
@@ -951,8 +929,8 @@ class AboutScreen extends StatelessWidget {
                   color: AppColors.textPrimary,
                   fontWeight: FontWeight.w800,
                   fontSize: 18)),
-          const Text('Version 1.0.0',
-              style: TextStyle(color: AppColors.textMuted, fontSize: 12.5)),
+          Text(AppLocalizations.of(context)!.settingsAppVersion('1.0.0'),
+              style: const TextStyle(color: AppColors.textMuted, fontSize: 12.5)),
           const SizedBox(height: 20),
           GlowCard(
             child: Column(

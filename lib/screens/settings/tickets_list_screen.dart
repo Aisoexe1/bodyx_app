@@ -95,7 +95,7 @@ class _TicketsListScreenState extends State<TicketsListScreen> {
                   }
                   if (snapshot.hasError) {
                     return Center(
-                      child: Text(describeApiError(snapshot.error!),
+                      child: Text(describeApiError(context, snapshot.error!),
                           style: const TextStyle(color: AppColors.textMuted)),
                     );
                   }

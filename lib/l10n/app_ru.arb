@@ -87,6 +87,8 @@
   "resetPasswordMismatchError": "Пароли не совпадают",
   "resetPasswordButton": "Сбросить пароль",
   "resetPasswordBackToSignIn": "Назад ко входу",
+  "apiErrorCantReachServer": "Не удаётся связаться с сервером. Проверьте соединение и попробуйте снова.",
+  "apiErrorGeneric": "Что-то пошло не так. Попробуйте ещё раз.",
   "signInWelcomeBack": "С возвращением",
   "signInStayConsistent": "Сохраняйте регулярность",
   "signInEmailLabel": "Email",
@@ -161,6 +163,31 @@
   "logMetricsBodyFatPctLabel": "Процент жира (%)",
   "logMetricsSaveCheckIn": "Сохранить отметку",
   "progressPhotoCompareTitle": "Сравнение",
+  "progressCompareSameDay": "Тот же день",
+  "progressCompareElapsedLabel": "Разница — {parts}",
+  "@progressCompareElapsedLabel": {
+    "placeholders": {
+      "parts": {}
+    }
+  },
+  "progressCompareUnitDays": "{days, plural, one{{days} день} few{{days} дня} many{{days} дней} other{{days} дня}}",
+  "@progressCompareUnitDays": {
+    "placeholders": {
+      "days": {}
+    }
+  },
+  "progressCompareUnitMonths": "{months, plural, one{{months} месяц} few{{months} месяца} many{{months} месяцев} other{{months} месяца}}",
+  "@progressCompareUnitMonths": {
+    "placeholders": {
+      "months": {}
+    }
+  },
+  "progressCompareUnitYears": "{years, plural, one{{years} год} few{{years} года} many{{years} лет} other{{years} года}}",
+  "@progressCompareUnitYears": {
+    "placeholders": {
+      "years": {}
+    }
+  },
   "progressPhotoCompareLoadError": "Не удалось загрузить эти фото",
   "progressPhotoCompareGoBack": "Назад",
   "progressPhotoCompareBefore": "До",
@@ -260,6 +287,10 @@
     }
   },
   "waterLogTitle": "Вода",
+  "waterLogPresetGlass": "Стакан",
+  "waterLogPresetCup": "Чашка",
+  "waterLogPresetBottle": "Бутылка",
+  "waterLogPresetLarge": "Большая",
   "waterLogConsumedOfGoal": "{consumed} л из {goal} л",
   "@waterLogConsumedOfGoal": {
     "placeholders": {
@@ -403,6 +434,25 @@
   "progressWeightEmptySubtitle": "Запишите вес, чтобы начать отслеживать динамику",
   "progressWeightChangeLabel": "Изменение за 7 дней",
   "progressBmiLabel": "ИМТ",
+  "healthStatusWaterTooEarly": "Ещё рано — впереди весь день",
+  "healthStatusWaterDehydrated": "Обезвоживание — выпей воды сейчас",
+  "healthStatusWaterBehindPace": "Немного отстаёшь от нормы",
+  "healthStatusWaterPerfect": "Идеально",
+  "healthStatusWeightNotEnoughData": "Недостаточно данных",
+  "healthStatusWeightOffTrack": "Не соответствует цели набора",
+  "healthStatusWeightMostlyFat": "Набор идёт почти весь в жир",
+  "healthStatusWeightGainingMuscle": "Отлично — набираешь мышцы",
+  "healthStatusWeightNeedsAdjustment": "Требуется корректировка калорий",
+  "healthStatusCalorieDeficit": "Дефицит не даст расти",
+  "healthStatusCalorieBarelySurplus": "Профицита почти нет",
+  "healthStatusCalorieSurplusTooBig": "Профицит слишком большой",
+  "healthStatusCalorieOnTrack": "Профицит в норме — идеально для роста",
+  "healthStatusCalorieLowSurplus": "Профицита мало — рост будет медленным",
+  "healthStatusCalorieFatGainRisk": "Риск набрать лишний жир",
+  "healthStatusProteinNoTarget": "—",
+  "healthStatusProteinMet": "Норма по белку выполнена",
+  "healthStatusProteinSlightlyLow": "Немного не хватает белка",
+  "healthStatusProteinTooLow": "Белка сильно недостаточно",
   "progressActivityTitle": "Активность",
   "progressActivitySubtitle": "История шагов за {days} дней",
   "@progressActivitySubtitle": {
@@ -413,6 +463,11 @@
   "progressCaloriesTitle": "Калории",
   "progressCaloriesSubtitle": "Профицит для набора мышечной массы",
   "progressSleepTitle": "Сон",
+  "progressSleepSubtitleSynced": "Сегодняшняя разбивка · синхронизировано с Health",
+  "progressSleepSubtitleEstimated": "Сегодняшняя разбивка · оценочно (включите синхронизацию с Health в настройках для точных фаз)",
+  "progressRangeWeek": "Неделя",
+  "progressRangeMonth": "Месяц",
+  "progressRangeYear": "Год",
   "progressSleepSubtitle": "Структура сна за сегодня",
   "progressHeartRateTitle": "Пульс",
   "progressHeartRateSubtitle": "Зона пульса и динамика восстановления",
@@ -444,6 +499,24 @@
     }
   },
   "contactSupportAskHint": "Задайте вопрос…",
+  "contactSupportSuggestionLogMeal": "Как записать приём пищи?",
+  "contactSupportSuggestionTdee": "Как рассчитывается мой TDEE?",
+  "contactSupportSuggestionSyncWearable": "Синхронизировать устройство",
+  "supportAssistantModelName": "Локальный FAQ на устройстве",
+  "supportAssistantReplyGreeting": "Привет! Я ассистент BodyX. Спроси меня про воду, калории, тренировки, отслеживание веса, сон или синхронизацию с носимым устройством.",
+  "supportAssistantReplyWater": "Твоя норма воды зависит от веса тела и увеличивается в дни тренировок. Нажимай на карточку «Вода» на главном экране каждый раз, когда пьёшь, чтобы записать это — кольцо заполняется, а цветной индикатор показывает, успеваешь ли ты за день.",
+  "supportAssistantReplyCalories": "Съеденные калории берутся из приёмов пищи, которые ты записываешь сам — нажми на карточку «Калории», чтобы найти продукт в базе или добавить свой. Твоя цель (TDEE) рассчитывается по возрасту, весу, росту, полу и уровню активности по формуле Миффлина-Сан Жеора.",
+  "supportAssistantReplyProtein": "Твоя норма белка — 1.8 г на кг веса тела, это надёжный диапазон для набора или поддержания мышц. Она отслеживается по записанным приёмам пищи и обновляется автоматически при изменении веса.",
+  "supportAssistantReplyWorkout": "Сегодняшняя тренировка находится во вкладке «План» — нажми на карточку тренировки, чтобы открыть чек-лист по подходам, и отмечай каждый подход по мере выполнения. Прогресс сохраняется автоматически, даже если закрыть приложение посреди тренировки.",
+  "supportAssistantReplyWeight": "Записывай вес и процент жира через «Записать вес» в чек-листе на главном экране. Мы объединяем динамику веса с динамикой процента жира, чтобы отличить набор мышц от набора жира, а не просто смотреть на цифру на весах.",
+  "supportAssistantReplySleep": "Сон подтягивается из Apple Health или Health Connect после включения синхронизации в настройках. Без синхронизированного устройства записать сон вручную пока нельзя, поэтому он остаётся на нуле.",
+  "supportAssistantReplySync": "Зайди в Настройки → включи «Синхронизация с Health». После включения BodyX автоматически подтягивает шаги, активные калории и сон из Apple Health или Health Connect. Нет устройства? Всё продолжает работать с данными, которые ты вводишь вручную.",
+  "supportAssistantReplyExport": "Экспорта пока нет — это в планах. Профиль, вес и замеры тела синхронизируются с твоим аккаунтом, когда ты вошёл в систему и сервер доступен; фото прогресса, приёмы пищи и тренировки остаются только на этом устройстве.",
+  "supportAssistantReplyGoal": "Цели по шагам и калориям рассчитываются на основе профиля в Профиль → Редактировать профиль. Обнови вес, рост, возраст или уровень активности — и цели пересчитаются автоматически, ручной настройки пока нет.",
+  "supportAssistantReplyNotifications": "Напоминания о тренировках и воде можно включить в Настройки → Уведомления. Ты сам контролируешь, какие из них срабатывают и когда.",
+  "supportAssistantReplyAccount": "Управление аккаунтом и выход находятся в Профиль → Настройки. Забыл пароль? Используй «Забыли пароль» на экране входа. Также можно навсегда удалить аккаунт и все данные через Настройки → Приватность → Удалить аккаунт.",
+  "supportAssistantReplyThanks": "Пожалуйста! Могу ещё чем-то помочь?",
+  "supportAssistantReplyFallback": "У меня пока нет готового ответа на это — попробуй спросить про воду, калории, тренировки, отслеживание веса, сон или синхронизацию с устройством, либо посмотри вопросы выше.",
   "settingsEditProfileTitle": "Редактировать профиль",
   "settingsUsernameLabel": "Имя пользователя",
   "settingsSaveChangesButton": "Сохранить изменения",
@@ -503,7 +576,7 @@
       "platform": {}
     }
   },
-  "settingsHealthSyncDescription": "Считывает шаги, калории, сон, воду, вес и пульс, чтобы данные на панели были точными. BodyX никогда не записывает данные обратно.",
+  "settingsHealthSyncDescription": "Считывает шаги, калории, сон, воду, вес и процент жира, чтобы данные на панели были точными. BodyX никогда не записывает данные обратно.",
   "settingsSyncNowButton": "Синхронизировать сейчас",
   "settingsUnitsLanguageTitle": "Единицы измерения и язык",
   "settingsUseMetricUnitsLabel": "Использовать метрическую систему (см / кг)",
@@ -520,6 +593,24 @@
   "settingsContactSupportLabel": "Связаться с поддержкой",
   "settingsContactSupportSubtitle": "Чат с ассистентом BodyX",
   "settingsFrequentlyAskedHeader": "ЧАСТЫЕ ВОПРОСЫ",
+  "settingsFaqBodyScanQuestion": "Как рассчитывается мой скан тела?",
+  "settingsFaqBodyScanAnswer": "Записывай вес и процент жира через «Записать вес» в чек-листе на главном экране. Мы объединяем динамику веса с динамикой процента жира, чтобы отличить набор мышц от набора жира, а не просто смотреть, как меняется цифра на весах.",
+  "settingsFaqSyncWearableQuestion": "Как синхронизировать носимое устройство?",
+  "settingsFaqSyncWearableAnswer": "Зайди в Настройки → включи «Синхронизация с Health». После включения BodyX автоматически подтягивает шаги, активные калории и сон из Apple Health или Health Connect. Нет устройства? Всё продолжает работать с данными, которые ты вводишь вручную.",
+  "settingsFaqTargetsQuestion": "Откуда берутся мои цели по калориям и белку?",
+  "settingsFaqTargetsAnswer": "Твоя цель по калориям (TDEE) рассчитывается по возрасту, весу, росту, полу и уровню активности по формуле Миффлина-Сан Жеора. Норма белка — 1.8 г на кг веса тела. Обе цели обновляются автоматически при редактировании профиля.",
+  "settingsFaqTrackWorkoutQuestion": "Как отслеживать тренировку?",
+  "settingsFaqTrackWorkoutAnswer": "Открой вкладку «План» и нажми на карточку тренировки — откроется чек-лист по подходам. Отмечай каждый подход по мере выполнения; прогресс сохраняется автоматически, даже если закрыть приложение посреди тренировки.",
+  "settingsFaqExportDataQuestion": "Можно ли экспортировать данные о прогрессе?",
+  "settingsFaqExportDataAnswer": "Пока нет — это в планах. Профиль, вес и замеры тела синхронизируются с твоим аккаунтом, когда ты вошёл в систему и сервер доступен; фото прогресса, приёмы пищи и тренировки остаются только на этом устройстве.",
+  "settingsFaqDailyGoalsQuestion": "Как изменить мои ежедневные цели?",
+  "settingsFaqDailyGoalsAnswer": "Цели по шагам и калориям рассчитываются на основе профиля в Профиль → Редактировать профиль. Обнови вес, рост, возраст или уровень активности — и цели пересчитаются автоматически, ручной настройки пока нет.",
+  "settingsAppVersion": "Версия {version}",
+  "@settingsAppVersion": {
+    "placeholders": {
+      "version": {}
+    }
+  },
   "settingsAboutTitle": "О BodyX",
   "settingsAppName": "BodyX",
   "settingsAboutDescription": "BodyX помогает отслеживать тренировки, сон, питание и состав тела в едином премиальном интерфейсе в стиле тёмного неона.",
@@ -643,6 +734,10 @@
   "settingsGoalBuildMuscle": "Набрать мышечную массу",
   "settingsGoalMaintainWeight": "Поддерживать вес",
   "settingsGoalImproveEndurance": "Улучшить выносливость",
+  "notificationChannelRemindersName": "Напоминания BodyX",
+  "notificationChannelRemindersDescription": "Ежедневные напоминания о тренировках и воде",
+  "notificationChannelActivityDoneName": "Завершение активности BodyX",
+  "notificationChannelActivityDoneDescription": "Звучит, когда завершается активность по таймеру",
   "notificationWorkoutReminderTitle": "Сегодняшняя тренировка ждёт",
   "notificationWorkoutReminderBody": "Загляните в план и приступайте — у вас всё получится.",
   "notificationHydrationReminderTitle": "Проверка гидратации",

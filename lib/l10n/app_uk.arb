@@ -87,6 +87,8 @@
   "resetPasswordMismatchError": "Паролі не збігаються",
   "resetPasswordButton": "Скинути пароль",
   "resetPasswordBackToSignIn": "Повернутися до входу",
+  "apiErrorCantReachServer": "Не вдається зв'язатися із сервером. Перевірте з'єднання і спробуйте ще раз.",
+  "apiErrorGeneric": "Щось пішло не так. Спробуйте ще раз.",
   "signInWelcomeBack": "З поверненням",
   "signInStayConsistent": "Будьте послідовні",
   "signInEmailLabel": "Email",
@@ -161,6 +163,31 @@
   "logMetricsBodyFatPctLabel": "Жир у тілі (%)",
   "logMetricsSaveCheckIn": "Зберегти чек-ін",
   "progressPhotoCompareTitle": "Порівняння",
+  "progressCompareSameDay": "Той самий день",
+  "progressCompareElapsedLabel": "Різниця — {parts}",
+  "@progressCompareElapsedLabel": {
+    "placeholders": {
+      "parts": {}
+    }
+  },
+  "progressCompareUnitDays": "{days, plural, one{{days} день} few{{days} дні} many{{days} днів} other{{days} дні}}",
+  "@progressCompareUnitDays": {
+    "placeholders": {
+      "days": {}
+    }
+  },
+  "progressCompareUnitMonths": "{months, plural, one{{months} місяць} few{{months} місяці} many{{months} місяців} other{{months} місяці}}",
+  "@progressCompareUnitMonths": {
+    "placeholders": {
+      "months": {}
+    }
+  },
+  "progressCompareUnitYears": "{years, plural, one{{years} рік} few{{years} роки} many{{years} років} other{{years} року}}",
+  "@progressCompareUnitYears": {
+    "placeholders": {
+      "years": {}
+    }
+  },
   "progressPhotoCompareLoadError": "Не вдалося завантажити ці фото",
   "progressPhotoCompareGoBack": "Повернутися",
   "progressPhotoCompareBefore": "До",
@@ -260,6 +287,10 @@
     }
   },
   "waterLogTitle": "Вода",
+  "waterLogPresetGlass": "Склянка",
+  "waterLogPresetCup": "Чашка",
+  "waterLogPresetBottle": "Пляшка",
+  "waterLogPresetLarge": "Велика",
   "waterLogConsumedOfGoal": "{consumed} л із {goal} л",
   "@waterLogConsumedOfGoal": {
     "placeholders": {
@@ -403,6 +434,25 @@
   "progressWeightEmptySubtitle": "Запишіть вагу, щоб почати відстежувати динаміку",
   "progressWeightChangeLabel": "Зміна за 7 днів",
   "progressBmiLabel": "ІМТ",
+  "healthStatusWaterTooEarly": "Ще рано — попереду весь день",
+  "healthStatusWaterDehydrated": "Зневоднення — випий води зараз",
+  "healthStatusWaterBehindPace": "Трохи відстаєш від норми",
+  "healthStatusWaterPerfect": "Ідеально",
+  "healthStatusWeightNotEnoughData": "Недостатньо даних",
+  "healthStatusWeightOffTrack": "Не відповідає цілі набору",
+  "healthStatusWeightMostlyFat": "Набір йде майже весь у жир",
+  "healthStatusWeightGainingMuscle": "Чудово — набираєш м'язи",
+  "healthStatusWeightNeedsAdjustment": "Потрібне коригування калорій",
+  "healthStatusCalorieDeficit": "Дефіцит не дасть рости",
+  "healthStatusCalorieBarelySurplus": "Профіциту майже немає",
+  "healthStatusCalorieSurplusTooBig": "Профіцит занадто великий",
+  "healthStatusCalorieOnTrack": "Профіцит у нормі — ідеально для росту",
+  "healthStatusCalorieLowSurplus": "Профіциту мало — ріст буде повільним",
+  "healthStatusCalorieFatGainRisk": "Ризик набрати зайвий жир",
+  "healthStatusProteinNoTarget": "—",
+  "healthStatusProteinMet": "Норму білка виконано",
+  "healthStatusProteinSlightlyLow": "Трохи не вистачає білка",
+  "healthStatusProteinTooLow": "Білка сильно недостатньо",
   "progressActivityTitle": "Активність",
   "progressActivitySubtitle": "Історія кроків за {days} днів",
   "@progressActivitySubtitle": {
@@ -413,6 +463,11 @@
   "progressCaloriesTitle": "Калорії",
   "progressCaloriesSubtitle": "Профіцит для набору м'язів",
   "progressSleepTitle": "Сон",
+  "progressSleepSubtitleSynced": "Сьогоднішній розподіл · синхронізовано з Health",
+  "progressSleepSubtitleEstimated": "Сьогоднішній розподіл · орієнтовно (увімкніть синхронізацію з Health у налаштуваннях для точних фаз)",
+  "progressRangeWeek": "Тиждень",
+  "progressRangeMonth": "Місяць",
+  "progressRangeYear": "Рік",
   "progressSleepSubtitle": "Структура сьогоднішнього сну",
   "progressHeartRateTitle": "Пульс",
   "progressHeartRateSubtitle": "Зона пульсу та динаміка відновлення",
@@ -444,6 +499,24 @@
     }
   },
   "contactSupportAskHint": "Задайте питання…",
+  "contactSupportSuggestionLogMeal": "Як записати прийом їжі?",
+  "contactSupportSuggestionTdee": "Як розраховується мій TDEE?",
+  "contactSupportSuggestionSyncWearable": "Синхронізувати пристрій",
+  "supportAssistantModelName": "Локальний FAQ на пристрої",
+  "supportAssistantReplyGreeting": "Привіт! Я асистент BodyX. Запитай мене про воду, калорії, тренування, відстеження ваги, сон або синхронізацію з носимим пристроєм.",
+  "supportAssistantReplyWater": "Твоя норма води залежить від ваги тіла і збільшується у дні тренувань. Натискай на картку «Вода» на головному екрані щоразу, коли п'єш, щоб записати це — кільце заповнюється, а кольоровий індикатор показує, чи встигаєш ти за день.",
+  "supportAssistantReplyCalories": "З'їдені калорії беруться з прийомів їжі, які ти записуєш сам — натисни на картку «Калорії», щоб знайти продукт у базі або додати свій. Твоя ціль (TDEE) розраховується за віком, вагою, зростом, статтю та рівнем активності за формулою Міффліна-Сан Жеора.",
+  "supportAssistantReplyProtein": "Твоя норма білка — 1.8 г на кг ваги тіла, це надійний діапазон для набору або підтримки м'язів. Вона відстежується за записаними прийомами їжі та оновлюється автоматично при зміні ваги.",
+  "supportAssistantReplyWorkout": "Сьогоднішнє тренування знаходиться на вкладці «План» — натисни на картку тренування, щоб відкрити чек-лист за підходами, і відзначай кожен підхід у міру виконання. Прогрес зберігається автоматично, навіть якщо закрити застосунок посеред тренування.",
+  "supportAssistantReplyWeight": "Записуй вагу та відсоток жиру через «Записати вагу» в чек-листі на головному екрані. Ми поєднуємо динаміку ваги з динамікою відсотка жиру, щоб відрізнити набір м'язів від набору жиру, а не просто дивитися на цифру на вагах.",
+  "supportAssistantReplySleep": "Сон підтягується з Apple Health або Health Connect після ввімкнення синхронізації в налаштуваннях. Без синхронізованого пристрою записати сон вручну поки що не можна, тому він залишається на нулі.",
+  "supportAssistantReplySync": "Зайди в Налаштування → увімкни «Синхронізація з Health». Після ввімкнення BodyX автоматично підтягує кроки, активні калорії та сон з Apple Health або Health Connect. Немає пристрою? Все продовжує працювати з даними, які ти вводиш вручну.",
+  "supportAssistantReplyExport": "Експорту поки немає — це в планах. Профіль, вага та виміри тіла синхронізуються з твоїм акаунтом, коли ти увійшов у систему і сервер доступний; фото прогресу, прийоми їжі та тренування залишаються лише на цьому пристрої.",
+  "supportAssistantReplyGoal": "Цілі за кроками та калоріями розраховуються на основі профілю в Профіль → Редагувати профіль. Онови вагу, зріст, вік або рівень активності — і цілі перерахуються автоматично, ручного налаштування поки немає.",
+  "supportAssistantReplyNotifications": "Нагадування про тренування та воду можна ввімкнути в Налаштування → Сповіщення. Ти сам контролюєш, які з них спрацьовують і коли.",
+  "supportAssistantReplyAccount": "Керування акаунтом та вихід знаходяться в Профіль → Налаштування. Забув пароль? Використай «Забули пароль» на екрані входу. Також можна назавжди видалити акаунт і всі дані через Налаштування → Приватність → Видалити акаунт.",
+  "supportAssistantReplyThanks": "Будь ласка! Можу ще чимось допомогти?",
+  "supportAssistantReplyFallback": "У мене поки немає готової відповіді на це — спробуй запитати про воду, калорії, тренування, відстеження ваги, сон або синхронізацію з пристроєм, або подивись питання вище.",
   "settingsEditProfileTitle": "Редагувати профіль",
   "settingsUsernameLabel": "Ім'я користувача",
   "settingsSaveChangesButton": "Зберегти зміни",
@@ -503,7 +576,7 @@
       "platform": {}
     }
   },
-  "settingsHealthSyncDescription": "Зчитує кроки, калорії, сон, воду, вагу та пульс, щоб дані на панелі були точними. BodyX ніколи не записує дані назад.",
+  "settingsHealthSyncDescription": "Зчитує кроки, калорії, сон, воду, вагу та відсоток жиру, щоб дані на панелі були точними. BodyX ніколи не записує дані назад.",
   "settingsSyncNowButton": "Синхронізувати зараз",
   "settingsUnitsLanguageTitle": "Одиниці виміру та мова",
   "settingsUseMetricUnitsLabel": "Використовувати метричні одиниці (см / кг)",
@@ -520,6 +593,24 @@
   "settingsContactSupportLabel": "Зв'язатися з підтримкою",
   "settingsContactSupportSubtitle": "Чат з асистентом BodyX",
   "settingsFrequentlyAskedHeader": "ЧАСТІ ЗАПИТАННЯ",
+  "settingsFaqBodyScanQuestion": "Як розраховується мій скан тіла?",
+  "settingsFaqBodyScanAnswer": "Записуй вагу та відсоток жиру через «Записати вагу» в чек-листі на головному екрані. Ми поєднуємо динаміку ваги з динамікою відсотка жиру, щоб відрізнити набір м'язів від набору жиру, а не просто дивитися, як змінюється цифра на вагах.",
+  "settingsFaqSyncWearableQuestion": "Як синхронізувати носимий пристрій?",
+  "settingsFaqSyncWearableAnswer": "Зайди в Налаштування → увімкни «Синхронізація з Health». Після ввімкнення BodyX автоматично підтягує кроки, активні калорії та сон з Apple Health або Health Connect. Немає пристрою? Все продовжує працювати з даними, які ти вводиш вручну.",
+  "settingsFaqTargetsQuestion": "Звідки беруться мої цілі за калоріями та білком?",
+  "settingsFaqTargetsAnswer": "Твоя ціль за калоріями (TDEE) розраховується за віком, вагою, зростом, статтю та рівнем активності за формулою Міффліна-Сан Жеора. Норма білка — 1.8 г на кг ваги тіла. Обидві цілі оновлюються автоматично при редагуванні профілю.",
+  "settingsFaqTrackWorkoutQuestion": "Як відстежувати тренування?",
+  "settingsFaqTrackWorkoutAnswer": "Відкрий вкладку «План» і натисни на картку тренування — відкриється чек-лист за підходами. Відзначай кожен підхід у міру виконання; прогрес зберігається автоматично, навіть якщо закрити застосунок посеред тренування.",
+  "settingsFaqExportDataQuestion": "Чи можна експортувати дані про прогрес?",
+  "settingsFaqExportDataAnswer": "Поки що немає — це в планах. Профіль, вага та виміри тіла синхронізуються з твоїм акаунтом, коли ти увійшов у систему і сервер доступний; фото прогресу, прийоми їжі та тренування залишаються лише на цьому пристрої.",
+  "settingsFaqDailyGoalsQuestion": "Як змінити мої щоденні цілі?",
+  "settingsFaqDailyGoalsAnswer": "Цілі за кроками та калоріями розраховуються на основі профілю в Профіль → Редагувати профіль. Онови вагу, зріст, вік або рівень активності — і цілі перерахуються автоматично, ручного налаштування поки немає.",
+  "settingsAppVersion": "Версія {version}",
+  "@settingsAppVersion": {
+    "placeholders": {
+      "version": {}
+    }
+  },
   "settingsAboutTitle": "Про BodyX",
   "settingsAppName": "BodyX",
   "settingsAboutDescription": "BodyX допомагає відстежувати тренування, сон, харчування та склад тіла в єдиному преміальному неоновому інтерфейсі.",
@@ -643,6 +734,10 @@
   "settingsGoalBuildMuscle": "Набрати м'язову масу",
   "settingsGoalMaintainWeight": "Підтримувати вагу",
   "settingsGoalImproveEndurance": "Покращити витривалість",
+  "notificationChannelRemindersName": "Нагадування BodyX",
+  "notificationChannelRemindersDescription": "Щоденні нагадування про тренування та воду",
+  "notificationChannelActivityDoneName": "Завершення активності BodyX",
+  "notificationChannelActivityDoneDescription": "Звучить, коли завершується активність за таймером",
   "notificationWorkoutReminderTitle": "Сьогоднішнє тренування чекає",
   "notificationWorkoutReminderBody": "Перегляньте план і починайте — у вас все вийде.",
   "notificationHydrationReminderTitle": "Перевірка гідратації",

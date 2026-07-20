@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:bodyx_app/l10n/gen/app_localizations.dart';
 import '../../data/food_database.dart';
 import '../../logic/food_labels.dart';
+import '../../logic/health_insights_labels.dart';
 import '../../models/models.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_colors.dart';
@@ -157,7 +158,7 @@ class _LogMealSheetState extends State<LogMealSheet> {
                                 color: AppColors.textPrimary)),
                         const Spacer(),
                         StatChip(
-                            label: status.label,
+                            label: statusLabel(context, status),
                             color: statusColor(status.level)),
                       ],
                     ),

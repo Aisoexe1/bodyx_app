@@ -6,10 +6,37 @@ import '../models/models.dart';
 /// system learnable once and reused everywhere.
 enum StatusLevel { good, warn, bad }
 
+/// Identifies which message a [StatusResult] carries, without hardcoding the
+/// display text here — this file has no [BuildContext], so the actual
+/// localized string is resolved at the display layer via `statusLabel()`
+/// (see `lib/logic/health_insights_labels.dart`), the same split used for
+/// [UserProfile.goal] (`goalLabel`) and [FoodCategory] (`foodCategoryLabel`).
+enum StatusKind {
+  waterTooEarly,
+  waterDehydrated,
+  waterBehindPace,
+  waterPerfect,
+  weightNotEnoughData,
+  weightOffTrack,
+  weightMostlyFat,
+  weightGainingMuscle,
+  weightNeedsAdjustment,
+  calorieDeficit,
+  calorieBarelySurplus,
+  calorieSurplusTooBig,
+  calorieOnTrack,
+  calorieLowSurplus,
+  calorieFatGainRisk,
+  proteinNoTarget,
+  proteinMet,
+  proteinSlightlyLow,
+  proteinTooLow,
+}
+
 class StatusResult {
-  const StatusResult(this.level, this.label);
+  const StatusResult(this.level, this.kind);
   final StatusLevel level;
-  final String label;
+  final StatusKind kind;
 }
 
 /// Pure calculation functions — no widgets, no state, fully unit-testable.
@@ -46,16 +73,16 @@ class HealthInsights {
     final expected = goalMl * (elapsed / (sleepHour - wakeHour));
 
     if (expected <= 0) {
-      return const StatusResult(StatusLevel.good, 'Ещё рано — впереди весь день');
+      return const StatusResult(StatusLevel.good, StatusKind.waterTooEarly);
     }
     final ratio = consumedMl / expected;
     if (ratio < 0.6) {
-      return const StatusResult(StatusLevel.bad, 'Обезвоживание — выпей воды сейчас');
+      return const StatusResult(StatusLevel.bad, StatusKind.waterDehydrated);
     }
     if (ratio < 0.9) {
-      return const StatusResult(StatusLevel.warn, 'Немного отстаёшь от нормы');
+      return const StatusResult(StatusLevel.warn, StatusKind.waterBehindPace);
     }
-    return const StatusResult(StatusLevel.good, 'Идеально');
+    return const StatusResult(StatusLevel.good, StatusKind.waterPerfect);
   }
 
   // ---- Body composition -----------------------------------------------------
@@ -66,7 +93,7 @@ class HealthInsights {
   /// not just fat" signal a raw BMI reading can't express.
   static StatusResult weightVerdict(List<WeightEntry> history) {
     if (history.length < 2) {
-      return const StatusResult(StatusLevel.good, 'Недостаточно данных');
+      return const StatusResult(StatusLevel.good, StatusKind.weightNotEnoughData);
     }
     final last = history.last;
     final weekAgo = _closestEntry(history, last.date.subtract(const Duration(days: 7)));
@@ -78,15 +105,15 @@ class HealthInsights {
     final bodyFatDelta = monthAgo == null ? 0.0 : last.bodyFatPct - monthAgo.bodyFatPct;
 
     if (weeklyRatePct <= 0) {
-      return const StatusResult(StatusLevel.bad, 'Не соответствует цели набора');
+      return const StatusResult(StatusLevel.bad, StatusKind.weightOffTrack);
     }
     if (bodyFatDelta > 2.5) {
-      return const StatusResult(StatusLevel.bad, 'Набор идёт почти весь в жир');
+      return const StatusResult(StatusLevel.bad, StatusKind.weightMostlyFat);
     }
     if (weeklyRatePct >= 0.15 && weeklyRatePct <= 0.5 && bodyFatDelta <= 1.0) {
-      return const StatusResult(StatusLevel.good, 'Отлично — набираешь мышцы');
+      return const StatusResult(StatusLevel.good, StatusKind.weightGainingMuscle);
     }
-    return const StatusResult(StatusLevel.warn, 'Требуется корректировка калорий');
+    return const StatusResult(StatusLevel.warn, StatusKind.weightNeedsAdjustment);
   }
 
   static WeightEntry? _closestEntry(List<WeightEntry> history, DateTime target) {
@@ -130,18 +157,18 @@ class HealthInsights {
   static StatusResult calorieSurplusStatus(int surplus) {
     if (surplus < 50) {
       return StatusResult(StatusLevel.bad,
-          surplus < 0 ? 'Дефицит не даст расти' : 'Профицита почти нет');
+          surplus < 0 ? StatusKind.calorieDeficit : StatusKind.calorieBarelySurplus);
     }
     if (surplus > 700) {
-      return const StatusResult(StatusLevel.bad, 'Профицит слишком большой');
+      return const StatusResult(StatusLevel.bad, StatusKind.calorieSurplusTooBig);
     }
     if (surplus >= 200 && surplus <= 500) {
-      return const StatusResult(StatusLevel.good, 'Профицит в норме — идеально для роста');
+      return const StatusResult(StatusLevel.good, StatusKind.calorieOnTrack);
     }
     if (surplus < 200) {
-      return const StatusResult(StatusLevel.warn, 'Профицита мало — рост будет медленным');
+      return const StatusResult(StatusLevel.warn, StatusKind.calorieLowSurplus);
     }
-    return const StatusResult(StatusLevel.warn, 'Риск набрать лишний жир');
+    return const StatusResult(StatusLevel.warn, StatusKind.calorieFatGainRisk);
   }
 
   /// 1.8g/kg — the middle of the commonly recommended 1.6-2.2g/kg range for
@@ -149,15 +176,15 @@ class HealthInsights {
   static double proteinTargetG(double weightKg) => weightKg * 1.8;
 
   static StatusResult proteinStatus(double consumedG, double targetG) {
-    if (targetG <= 0) return const StatusResult(StatusLevel.good, '—');
+    if (targetG <= 0) return const StatusResult(StatusLevel.good, StatusKind.proteinNoTarget);
     final ratio = consumedG / targetG;
     if (ratio >= 0.9) {
-      return const StatusResult(StatusLevel.good, 'Норма по белку выполнена');
+      return const StatusResult(StatusLevel.good, StatusKind.proteinMet);
     }
     if (ratio >= 0.7) {
-      return const StatusResult(StatusLevel.warn, 'Немного не хватает белка');
+      return const StatusResult(StatusLevel.warn, StatusKind.proteinSlightlyLow);
     }
-    return const StatusResult(StatusLevel.bad, 'Белка сильно недостаточно');
+    return const StatusResult(StatusLevel.bad, StatusKind.proteinTooLow);
   }
 
 }

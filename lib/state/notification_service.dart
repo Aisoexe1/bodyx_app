@@ -63,16 +63,19 @@ class NotificationService {
     return true;
   }
 
-  NotificationDetails get _dailyDetails => const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'bodyx_reminders',
-          'BodyX reminders',
-          channelDescription: 'Daily workout and hydration nudges',
-          importance: Importance.defaultImportance,
-          priority: Priority.defaultPriority,
-        ),
-        iOS: DarwinNotificationDetails(),
-      );
+  NotificationDetails _dailyDetails(Locale locale) {
+    final l10n = lookupAppLocalizations(locale);
+    return NotificationDetails(
+      android: AndroidNotificationDetails(
+        'bodyx_reminders',
+        l10n.notificationChannelRemindersName,
+        channelDescription: l10n.notificationChannelRemindersDescription,
+        importance: Importance.defaultImportance,
+        priority: Priority.defaultPriority,
+      ),
+      iOS: const DarwinNotificationDetails(),
+    );
+  }
 
   tz.TZDateTime _nextInstanceOfTime(int hour, int minute) {
     final now = tz.TZDateTime.now(tz.local);
@@ -92,7 +95,7 @@ class NotificationService {
       l10n.notificationWorkoutReminderTitle,
       l10n.notificationWorkoutReminderBody,
       _nextInstanceOfTime(18, 0),
-      _dailyDetails,
+      _dailyDetails(locale),
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
@@ -113,7 +116,7 @@ class NotificationService {
       l10n.notificationHydrationReminderTitle,
       l10n.notificationHydrationReminderBody,
       _nextInstanceOfTime(14, 0),
-      _dailyDetails,
+      _dailyDetails(locale),
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
@@ -129,7 +132,8 @@ class NotificationService {
   /// Fires immediately with sound — used when a mobility activity's
   /// countdown finishes, so the "done" moment is audible even with the
   /// phone locked or the app in the background.
-  Future<void> showActivityCompleted(String title, String body) async {
+  Future<void> showActivityCompleted(
+      Locale locale, String title, String body) async {
     await init();
     // Best-effort: if permission (incl. sound) was never granted — the user
     // never touched a Notifications toggle — request it now rather than
@@ -139,15 +143,16 @@ class NotificationService {
     } catch (e) {
       debugPrint('Activity-completed permission request failed: $e');
     }
+    final l10n = lookupAppLocalizations(locale);
     await _plugin.show(
       _activityDoneId,
       title,
       body,
-      const NotificationDetails(
+      NotificationDetails(
         android: AndroidNotificationDetails(
           'bodyx_activity_done',
-          'BodyX activity completion',
-          channelDescription: 'Plays when a timed activity finishes',
+          l10n.notificationChannelActivityDoneName,
+          channelDescription: l10n.notificationChannelActivityDoneDescription,
           importance: Importance.high,
           priority: Priority.high,
           playSound: true,
@@ -156,7 +161,7 @@ class NotificationService {
         // controls whether a foreground notification is *allowed* to play
         // whatever sound is attached; without a `sound` it plays nothing
         // (which is why this used to feel like "vibration but no sound").
-        iOS: DarwinNotificationDetails(
+        iOS: const DarwinNotificationDetails(
           presentAlert: true,
           presentBanner: true,
           presentSound: true,

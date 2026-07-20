@@ -27,20 +27,19 @@ class ContactSupportScreen extends StatefulWidget {
 class _ContactSupportScreenState extends State<ContactSupportScreen> {
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
-  final List<_ChatMessage> _messages = [
-    _ChatMessage(
-      "Hi! I'm the BodyX assistant. Ask me about water, calories, "
-      "workouts, weight tracking, sleep, or syncing a wearable.",
-      false,
-    ),
-  ];
+  final List<_ChatMessage> _messages = [];
   bool _typing = false;
+  bool _greeted = false;
 
-  static const _suggestions = [
-    'How do I log a meal?',
-    'How is my TDEE calculated?',
-    'Sync a wearable',
-  ];
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_greeted) {
+      _greeted = true;
+      _messages.add(_ChatMessage(
+          AppLocalizations.of(context)!.supportAssistantReplyGreeting, false));
+    }
+  }
 
   @override
   void dispose() {
@@ -64,7 +63,8 @@ class _ContactSupportScreenState extends State<ContactSupportScreen> {
       if (!mounted) return;
       setState(() {
         _typing = false;
-        _messages.add(_ChatMessage(SupportAssistant.reply(trimmed), false));
+        _messages
+            .add(_ChatMessage(SupportAssistant.reply(context, trimmed), false));
       });
       _scrollToBottom();
     });
@@ -121,7 +121,7 @@ class _ContactSupportScreenState extends State<ContactSupportScreen> {
                                 fontSize: 15)),
                         Text(
                             AppLocalizations.of(context)!.contactSupportPoweredBy(
-                                SupportAssistant.modelName),
+                                SupportAssistant.modelName(context)),
                             style: const TextStyle(
                                 color: AppColors.textMuted, fontSize: 11.5)),
                       ],
@@ -161,7 +161,14 @@ class _ContactSupportScreenState extends State<ContactSupportScreen> {
                 child: Wrap(
                   spacing: 8,
                   runSpacing: 8,
-                  children: _suggestions
+                  children: [
+                    AppLocalizations.of(context)!
+                        .contactSupportSuggestionLogMeal,
+                    AppLocalizations.of(context)!
+                        .contactSupportSuggestionTdee,
+                    AppLocalizations.of(context)!
+                        .contactSupportSuggestionSyncWearable,
+                  ]
                       .map((s) => ScaleTap(
                             onTap: () => _send(s),
                             child: Container(

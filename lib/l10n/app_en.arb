@@ -87,6 +87,8 @@
   "resetPasswordMismatchError": "Passwords do not match",
   "resetPasswordButton": "Reset password",
   "resetPasswordBackToSignIn": "Back to sign in",
+  "apiErrorCantReachServer": "Can't reach the server. Check your connection and try again.",
+  "apiErrorGeneric": "Something went wrong. Please try again.",
   "signInWelcomeBack": "Welcome back",
   "signInStayConsistent": "Stay consistent",
   "signInEmailLabel": "Email",
@@ -161,6 +163,31 @@
   "logMetricsBodyFatPctLabel": "Body fat (%)",
   "logMetricsSaveCheckIn": "Save check-in",
   "progressPhotoCompareTitle": "Compare",
+  "progressCompareSameDay": "Same day",
+  "progressCompareElapsedLabel": "{parts} apart",
+  "@progressCompareElapsedLabel": {
+    "placeholders": {
+      "parts": {}
+    }
+  },
+  "progressCompareUnitDays": "{days, plural, one{1 day} other{{days} days}}",
+  "@progressCompareUnitDays": {
+    "placeholders": {
+      "days": {}
+    }
+  },
+  "progressCompareUnitMonths": "{months, plural, one{1 month} other{{months} months}}",
+  "@progressCompareUnitMonths": {
+    "placeholders": {
+      "months": {}
+    }
+  },
+  "progressCompareUnitYears": "{years, plural, one{1 year} other{{years} years}}",
+  "@progressCompareUnitYears": {
+    "placeholders": {
+      "years": {}
+    }
+  },
   "progressPhotoCompareLoadError": "Couldn't load these photos",
   "progressPhotoCompareGoBack": "Go back",
   "progressPhotoCompareBefore": "Before",
@@ -260,6 +287,10 @@
     }
   },
   "waterLogTitle": "Water",
+  "waterLogPresetGlass": "Glass",
+  "waterLogPresetCup": "Cup",
+  "waterLogPresetBottle": "Bottle",
+  "waterLogPresetLarge": "Large",
   "waterLogConsumedOfGoal": "{consumed} L of {goal} L",
   "@waterLogConsumedOfGoal": {
     "placeholders": {
@@ -403,6 +434,25 @@
   "progressWeightEmptySubtitle": "Log your weight to start tracking your trend",
   "progressWeightChangeLabel": "7-day change",
   "progressBmiLabel": "BMI",
+  "healthStatusWaterTooEarly": "Still early — plenty of day left",
+  "healthStatusWaterDehydrated": "Dehydrated — drink water now",
+  "healthStatusWaterBehindPace": "A little behind pace",
+  "healthStatusWaterPerfect": "Perfect",
+  "healthStatusWeightNotEnoughData": "Not enough data yet",
+  "healthStatusWeightOffTrack": "Off track for your bulk goal",
+  "healthStatusWeightMostlyFat": "Gain is mostly fat",
+  "healthStatusWeightGainingMuscle": "Great — you're gaining muscle",
+  "healthStatusWeightNeedsAdjustment": "Calorie adjustment needed",
+  "healthStatusCalorieDeficit": "A deficit won't let you grow",
+  "healthStatusCalorieBarelySurplus": "Barely any surplus",
+  "healthStatusCalorieSurplusTooBig": "Surplus is too big",
+  "healthStatusCalorieOnTrack": "Surplus is on track — ideal for growth",
+  "healthStatusCalorieLowSurplus": "Low surplus — growth will be slow",
+  "healthStatusCalorieFatGainRisk": "Risk of gaining excess fat",
+  "healthStatusProteinNoTarget": "—",
+  "healthStatusProteinMet": "Protein target met",
+  "healthStatusProteinSlightlyLow": "Slightly short on protein",
+  "healthStatusProteinTooLow": "Protein intake is too low",
   "progressActivityTitle": "Activity",
   "progressActivitySubtitle": "{days}-day step history",
   "@progressActivitySubtitle": {
@@ -413,6 +463,11 @@
   "progressCaloriesTitle": "Calories",
   "progressCaloriesSubtitle": "Surplus for muscle gain",
   "progressSleepTitle": "Sleep",
+  "progressSleepSubtitleSynced": "Today's breakdown · synced from Health",
+  "progressSleepSubtitleEstimated": "Today's breakdown · estimated (enable Health sync in Settings for real stages)",
+  "progressRangeWeek": "Week",
+  "progressRangeMonth": "Month",
+  "progressRangeYear": "Year",
   "progressSleepSubtitle": "Today's breakdown",
   "progressHeartRateTitle": "Heart rate",
   "progressHeartRateSubtitle": "Zone and recovery trend",
@@ -444,6 +499,24 @@
     }
   },
   "contactSupportAskHint": "Ask a question…",
+  "contactSupportSuggestionLogMeal": "How do I log a meal?",
+  "contactSupportSuggestionTdee": "How is my TDEE calculated?",
+  "contactSupportSuggestionSyncWearable": "Sync a wearable",
+  "supportAssistantModelName": "On-device FAQ",
+  "supportAssistantReplyGreeting": "Hey! I'm the BodyX assistant. Ask me about water, calories, workouts, weight tracking, sleep, or syncing a wearable.",
+  "supportAssistantReplyWater": "Your water goal scales with your body weight and rises on workout days. Tap the Water card on the dashboard any time you drink to log it — the ring fills up and the status dot tells you if you're on pace for the day.",
+  "supportAssistantReplyCalories": "Calories eaten come from meals you log yourself — tap the Calories card to search the food database or add a custom entry. Your target (TDEE) is calculated from your age, weight, height, gender and activity level with the Mifflin-St Jeor formula.",
+  "supportAssistantReplyProtein": "Your protein target is 1.8g per kg of body weight — a solid range for building or maintaining muscle. It's tracked against the meals you log, and updates automatically if your weight changes.",
+  "supportAssistantReplyWorkout": "Today's workout lives on the Plan tab — tap the workout card to open the set-by-set checklist and tick off each set as you finish it. Your progress saves automatically, even if you close the app mid-workout.",
+  "supportAssistantReplyWeight": "Log your weight and body-fat % from \"Log body weight\" on the dashboard checklist. We combine the weight trend with the body-fat trend so we can tell muscle gain from fat gain, instead of just watching the scale number.",
+  "supportAssistantReplySleep": "Sleep is pulled from Apple Health or Health Connect once you've enabled sync in Settings. Without a synced wearable, there's no way to log sleep by hand yet, so it stays at zero.",
+  "supportAssistantReplySync": "Go to Settings → toggle \"Sync with Health\". Once enabled, BodyX pulls steps, active calories burned, and sleep from Apple Health or Health Connect automatically. No wearable? Everything still works with data you log by hand.",
+  "supportAssistantReplyExport": "There's no export yet — it's on the roadmap. Your profile, weight and body measurements sync to your account when you're signed in and a server is reachable; progress photos, meals, and workouts stay on this device only.",
+  "supportAssistantReplyGoal": "Step and calorie goals are derived from your profile in Profile → Edit profile. Update your weight, height, age or activity level and your targets recalculate automatically — there's no manual override yet.",
+  "supportAssistantReplyNotifications": "Workout and hydration reminders can be switched on in Settings → Notifications. You control exactly which ones fire and when.",
+  "supportAssistantReplyAccount": "Account and sign-out controls live in Profile → Settings. Forgot your password? Use \"Forgot password\" on the sign-in screen. You can also permanently delete your account and all its data from Settings → Privacy → Delete account.",
+  "supportAssistantReplyThanks": "You're welcome! Anything else I can help with?",
+  "supportAssistantReplyFallback": "I don't have a canned answer for that yet — try asking about water, calories, workouts, weight tracking, sleep, or syncing a wearable, or check the FAQs above.",
   "settingsEditProfileTitle": "Edit profile",
   "settingsUsernameLabel": "Username",
   "settingsSaveChangesButton": "Save changes",
@@ -503,7 +576,7 @@
       "platform": {}
     }
   },
-  "settingsHealthSyncDescription": "Reads steps, calories, sleep, water, weight and heart rate to keep your dashboard accurate. BodyX never writes data back.",
+  "settingsHealthSyncDescription": "Reads steps, calories, sleep, water, weight and body fat percentage to keep your dashboard accurate. BodyX never writes data back.",
   "settingsSyncNowButton": "Sync now",
   "settingsUnitsLanguageTitle": "Units & language",
   "settingsUseMetricUnitsLabel": "Use metric units (cm / kg)",
@@ -520,6 +593,24 @@
   "settingsContactSupportLabel": "Contact support",
   "settingsContactSupportSubtitle": "Chat with the BodyX assistant",
   "settingsFrequentlyAskedHeader": "FREQUENTLY ASKED",
+  "settingsFaqBodyScanQuestion": "How is my body scan calculated?",
+  "settingsFaqBodyScanAnswer": "Log your weight and body-fat % from \"Log body weight\" on the dashboard checklist. We combine the weight trend with the body-fat trend so we can tell muscle gain from fat gain, instead of just watching the scale number move.",
+  "settingsFaqSyncWearableQuestion": "How do I sync a wearable device?",
+  "settingsFaqSyncWearableAnswer": "Go to Settings → toggle \"Sync with Health\". Once enabled, BodyX pulls steps, active calories burned and sleep from Apple Health or Health Connect automatically. No wearable? Everything still works with data you log by hand.",
+  "settingsFaqTargetsQuestion": "Where do my calorie and protein targets come from?",
+  "settingsFaqTargetsAnswer": "Your calorie target (TDEE) is calculated from your age, weight, height, gender and activity level using the Mifflin-St Jeor formula. Protein target is 1.8g per kg of body weight. Both update automatically if you edit your profile.",
+  "settingsFaqTrackWorkoutQuestion": "How do I track a workout?",
+  "settingsFaqTrackWorkoutAnswer": "Open the Plan tab and tap the workout card — it opens a set-by-set checklist. Tap each set as you finish it; progress saves automatically, even if you close the app mid-workout.",
+  "settingsFaqExportDataQuestion": "Can I export my progress data?",
+  "settingsFaqExportDataAnswer": "Not yet — that's on the roadmap. Your profile, weight and body measurements sync to your account when you're signed in and a server is reachable; progress photos, meals, and workouts stay on this device only.",
+  "settingsFaqDailyGoalsQuestion": "How do I change my daily goals?",
+  "settingsFaqDailyGoalsAnswer": "Step and calorie goals are derived from your profile in Profile → Edit profile. Update your weight, height, age or activity level and your targets recalculate automatically — there's no manual override yet.",
+  "settingsAppVersion": "Version {version}",
+  "@settingsAppVersion": {
+    "placeholders": {
+      "version": {}
+    }
+  },
   "settingsAboutTitle": "About BodyX",
   "settingsAppName": "BodyX",
   "settingsAboutDescription": "BodyX helps you track training, sleep, nutrition and body composition in one premium, dark-neon experience.",
@@ -643,6 +734,10 @@
   "settingsGoalBuildMuscle": "Build muscle",
   "settingsGoalMaintainWeight": "Maintain weight",
   "settingsGoalImproveEndurance": "Improve endurance",
+  "notificationChannelRemindersName": "BodyX reminders",
+  "notificationChannelRemindersDescription": "Daily workout and hydration nudges",
+  "notificationChannelActivityDoneName": "BodyX activity completion",
+  "notificationChannelActivityDoneDescription": "Plays when a timed activity finishes",
   "notificationWorkoutReminderTitle": "Today's workout is waiting",
   "notificationWorkoutReminderBody": "Check your plan and get moving — you've got this.",
   "notificationHydrationReminderTitle": "Hydration check",

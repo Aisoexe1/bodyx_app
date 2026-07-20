@@ -64,7 +64,7 @@ class _ProgressPhotoCompareScreenState
                 padding: const EdgeInsets.only(left: 52),
                 child: StatChip(
                   icon: Icons.calendar_today_rounded,
-                  label: formatElapsed(before.date, after.date),
+                  label: formatElapsed(context, before.date, after.date),
                   color: AppColors.primaryBright,
                 ),
               ),

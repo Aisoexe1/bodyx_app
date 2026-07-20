@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:bodyx_app/l10n/gen/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../logic/health_insights.dart';
+import '../../logic/health_insights_labels.dart';
 import '../../models/models.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_colors.dart';
@@ -219,8 +220,8 @@ class _ProgressScreenState extends State<ProgressScreen> {
                 SectionHeader(
                   title: AppLocalizations.of(context)!.progressSleepTitle,
                   subtitle: todayStats.sleepStagesSynced
-                      ? "Today's breakdown · synced from Health"
-                      : "Today's breakdown · estimated (enable Health sync in Settings for real stages)",
+                      ? AppLocalizations.of(context)!.progressSleepSubtitleSynced
+                      : AppLocalizations.of(context)!.progressSleepSubtitleEstimated,
                 ),
                 const SizedBox(height: 12),
                 GlowCard(
@@ -321,7 +322,7 @@ class _WeightVerdictCard extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(verdict.label,
+            child: Text(statusLabel(context, verdict),
                 style: const TextStyle(
                     color: AppColors.textPrimary,
                     fontWeight: FontWeight.w700,
@@ -365,7 +366,7 @@ class _CaloriesCard extends StatelessWidget {
                       fontWeight: FontWeight.w800,
                       fontSize: 24)),
               const Spacer(),
-              StatChip(label: status.label, color: color),
+              StatChip(label: statusLabel(context, status), color: color),
             ],
           ),
           const SizedBox(height: 4),
@@ -393,10 +394,10 @@ class _RangeSelector extends StatelessWidget {
   final int index;
   final ValueChanged<int> onChanged;
 
-  static const _labels = ['Week', 'Month', 'Year'];
-
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final labels = [l10n.progressRangeWeek, l10n.progressRangeMonth, l10n.progressRangeYear];
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
@@ -405,7 +406,7 @@ class _RangeSelector extends StatelessWidget {
         border: Border.all(color: AppColors.cardBorder),
       ),
       child: Row(
-        children: List.generate(_labels.length, (i) {
+        children: List.generate(labels.length, (i) {
           final active = i == index;
           return Expanded(
             child: GestureDetector(
@@ -419,7 +420,7 @@ class _RangeSelector extends StatelessWidget {
                   borderRadius: BorderRadius.circular(AppRadius.pill),
                 ),
                 child: Text(
-                  _labels[i],
+                  labels[i],
                   style: TextStyle(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w700,

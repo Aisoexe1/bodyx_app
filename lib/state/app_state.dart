@@ -926,6 +926,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     _persistMobilityActivities();
     final l10n = lookupAppLocalizations(_effectiveLocale);
     unawaited(NotificationService.instance.showActivityCompleted(
+      _effectiveLocale,
       l10n.mobilityActivityCompletedTitle,
       l10n.mobilityActivityCompletedBody(activity.name),
     ));
