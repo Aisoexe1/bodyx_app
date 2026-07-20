@@ -13,9 +13,8 @@
 <script src="OrbitControls.js"></script>
 <script>
 (function () {
-  var BASE_COLOR = 0x1AA6E0;
-  var HILITE_COLOR = 0x5FD8FF;
-  var BG_COLOR = null; // transparent, host page shows through
+  var BASE_COLOR = 0x6E8AA3;   // muted clay/mannequin tone, not a toy-bright color
+  var HILITE_COLOR = 0x5FD8FF; // app accent, used only as tap feedback
 
   var scene = new THREE.Scene();
   var camera = new THREE.PerspectiveCamera(30, window.innerWidth / window.innerHeight, 0.1, 100);
@@ -27,13 +26,16 @@
   renderer.setClearColor(0x000000, 0);
   document.body.appendChild(renderer.domElement);
 
-  scene.add(new THREE.AmbientLight(0xffffff, 0.65));
-  var key = new THREE.DirectionalLight(0xffffff, 0.9);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+  var key = new THREE.DirectionalLight(0xffffff, 0.95);
   key.position.set(3, 5, 4);
   scene.add(key);
-  var fill = new THREE.DirectionalLight(0x5fd8ff, 0.35);
+  var fill = new THREE.DirectionalLight(0x5fd8ff, 0.3);
   fill.position.set(-4, -1, -3);
   scene.add(fill);
+  var rim = new THREE.DirectionalLight(0xffffff, 0.25);
+  rim.position.set(0, 2, -6);
+  scene.add(rim);
 
   var controls = new THREE.OrbitControls(camera, renderer.domElement);
   controls.enablePan = false;
@@ -47,118 +49,166 @@
   var figure = new THREE.Group();
   scene.add(figure);
 
-  var parts = []; // { mesh, partId }
-  var materialCache = {};
+  var meshes = [];   // every raycastable mesh (no per-mesh identity needed)
+  var anchors = [];  // { position: Vector3 (figure-local), partId }
+  var material = new THREE.MeshStandardMaterial({
+    color: BASE_COLOR, roughness: 0.75, metalness: 0.05
+  });
 
-  function materialFor(colorHex) {
-    if (!materialCache[colorHex]) {
-      materialCache[colorHex] = new THREE.MeshStandardMaterial({
-        color: colorHex, roughness: 0.55, metalness: 0.15
-      });
-    }
-    return materialCache[colorHex];
-  }
-
-  function register(mesh, partId) {
-    mesh.userData.partId = partId;
-    mesh.userData.baseColor = BASE_COLOR;
-    parts.push(mesh);
+  function addMesh(mesh) {
+    meshes.push(mesh);
     figure.add(mesh);
     return mesh;
   }
 
-  function addSphere(partId, radius, x, y, z, scaleXYZ) {
-    var geo = new THREE.SphereGeometry(radius, 20, 16);
-    var mesh = new THREE.Mesh(geo, materialFor(BASE_COLOR).clone());
+  function anchor(partId, x, y, z) {
+    anchors.push({ partId: partId, position: new THREE.Vector3(x, y, z) });
+  }
+
+  function addSphere(radius, x, y, z, scaleXYZ, segs) {
+    var geo = new THREE.SphereGeometry(radius, segs || 22, segs ? Math.round(segs * 0.75) : 16);
+    var mesh = new THREE.Mesh(geo, material);
     mesh.position.set(x, y, z);
     if (scaleXYZ) mesh.scale.set(scaleXYZ[0], scaleXYZ[1], scaleXYZ[2]);
-    return register(mesh, partId);
+    return addMesh(mesh);
   }
 
-  function addBox(partId, w, h, d, x, y, z) {
-    var geo = new THREE.BoxGeometry(w, h, d, 2, 2, 2);
-    var mesh = new THREE.Mesh(geo, materialFor(BASE_COLOR).clone());
-    mesh.position.set(x, y, z);
-    return register(mesh, partId);
-  }
-
-  // A cylinder segment connecting two joint points, used for limb bones.
-  function addLimb(partId, radiusTop, radiusBottom, from, to) {
+  // A smoothly tapered solid of revolution — MUCH more organic than a plain
+  // cylinder. `profile` is [[t, radius], ...] with t in [0,1] along the
+  // segment's own length; z-flatten turns a round cross-section into an
+  // oval (used for the torso, which is wider than it is deep).
+  function addTaperedLimb(profile, from, to, flattenZ) {
     var start = new THREE.Vector3(from[0], from[1], from[2]);
     var end = new THREE.Vector3(to[0], to[1], to[2]);
     var length = start.distanceTo(end);
-    var geo = new THREE.CylinderGeometry(radiusTop, radiusBottom, length, 14, 1);
-    var mesh = new THREE.Mesh(geo, materialFor(BASE_COLOR).clone());
-    var mid = start.clone().add(end).multiplyScalar(0.5);
-    mesh.position.copy(mid);
+    var points = profile.map(function (p) {
+      return new THREE.Vector2(Math.max(0.004, p[1]), p[0] * length);
+    });
+    var geo = new THREE.LatheGeometry(points, 20);
+    var mesh = new THREE.Mesh(geo, material);
+    if (flattenZ) mesh.scale.z = flattenZ;
+    mesh.position.copy(start);
     mesh.quaternion.setFromUnitVectors(
       new THREE.Vector3(0, 1, 0),
       end.clone().sub(start).normalize()
     );
-    return register(mesh, partId);
+    return addMesh(mesh);
   }
 
-  // ---- Build the figure ------------------------------------------------
-  // Head / neck
-  addSphere('head', 0.46, 0, 2.92, 0);
-  addLimb('neck', 0.19, 0.22, [0, 2.6, 0], [0, 2.34, 0]);
+  // ---- Build the figure --------------------------------------------------
+  // Proportions are hand-tuned against a live render (see body3d dev notes)
+  // rather than derived analytically — a hand-built figure like this is
+  // eyeballed the same way a sculptor works, not computed.
 
-  // Torso: split front/back so a rotated view distinguishes chest/back and
-  // abdomen/lower-back as genuinely different tappable meshes.
-  addBox('chest', 1.02, 0.72, 0.24, 0, 1.92, 0.16);
-  addBox('upperBack', 1.02, 0.72, 0.24, 0, 1.92, -0.16);
-  addBox('abdomen', 0.86, 0.62, 0.2, 0, 1.28, 0.14);
-  addBox('lowerBack', 0.86, 0.62, 0.2, 0, 1.28, -0.14);
-  // Pelvis block ties the torso to the legs; not independently tappable —
-  // grouped visually with the hips.
-  var pelvis = addBox('pelvis', 0.78, 0.34, 0.42, 0, 0.78, 0);
+  // Head + neck.
+  addSphere(0.4, 0, 3.08, 0, null, 26);
+  addTaperedLimb(
+    [[0, 0.205], [0.5, 0.185], [1, 0.165]],
+    [0, 2.5, 0], [0, 2.82, 0]
+  );
+  anchor('head', 0, 3.08, 0.34);
+  anchor('neck', 0, 2.66, 0.16);
 
-  // Arms (slight outward "A" pose so limbs don't overlap the torso).
+  // Torso: one continuous tapered shape (pelvis to shoulder line), flattened
+  // front-to-back into an oval rather than built from separate boxes — no
+  // visible seam between chest/abdomen. Front vs. back, upper vs. lower are
+  // resolved later purely from *where* the tap landed (see anchors below).
+  addTaperedLimb(
+    [
+      [0, 0.05], [0.14, 0.40], [0.28, 0.44], [0.45, 0.33],
+      [0.62, 0.40], [0.78, 0.44], [0.92, 0.38], [1, 0.24]
+    ],
+    [0, 0.5, 0], [0, 2.5, 0],
+    0.64
+  );
+  anchor('pelvis', 0, 0.9, 0);
+  anchor('abdomen', 0, 1.42, 0.24);
+  anchor('lowerBack', 0, 1.42, -0.24);
+  anchor('chest', 0, 2.05, 0.27);
+  anchor('upperBack', 0, 2.05, -0.27);
+
+  // Arms — slight outward "A" pose so limbs read as separate from the torso
+  // from every angle, not just front-on.
   [-1, 1].forEach(function (side) {
     var tag = side < 0 ? 'left' : 'right';
-    var shoulder = [0.62 * side, 2.06, 0];
-    var elbow = [1.02 * side, 1.28, 0.06];
-    var wrist = [1.22 * side, 0.56, 0.1];
-    var handTip = [1.28 * side, 0.32, 0.12];
+    var shoulder = [0.52 * side, 2.42, 0];
+    var elbow = [0.98 * side, 1.66, 0.08];
+    var wrist = [1.2 * side, 0.86, 0.14];
 
-    addSphere(tag + 'Shoulder', 0.21, shoulder[0], shoulder[1], shoulder[2]);
-    addLimb(tag + 'UpperArm', 0.155, 0.135, shoulder, elbow);
-    addSphere(tag + 'Elbow', 0.155, elbow[0], elbow[1], elbow[2]);
-    addLimb(tag + 'Forearm', 0.13, 0.11, elbow, wrist);
-    addSphere(tag + 'Wrist', 0.15, wrist[0], wrist[1], wrist[2], [0.9, 1.6, 0.7]);
+    addSphere(0.19, shoulder[0], shoulder[1], shoulder[2], null, 18);
+    addTaperedLimb(
+      [[0, 0.175], [0.45, 0.16], [1, 0.135]], shoulder, elbow
+    );
+    addSphere(0.135, elbow[0], elbow[1], elbow[2], null, 16);
+    addTaperedLimb(
+      [[0, 0.13], [0.5, 0.11], [1, 0.09]], elbow, wrist
+    );
+    addSphere(0.115, wrist[0], wrist[1], wrist[2], [0.85, 1.7, 0.65], 16);
+
+    anchor(tag + 'Shoulder', shoulder[0], shoulder[1], shoulder[2]);
+    anchor(tag + 'UpperArm', (shoulder[0] + elbow[0]) / 2, (shoulder[1] + elbow[1]) / 2, 0.05);
+    anchor(tag + 'Elbow', elbow[0], elbow[1], elbow[2]);
+    anchor(tag + 'Forearm', (elbow[0] + wrist[0]) / 2, (elbow[1] + wrist[1]) / 2, 0.1);
+    anchor(tag + 'Wrist', wrist[0], wrist[1], wrist[2]);
   });
 
   // Legs.
   [-1, 1].forEach(function (side) {
     var tag = side < 0 ? 'left' : 'right';
-    var hip = [0.32 * side, 0.66, 0];
-    var knee = [0.34 * side, -0.52, 0.04];
-    var ankle = [0.33 * side, -1.62, 0.02];
+    // The thigh's own start point is embedded inside the torso mesh (whose
+    // lower half now runs from y=0.5 to y=2.5) so its top cap never shows —
+    // legs simply emerge from inside the pelvis instead of butting a flat
+    // disc against one. The hip *anchor* used for hit-testing stays at the
+    // visible surface, independent of where the mesh itself starts.
+    var hipMeshStart = [0.24 * side, 0.6, 0];
+    var hipAnchorPoint = [0.26 * side, 0.88, 0.08];
+    var knee = [0.27 * side, -0.5, 0.05];
+    var ankle = [0.26 * side, -1.66, 0.02];
 
-    addSphere(tag + 'Hip', 0.22, hip[0], hip[1], hip[2]);
-    addLimb(tag + 'Thigh', 0.21, 0.18, hip, knee);
-    addSphere(tag + 'Knee', 0.18, knee[0], knee[1], knee[2]);
-    addLimb(tag + 'Calf', 0.16, 0.12, knee, ankle);
-    addSphere(tag + 'Ankle', 0.15, ankle[0], ankle[1], ankle[2], [1, 0.8, 1.6]);
+    // Starts at a small radius (buried inside the torso, where its own
+    // radius is still narrow) and widens quickly just below the torso's
+    // visible surface — that's what hides the seam, not exact radius
+    // matching against the torso profile.
+    addTaperedLimb(
+      [[0, 0.1], [0.1, 0.29], [0.34, 0.26], [0.6, 0.23], [1, 0.185]],
+      hipMeshStart, knee
+    );
+    addSphere(0.175, knee[0], knee[1], knee[2], null, 18);
+    addTaperedLimb(
+      [[0, 0.18], [0.32, 0.185], [1, 0.105]], knee, ankle
+    );
+    addSphere(0.115, ankle[0], ankle[1], ankle[2], [1, 0.75, 1.7], 16);
+
+    anchor(tag + 'Hip', hipAnchorPoint[0], hipAnchorPoint[1], hipAnchorPoint[2]);
+    anchor(tag + 'Thigh', (hipAnchorPoint[0] + knee[0]) / 2, (hipAnchorPoint[1] + knee[1]) / 2, 0.08);
+    anchor(tag + 'Knee', knee[0], knee[1], knee[2]);
+    anchor(tag + 'Calf', (knee[0] + ankle[0]) / 2, (knee[1] + ankle[1]) / 2, 0.08);
+    anchor(tag + 'Ankle', ankle[0], ankle[1], ankle[2]);
   });
 
-  figure.position.y = -0.15;
+  figure.position.y = -0.25;
+  // Anchors are authored in the same local space as the meshes above, so
+  // they need the identical group offset applied to compare against
+  // world-space raycast hits.
+  anchors.forEach(function (a) { a.position.y += figure.position.y; });
 
-  // ---- Interaction: tap vs. drag-to-rotate ------------------------------
+  // ---- Interaction: tap vs. drag-to-rotate --------------------------------
   var raycaster = new THREE.Raycaster();
   var pointerDown = null;
-  var selected = null;
+  var selectedMesh = null;
+  var markerGeo = new THREE.SphereGeometry(0.05, 12, 10);
+  var markerMat = new THREE.MeshBasicMaterial({ color: HILITE_COLOR });
+  var marker = new THREE.Mesh(markerGeo, markerMat);
+  marker.visible = false;
+  scene.add(marker);
 
-  function setSelected(mesh) {
-    if (selected && selected !== mesh) {
-      selected.material.color.setHex(selected.userData.baseColor);
-      selected.material.emissive && selected.material.emissive.setHex(0x000000);
-    }
-    selected = mesh;
-    if (mesh) {
-      mesh.material.color.setHex(HILITE_COLOR);
-      mesh.material.emissive && mesh.material.emissive.setHex(0x0a3a4a);
-    }
+  function nearestAnchor(point) {
+    var best = null, bestDist = Infinity;
+    anchors.forEach(function (a) {
+      var d = point.distanceTo(a.position);
+      if (d < bestDist) { bestDist = d; best = a; }
+    });
+    return best;
   }
 
   function ndcFromEvent(evt) {
@@ -195,16 +245,21 @@
     lastTapAt = now;
 
     raycaster.setFromCamera({ x: p.x, y: p.y }, camera);
-    var hits = raycaster.intersectObjects(parts, false);
+    var hits = raycaster.intersectObjects(meshes, false);
     if (hits.length === 0) return;
-    var mesh = hits[0].object;
-    setSelected(mesh);
+    var hit = hits[0];
+    var match = nearestAnchor(hit.point);
+    if (!match) return;
+
+    marker.position.copy(hit.point);
+    marker.visible = true;
+
     if (window.FlutterChannel && window.FlutterChannel.postMessage) {
-      window.FlutterChannel.postMessage(mesh.userData.partId);
+      window.FlutterChannel.postMessage(match.partId);
     } else if (window.parent) {
       // Standalone-browser fallback for local testing.
-      window.parent.postMessage({ bodyPart: mesh.userData.partId }, '*');
-      console.log('tapped:', mesh.userData.partId);
+      window.parent.postMessage({ bodyPart: match.partId }, '*');
+      console.log('tapped:', match.partId);
     }
   }
 
@@ -217,9 +272,9 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
   });
 
-  // Exposed for Flutter to clear the highlighted part after the injury
-  // sheet is dismissed, and for local debugging in a plain browser tab.
-  window.clearSelection = function () { setSelected(null); };
+  // Exposed for Flutter to clear the tap marker after the injury sheet is
+  // dismissed, and for local debugging in a plain browser tab.
+  window.clearSelection = function () { marker.visible = false; };
 
   (function animate() {
     requestAnimationFrame(animate);
