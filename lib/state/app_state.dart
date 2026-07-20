@@ -513,7 +513,13 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   /// app — the same "local always works" behavior every other network
   /// feature here already has (health sync, profile/weight/measurement
   /// sync all swallow connectivity failures rather than erroring out).
-  Future<void> signIn(String email, String password) async {
+  /// [rememberMe] controls whether the session survives an app restart —
+  /// when false, the sign-in still succeeds for the current app run, but
+  /// neither the "onboarding done" flag nor the Keychain token are kept, so
+  /// [hydrate] finds no session next launch and the user has to sign in
+  /// again (see [hydrate]'s `onboardingDone` gate).
+  Future<void> signIn(String email, String password,
+      {bool rememberMe = true}) async {
     final resolvedEmail = email.trim().isEmpty ? 'alex@bodyx.app' : email.trim();
     try {
       user = await _authRepository.login(email: resolvedEmail, password: password);
@@ -529,8 +535,12 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     }
     authStage = AuthStage.done;
     _hasSession = true;
-    _persistUser();
-    unawaited(_persistence.setOnboardingDone(true));
+    if (rememberMe) {
+      _persistUser();
+      unawaited(_persistence.setOnboardingDone(true));
+    } else {
+      unawaited(_authRepository.signOut());
+    }
     notifyListeners();
   }
 

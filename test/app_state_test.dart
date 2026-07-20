@@ -107,6 +107,23 @@ void main() {
       expect(state.bodyMeasurements.keys.toSet(), MuscleZone.values.toSet());
     });
 
+    test('signIn with rememberMe: false does not survive a restart',
+        () async {
+      final state = newTestAppState();
+      await state.hydrate();
+
+      await state.signIn('taylor@bodyx.app', 'whatever', rememberMe: false);
+      // Still signed in for the current app run.
+      expect(state.authStage, AuthStage.done);
+      expect(state.user, isNotNull);
+
+      final restarted = newTestAppState();
+      await restarted.hydrate();
+      restarted.finishSplash();
+      expect(restarted.authStage, AuthStage.signIn,
+          reason: 'an un-remembered session must not survive a restart');
+    });
+
     test('signOut clears the session and does not auto-restore it',
         () async {
       final state = newTestAppState();

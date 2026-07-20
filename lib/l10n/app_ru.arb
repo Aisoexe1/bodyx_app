@@ -93,6 +93,7 @@
   "signInPasswordLabel": "Пароль",
   "signInFieldsRequired": "Введите email и пароль, чтобы продолжить.",
   "signInSignInButton": "Войти",
+  "signInRememberMe": "Запомнить меня",
   "signInForgotPassword": "Забыли пароль?",
   "signInOrContinueWith": "или продолжить через",
   "signInGoogleLabel": "Google",

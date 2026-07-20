@@ -20,6 +20,7 @@ class _SignInScreenState extends State<SignInScreen> {
   final _password = TextEditingController();
   bool _obscure = true;
   bool _loading = false;
+  bool _rememberMe = true;
 
   @override
   void dispose() {
@@ -36,7 +37,9 @@ class _SignInScreenState extends State<SignInScreen> {
     }
     setState(() => _loading = true);
     try {
-      await context.read<AppState>().signIn(_email.text, _password.text);
+      await context
+          .read<AppState>()
+          .signIn(_email.text, _password.text, rememberMe: _rememberMe);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
@@ -111,6 +114,33 @@ class _SignInScreenState extends State<SignInScreen> {
                     ? Icons.visibility_off_outlined
                     : Icons.visibility_outlined,
                 onSuffixTap: () => setState(() => _obscure = !_obscure),
+              ),
+              const SizedBox(height: 10),
+              GestureDetector(
+                onTap: () => setState(() => _rememberMe = !_rememberMe),
+                behavior: HitTestBehavior.opaque,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: Checkbox(
+                        value: _rememberMe,
+                        onChanged: (v) =>
+                            setState(() => _rememberMe = v ?? true),
+                        activeColor: AppColors.primary,
+                        side: const BorderSide(color: AppColors.cardBorder),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(6)),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Text(AppLocalizations.of(context)!.signInRememberMe,
+                        style: const TextStyle(
+                            color: AppColors.textSecondary, fontSize: 13.5)),
+                  ],
+                ),
               ),
               const SizedBox(height: 16),
               PrimaryButton(
