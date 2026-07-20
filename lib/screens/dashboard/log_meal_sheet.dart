@@ -14,12 +14,13 @@ import '../../widgets/common/count_stepper.dart';
 import '../../widgets/common/glow_card.dart';
 import '../../widgets/common/inputs_buttons.dart';
 import '../../widgets/common/scale_tap.dart';
+import 'barcode_scanner_screen.dart';
 
 enum _LogMode { search, custom }
 
-/// Meal logging — search a small local food list (no external API/barcode
-/// service available in this prototype) or enter a custom item, plus
-/// today's already-logged meals with a way to remove one.
+/// Meal logging — search a small local food list, scan a product barcode
+/// (via Open Food Facts), or enter a custom item — plus today's
+/// already-logged meals with a way to remove one.
 class LogMealSheet extends StatefulWidget {
   const LogMealSheet({super.key});
 
@@ -199,6 +200,17 @@ class _LogMealSheetState extends State<LogMealSheet> {
                               AppLocalizations.of(context)!.logMealSearchHint,
                           prefixIcon: const Icon(Icons.search_rounded,
                               color: AppColors.textMuted),
+                          suffixIcon: IconButton(
+                            tooltip:
+                                AppLocalizations.of(context)!.logMealScanTooltip,
+                            icon: const Icon(Icons.qr_code_scanner_rounded,
+                                color: AppColors.primaryBright),
+                            onPressed: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => const BarcodeScannerScreen()),
+                            ),
+                          ),
                         ),
                       ),
                       const SizedBox(height: 12),

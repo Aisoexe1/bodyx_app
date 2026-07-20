@@ -212,18 +212,7 @@
   "progressPhotosTakeFirstPhotoButton": "Зробіть перше фото",
   "dashboardAthlete": "Атлет",
   "dashboardWaterLabel": "Вода",
-  "dashboardCaloriesLabel": "Калорії",
   "dashboardLastBodyScan": "Останній скан тіла",
-  "dashboardActionForToday": "Завдання на сьогодні",
-  "dashboardSeePlan": "Переглянути план",
-  "dashboardTodaysChecklist": "Чек-лист на сьогодні",
-  "dashboardDoneCount": "{doneCount} / {totalCount} виконано",
-  "@dashboardDoneCount": {
-    "placeholders": {
-      "doneCount": {},
-      "totalCount": {}
-    }
-  },
   "dashboardLogBodyWeight": "Записати вагу тіла",
   "dashboardLoggedToday": "Записано сьогодні",
   "dashboardMorningCheckIn": "Ранковий чек-ін",
@@ -340,24 +329,6 @@
       "total": {}
     }
   },
-  "planTodaysGoals": "Цілі на сьогодні",
-  "planSteps": "Кроки",
-  "planStepsProgress": "{current} / {goal}",
-  "@planStepsProgress": {
-    "placeholders": {
-      "current": {},
-      "goal": {}
-    }
-  },
-  "planCalories": "Калорії",
-  "planCaloriesProgress": "{current} / {goal} ккал",
-  "@planCaloriesProgress": {
-    "placeholders": {
-      "current": {},
-      "goal": {}
-    }
-  },
-  "planSleep": "Сон",
   "planThisWeek": "Цього тижня",
   "planDaySummary": "{steps} кроків · {calories} ккал",
   "@planDaySummary": {
@@ -717,15 +688,6 @@
       "total": {}
     }
   },
-  "dashboardNoExercisesYet": "Вправ поки немає — торкніться, щоб додати",
-  "dashboardWorkoutSetsProgress": "{completed} / {total} підходів",
-  "@dashboardWorkoutSetsProgress": {
-    "placeholders": {
-      "completed": {},
-      "total": {}
-    }
-  },
-  "dashboardNoActivitiesYet": "Активностей поки немає — торкніться, щоб додати",
   "workoutChecklistRemoveExerciseTitle": "Видалити {exercise}?",
   "@workoutChecklistRemoveExerciseTitle": {
     "placeholders": {
@@ -919,5 +881,24 @@
     "placeholders": {
       "date": {}
     }
-  }
+  },
+  "dashboardCaloriesBurnedLabel": "Спалено",
+  "dashboardCaloriesEatenLabel": "З'їдено",
+  "dashboardTodaysPlanLabel": "План на сьогодні",
+  "dashboardTodaysPlanEmptyHint": "Поки нічого не заплановано",
+  "scanBarcodeTitle": "Сканувати штрихкод",
+  "scanBarcodeHint": "Наведіть камеру на штрихкод продукту",
+  "scanBarcodeNotFoundTitle": "Продукт не знайдено",
+  "scanBarcodeNotFoundBody": "Цього штрихкоду немає в базі, або для нього поки немає даних про харчування. Спробуйте ще раз або додайте вручну.",
+  "scanBarcodeTryAgainButton": "Сканувати знову",
+  "scanBarcodeNovaLabel": "Рівень обробки",
+  "scanBarcodeNovaGroup1": "Необроблені / мінімально оброблені",
+  "scanBarcodeNovaGroup2": "Оброблені кулінарні інгредієнти",
+  "scanBarcodeNovaGroup3": "Оброблені продукти",
+  "scanBarcodeNovaGroup4": "Ультраоброблені",
+  "scanBarcodePer100g": "на 100 г",
+  "scanBarcodeAddButton": "Додати в сьогодні",
+  "scanBarcodeCameraPermissionTitle": "Потрібен доступ до камери",
+  "scanBarcodeCameraPermissionBody": "Увімкніть доступ до камери в налаштуваннях, щоб сканувати штрихкоди.",
+  "logMealScanTooltip": "Сканувати штрихкод"
 }

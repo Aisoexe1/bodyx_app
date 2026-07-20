@@ -212,18 +212,7 @@
   "progressPhotosTakeFirstPhotoButton": "Сделать первое фото",
   "dashboardAthlete": "Атлет",
   "dashboardWaterLabel": "Вода",
-  "dashboardCaloriesLabel": "Калории",
   "dashboardLastBodyScan": "Последнее сканирование тела",
-  "dashboardActionForToday": "Задача на сегодня",
-  "dashboardSeePlan": "Посмотреть план",
-  "dashboardTodaysChecklist": "Чек-лист на сегодня",
-  "dashboardDoneCount": "Выполнено {doneCount} / {totalCount}",
-  "@dashboardDoneCount": {
-    "placeholders": {
-      "doneCount": {},
-      "totalCount": {}
-    }
-  },
   "dashboardLogBodyWeight": "Записать вес тела",
   "dashboardLoggedToday": "Записано сегодня",
   "dashboardMorningCheckIn": "Утренняя отметка",
@@ -340,24 +329,6 @@
       "total": {}
     }
   },
-  "planTodaysGoals": "Цели на сегодня",
-  "planSteps": "Шаги",
-  "planStepsProgress": "{current} / {goal}",
-  "@planStepsProgress": {
-    "placeholders": {
-      "current": {},
-      "goal": {}
-    }
-  },
-  "planCalories": "Калории",
-  "planCaloriesProgress": "{current} / {goal} ккал",
-  "@planCaloriesProgress": {
-    "placeholders": {
-      "current": {},
-      "goal": {}
-    }
-  },
-  "planSleep": "Сон",
   "planThisWeek": "На этой неделе",
   "planDaySummary": "{steps} шагов · {calories} ккал",
   "@planDaySummary": {
@@ -717,15 +688,6 @@
       "total": {}
     }
   },
-  "dashboardNoExercisesYet": "Упражнений пока нет — нажмите, чтобы добавить",
-  "dashboardWorkoutSetsProgress": "{completed} / {total} подходов",
-  "@dashboardWorkoutSetsProgress": {
-    "placeholders": {
-      "completed": {},
-      "total": {}
-    }
-  },
-  "dashboardNoActivitiesYet": "Активностей пока нет — нажмите, чтобы добавить",
   "workoutChecklistRemoveExerciseTitle": "Удалить {exercise}?",
   "@workoutChecklistRemoveExerciseTitle": {
     "placeholders": {
@@ -919,5 +881,24 @@
     "placeholders": {
       "date": {}
     }
-  }
+  },
+  "dashboardCaloriesBurnedLabel": "Сожжено",
+  "dashboardCaloriesEatenLabel": "Съедено",
+  "dashboardTodaysPlanLabel": "План на сегодня",
+  "dashboardTodaysPlanEmptyHint": "Пока ничего не запланировано",
+  "scanBarcodeTitle": "Сканировать штрихкод",
+  "scanBarcodeHint": "Наведите камеру на штрихкод продукта",
+  "scanBarcodeNotFoundTitle": "Продукт не найден",
+  "scanBarcodeNotFoundBody": "Этого штрихкода нет в базе, или для него пока нет данных о питании. Попробуйте ещё раз или добавьте вручную.",
+  "scanBarcodeTryAgainButton": "Сканировать снова",
+  "scanBarcodeNovaLabel": "Уровень обработки",
+  "scanBarcodeNovaGroup1": "Необработанные / минимально обработанные",
+  "scanBarcodeNovaGroup2": "Обработанные кулинарные ингредиенты",
+  "scanBarcodeNovaGroup3": "Обработанные продукты",
+  "scanBarcodeNovaGroup4": "Ультраобработанные",
+  "scanBarcodePer100g": "на 100 г",
+  "scanBarcodeAddButton": "Добавить в сегодня",
+  "scanBarcodeCameraPermissionTitle": "Нужен доступ к камере",
+  "scanBarcodeCameraPermissionBody": "Включите доступ к камере в настройках, чтобы сканировать штрихкоды.",
+  "logMealScanTooltip": "Сканировать штрихкод"
 }

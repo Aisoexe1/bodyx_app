@@ -10,11 +10,7 @@ import '../../widgets/common/count_up_text.dart';
 import '../../widgets/common/glow_card.dart';
 import '../../widgets/common/progress_ring.dart';
 import '../../widgets/common/scale_tap.dart';
-import '../body_metrics/body_metrics_screen.dart';
 import '../body_metrics/log_metrics_sheet.dart';
-import '../plan/daily_plan_screen.dart';
-import '../plan/mobility_checklist_sheet.dart';
-import '../plan/workout_checklist_sheet.dart';
 import 'log_meal_sheet.dart';
 import 'water_log_sheet.dart';
 
@@ -43,8 +39,9 @@ class DashboardScreen extends StatelessWidget {
                   const SizedBox(height: 14),
                   _AnnouncementBanner(
                     announcement: announcement,
-                    onDismiss: () =>
-                        context.read<AppState>().dismissAnnouncement(announcement.id),
+                    onDismiss: () => context
+                        .read<AppState>()
+                        .dismissAnnouncement(announcement.id),
                   ),
                 ],
                 const SizedBox(height: 24),
@@ -56,7 +53,8 @@ class DashboardScreen extends StatelessWidget {
                       child: _MiniStatCard(
                         icon: Icons.water_drop_rounded,
                         color: AppColors.info,
-                        label: AppLocalizations.of(context)!.dashboardWaterLabel,
+                        label:
+                            AppLocalizations.of(context)!.dashboardWaterLabel,
                         value: CountUpText(
                           value: stats.waterMl,
                           formatter: (v) => '${(v / 1000).toStringAsFixed(1)}L',
@@ -76,9 +74,10 @@ class DashboardScreen extends StatelessWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: _MiniStatCard(
-                        icon: Icons.local_fire_department_rounded,
+                        icon: Icons.restaurant_rounded,
                         color: AppColors.warning,
-                        label: AppLocalizations.of(context)!.dashboardCaloriesLabel,
+                        label: AppLocalizations.of(context)!
+                            .dashboardCaloriesEatenLabel,
                         value: CountUpText(
                           value: state.todayCaloriesEaten,
                           formatter: (v) => '$v kcal',
@@ -103,16 +102,7 @@ class DashboardScreen extends StatelessWidget {
                 const SizedBox(height: 12),
                 _LastBodyScanCard(state: state),
                 const SizedBox(height: 24),
-                SectionHeader(
-                  title: AppLocalizations.of(context)!.dashboardActionForToday,
-                  action: AppLocalizations.of(context)!.dashboardSeePlan,
-                  onActionTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const DailyPlanScreen()),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                _TodayChecklistCard(state: state),
+                _TodayShortcuts(state: state),
               ]),
             ),
           ),
@@ -122,100 +112,55 @@ class DashboardScreen extends StatelessWidget {
   }
 }
 
-/// One cohesive checklist card instead of separate floating cards per
-/// item — groups today's real workout progress with the quick self-report
-/// tasks under a single header showing overall completion, so items with
-/// different interaction models (progress vs. checkbox) still read as one
-/// coherent list rather than an unrelated pile of cards.
-class _TodayChecklistCard extends StatelessWidget {
-  const _TodayChecklistCard({required this.state});
+/// A compact link into today's structured plan plus the one daily nudge
+/// that has no home elsewhere (weigh-in) — Plan (the tab) now owns the
+/// actual workout/mobility checklist, so this is a teaser, not a copy of
+/// it: no set counts, no progress bars, just "is there something to do."
+class _TodayShortcuts extends StatelessWidget {
+  const _TodayShortcuts({required this.state});
   final AppState state;
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final workoutSets = state.todayWorkoutSets;
     final workoutDone = workoutSets.isNotEmpty &&
         state.todayWorkoutCompletedSets == workoutSets.length;
     final mobilityActivities = state.todayMobilityActivities;
     final mobilityDone = mobilityActivities.isNotEmpty &&
         state.todayMobilityCompletedCount == mobilityActivities.length;
+    final planStarted = workoutSets.isNotEmpty || mobilityActivities.isNotEmpty;
+    final planDone = planStarted &&
+        (workoutSets.isEmpty || workoutDone) &&
+        (mobilityActivities.isEmpty || mobilityDone);
     final weightDone = state.loggedWeightToday;
-    final simpleTasks = state.planTasks;
-    final doneCount = (workoutDone ? 1 : 0) +
-        (mobilityDone ? 1 : 0) +
-        (weightDone ? 1 : 0) +
-        simpleTasks.where((t) => t.done).length;
-    final totalCount = 3 + simpleTasks.length;
 
     return GlowCard(
+      padding: EdgeInsets.zero,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                    AppLocalizations.of(context)!.dashboardTodaysChecklist,
-                    style: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 15)),
-              ),
-              StatChip(
-                label: AppLocalizations.of(context)!.dashboardDoneCount(
-                    doneCount.toString(), totalCount.toString()),
-                color: doneCount == totalCount
-                    ? AppColors.success
-                    : AppColors.primary,
-              ),
-            ],
+          _ShortcutRow(
+            icon: Icons.checklist_rounded,
+            title: l10n.dashboardTodaysPlanLabel,
+            subtitle: !planStarted
+                ? l10n.dashboardTodaysPlanEmptyHint
+                : planDone
+                    ? l10n.planDoneLabel
+                    : l10n.planInProgressLabel,
+            done: planDone,
+            onTap: () => context.read<AppState>().selectNav(2),
           ),
-          const SizedBox(height: 16),
-          _ChecklistRow(
-            icon: Icons.fitness_center_rounded,
-            title: AppLocalizations.of(context)!.planTodaysWorkoutTitle,
-            subtitle: workoutSets.isEmpty
-                ? AppLocalizations.of(context)!.dashboardNoExercisesYet
-                : AppLocalizations.of(context)!.dashboardWorkoutSetsProgress(
-                    state.todayWorkoutCompletedSets.toString(),
-                    workoutSets.length.toString(),
-                  ),
-            done: workoutDone,
-            progress: workoutSets.isEmpty ? null : state.todayWorkoutProgress,
-            onTap: () => showModalBottomSheet(
-              context: context,
-              isScrollControlled: true,
-              backgroundColor: Colors.transparent,
-              builder: (_) => const WorkoutChecklistSheet(),
-            ),
-          ),
-          const _ChecklistDivider(),
-          _ChecklistRow(
-            icon: Icons.self_improvement_rounded,
-            title: AppLocalizations.of(context)!.planMobilityStretchTitle,
-            subtitle: mobilityActivities.isEmpty
-                ? AppLocalizations.of(context)!.dashboardNoActivitiesYet
-                : AppLocalizations.of(context)!.planMobilityProgress(
-                    state.todayMobilityCompletedCount.toString(),
-                    mobilityActivities.length.toString(),
-                  ),
-            done: mobilityDone,
-            progress:
-                mobilityActivities.isEmpty ? null : state.todayMobilityProgress,
-            onTap: () => showModalBottomSheet(
-              context: context,
-              isScrollControlled: true,
-              backgroundColor: Colors.transparent,
-              builder: (_) => const MobilityChecklistSheet(),
-            ),
-          ),
-          const _ChecklistDivider(),
-          _ChecklistRow(
+          const Divider(
+              height: 1,
+              color: AppColors.divider,
+              indent: AppSpacing.md,
+              endIndent: AppSpacing.md),
+          _ShortcutRow(
             icon: Icons.monitor_weight_rounded,
-            title: AppLocalizations.of(context)!.dashboardLogBodyWeight,
+            title: l10n.dashboardLogBodyWeight,
             subtitle: weightDone
-                ? AppLocalizations.of(context)!.dashboardLoggedToday
-                : AppLocalizations.of(context)!.dashboardMorningCheckIn,
+                ? l10n.dashboardLoggedToday
+                : l10n.dashboardMorningCheckIn,
             done: weightDone,
             onTap: () => showModalBottomSheet(
               context: context,
@@ -224,108 +169,62 @@ class _TodayChecklistCard extends StatelessWidget {
               builder: (_) => const LogMetricsSheet(),
             ),
           ),
-          for (var i = 0; i < simpleTasks.length; i++) ...[
-            const _ChecklistDivider(),
-            _ChecklistRow(
-              icon: simpleTasks[i].icon,
-              title: simpleTasks[i].title,
-              subtitle: simpleTasks[i].subtitle,
-              done: simpleTasks[i].done,
-              onTap: () => context.read<AppState>().togglePlanTask(i),
-            ),
-          ],
         ],
       ),
     );
   }
 }
 
-class _ChecklistDivider extends StatelessWidget {
-  const _ChecklistDivider();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 14),
-      child: Container(height: 1, color: AppColors.cardBorder),
-    );
-  }
-}
-
-class _ChecklistRow extends StatelessWidget {
-  const _ChecklistRow({
+class _ShortcutRow extends StatelessWidget {
+  const _ShortcutRow({
     required this.icon,
     required this.title,
     required this.subtitle,
     required this.done,
     required this.onTap,
-    this.progress,
   });
 
   final IconData icon;
   final String title;
   final String subtitle;
   final bool done;
-  final double? progress;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return ScaleTap(
       onTap: onTap,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          GlowIconBadge(
-            icon: icon,
-            color: done ? AppColors.success : AppColors.primary,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                      decoration:
-                          done ? TextDecoration.lineThrough : TextDecoration.none,
-                      decorationColor: AppColors.textMuted,
-                    )),
-                const SizedBox(height: 2),
-                Text(subtitle,
-                    style: const TextStyle(
-                        color: AppColors.textMuted, fontSize: 12.5)),
-                if (progress != null) ...[
-                  const SizedBox(height: 8),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(AppRadius.pill),
-                    child: TweenAnimationBuilder<double>(
-                      tween: Tween(begin: 0, end: progress!.clamp(0, 1)),
-                      duration: const Duration(milliseconds: 600),
-                      curve: Curves.easeOutCubic,
-                      builder: (context, t, _) => LinearProgressIndicator(
-                        value: t,
-                        minHeight: 6,
-                        backgroundColor: AppColors.surfaceElevated,
-                        valueColor: AlwaysStoppedAnimation(
-                            done ? AppColors.success : AppColors.primary),
-                      ),
-                    ),
-                  ),
-                ],
-              ],
+      child: Padding(
+        padding:
+            const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 14),
+        child: Row(
+          children: [
+            GlowIconBadge(
+              icon: icon,
+              color: done ? AppColors.success : AppColors.primary,
             ),
-          ),
-          const SizedBox(width: 8),
-          Icon(
-            done
-                ? Icons.check_circle_rounded
-                : Icons.radio_button_unchecked_rounded,
-            color: done ? AppColors.success : AppColors.textMuted,
-          ),
-        ],
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary)),
+                  const SizedBox(height: 2),
+                  Text(subtitle,
+                      style: const TextStyle(
+                          color: AppColors.textMuted, fontSize: 12.5)),
+                ],
+              ),
+            ),
+            Icon(
+              done ? Icons.check_circle_rounded : Icons.chevron_right_rounded,
+              color: done ? AppColors.success : AppColors.textMuted,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -499,7 +398,8 @@ class _DailyOverviewCard extends StatelessWidget {
                     const SizedBox(height: 10),
                     _statLine(
                       Icons.local_fire_department_rounded,
-                      AppLocalizations.of(context)!.dashboardCaloriesLabel,
+                      AppLocalizations.of(context)!
+                          .dashboardCaloriesBurnedLabel,
                       CountUpText(
                         value: stats.calories,
                         formatter: (v) => '$v kcal',
@@ -541,8 +441,8 @@ class _DailyOverviewCard extends StatelessWidget {
         Expanded(
           child: Text(label,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                  color: AppColors.textMuted, fontSize: 12.5)),
+              style:
+                  const TextStyle(color: AppColors.textMuted, fontSize: 12.5)),
         ),
         const SizedBox(width: 6),
         value,
@@ -621,7 +521,8 @@ class _LastBodyScanCard extends StatelessWidget {
     // Empty until the user logs their first weigh-in (or Health sync pulls
     // one in) — a brand new account has no entries yet, so this can't
     // assume there's always a `.last` to show.
-    final latest = state.weightHistory.isEmpty ? null : state.weightHistory.last;
+    final latest =
+        state.weightHistory.isEmpty ? null : state.weightHistory.last;
     final title = latest == null
         ? AppLocalizations.of(context)!.dashboardBodyScanEmptyTitle
         : AppLocalizations.of(context)!.dashboardBodyScanSummary(
@@ -630,10 +531,10 @@ class _LastBodyScanCard extends StatelessWidget {
         ? AppLocalizations.of(context)!.dashboardBodyScanEmptySubtitle
         : AppLocalizations.of(context)!.dashboardTapToViewFullReport;
     return ScaleTap(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const BodyMetricsScreen()),
-      ),
+      // Weight/body-fat detail lives on the Progress tab, not Body
+      // Metrics (that screen is circumference-only) — this switches tabs
+      // rather than pushing a screen since Progress is a bottom-nav tab.
+      onTap: () => context.read<AppState>().selectNav(1),
       child: GlowCard(
         child: Row(
           children: [
@@ -664,8 +565,7 @@ class _LastBodyScanCard extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right_rounded,
-                color: AppColors.textMuted),
+            const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
           ],
         ),
       ),

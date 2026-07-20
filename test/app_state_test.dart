@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:bodyx_app/models/achievements.dart';
 import 'package:bodyx_app/models/injury.dart';
 import 'package:bodyx_app/models/models.dart';
+import 'package:bodyx_app/models/scanned_product.dart';
 import 'package:bodyx_app/state/app_state.dart';
 import 'package:bodyx_app/state/persistence_service.dart';
 
@@ -1060,6 +1061,26 @@ void main() {
         awakeMinutes: 0,
       );
       expect(stats.sleepLabel, '7h 34m');
+    });
+
+    test('ScannedProduct scales per-100g macros to the chosen gram amount',
+        () {
+      const product = ScannedProduct(
+        barcode: '3017620422003',
+        name: 'Nutella',
+        nutriScore: NutriScoreGrade.e,
+        novaGroup: 4,
+        kcalPer100g: 539,
+        proteinPer100g: 6.3,
+        carbsPer100g: 57.5,
+        fatPer100g: 30.9,
+      );
+
+      expect(product.kcalFor(100), 539);
+      expect(product.kcalFor(30), 162); // 539 * 0.3 = 161.7, rounds to 162
+      expect(product.proteinFor(50), 3); // 6.3 * 0.5 = 3.15, rounds to 3
+      expect(product.carbsFor(200), 115);
+      expect(product.fatFor(0), 0);
     });
 
     test('Injury JSON round-trip preserves every field', () {

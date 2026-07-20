@@ -212,18 +212,7 @@
   "progressPhotosTakeFirstPhotoButton": "Take your first photo",
   "dashboardAthlete": "Athlete",
   "dashboardWaterLabel": "Water",
-  "dashboardCaloriesLabel": "Calories",
   "dashboardLastBodyScan": "Last body scan",
-  "dashboardActionForToday": "Action for today",
-  "dashboardSeePlan": "See plan",
-  "dashboardTodaysChecklist": "Today's checklist",
-  "dashboardDoneCount": "{doneCount} / {totalCount} done",
-  "@dashboardDoneCount": {
-    "placeholders": {
-      "doneCount": {},
-      "totalCount": {}
-    }
-  },
   "dashboardLogBodyWeight": "Log body weight",
   "dashboardLoggedToday": "Logged today",
   "dashboardMorningCheckIn": "Morning check-in",
@@ -340,24 +329,6 @@
       "total": {}
     }
   },
-  "planTodaysGoals": "Today's goals",
-  "planSteps": "Steps",
-  "planStepsProgress": "{current} / {goal}",
-  "@planStepsProgress": {
-    "placeholders": {
-      "current": {},
-      "goal": {}
-    }
-  },
-  "planCalories": "Calories",
-  "planCaloriesProgress": "{current} / {goal} kcal",
-  "@planCaloriesProgress": {
-    "placeholders": {
-      "current": {},
-      "goal": {}
-    }
-  },
-  "planSleep": "Sleep",
   "planThisWeek": "This week",
   "planDaySummary": "{steps} steps · {calories} kcal",
   "@planDaySummary": {
@@ -717,15 +688,6 @@
       "total": {}
     }
   },
-  "dashboardNoExercisesYet": "No exercises yet — tap to add",
-  "dashboardWorkoutSetsProgress": "{completed} / {total} sets",
-  "@dashboardWorkoutSetsProgress": {
-    "placeholders": {
-      "completed": {},
-      "total": {}
-    }
-  },
-  "dashboardNoActivitiesYet": "No activities yet — tap to add",
   "workoutChecklistRemoveExerciseTitle": "Remove {exercise}?",
   "@workoutChecklistRemoveExerciseTitle": {
     "placeholders": {
@@ -919,5 +881,24 @@
     "placeholders": {
       "date": {}
     }
-  }
+  },
+  "dashboardCaloriesBurnedLabel": "Burned",
+  "dashboardCaloriesEatenLabel": "Eaten",
+  "dashboardTodaysPlanLabel": "Today's Plan",
+  "dashboardTodaysPlanEmptyHint": "Nothing planned yet",
+  "scanBarcodeTitle": "Scan Barcode",
+  "scanBarcodeHint": "Point your camera at a product's barcode",
+  "scanBarcodeNotFoundTitle": "Product not found",
+  "scanBarcodeNotFoundBody": "This barcode isn't in the database, or doesn't have enough nutrition info yet. Try again or add it manually.",
+  "scanBarcodeTryAgainButton": "Scan again",
+  "scanBarcodeNovaLabel": "Processing level",
+  "scanBarcodeNovaGroup1": "Unprocessed / minimally processed",
+  "scanBarcodeNovaGroup2": "Processed culinary ingredients",
+  "scanBarcodeNovaGroup3": "Processed foods",
+  "scanBarcodeNovaGroup4": "Ultra-processed",
+  "scanBarcodePer100g": "per 100g",
+  "scanBarcodeAddButton": "Add to today",
+  "scanBarcodeCameraPermissionTitle": "Camera access needed",
+  "scanBarcodeCameraPermissionBody": "Enable camera access in Settings to scan barcodes.",
+  "logMealScanTooltip": "Scan barcode"
 }
