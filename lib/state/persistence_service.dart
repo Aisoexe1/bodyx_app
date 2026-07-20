@@ -32,7 +32,6 @@ class PersistenceService {
   static const _kMobilityActivities = 'bodyx.mobility_activities';
   static const _kMobilityActivitiesDate = 'bodyx.mobility_activities_date';
   static const _kLocale = 'bodyx.locale';
-  static const _kPublicProfile = 'bodyx.public_profile';
   static const _kShareAnonData = 'bodyx.share_anon_data';
   static const _kDismissedAnnouncementIds = 'bodyx.dismissed_announcement_ids';
   static const _kAchievementProgress = 'bodyx.achievement_progress';
@@ -285,12 +284,6 @@ class PersistenceService {
     final encoded = jsonEncode(injuries.map((e) => e.toJson()).toList());
     await (await _prefs).setString(_kInjuries, encoded);
   }
-
-  Future<bool?> loadPublicProfile() async =>
-      (await _prefs).getBool(_kPublicProfile);
-
-  Future<void> savePublicProfile(bool value) async =>
-      (await _prefs).setBool(_kPublicProfile, value);
 
   Future<bool?> loadShareAnonData() async =>
       (await _prefs).getBool(_kShareAnonData);

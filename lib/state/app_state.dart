@@ -277,7 +277,6 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
         workoutRemindersEnabled;
     healthSyncEnabled =
         await _persistence.loadHealthSyncEnabled() ?? healthSyncEnabled;
-    publicProfile = await _persistence.loadPublicProfile() ?? publicProfile;
     shareAnonData = await _persistence.loadShareAnonData() ?? shareAnonData;
 
     // Must load before [savedWaterLog] below — that triggers
@@ -1445,14 +1444,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   bool darkModeLocked = true; // this app is dark-only, shown as a toggle
   bool workoutRemindersEnabled = true;
   bool healthSyncEnabled = false;
-  bool publicProfile = false;
   bool shareAnonData = true;
-
-  void togglePublicProfile(bool value) {
-    publicProfile = value;
-    unawaited(_persistence.savePublicProfile(value));
-    notifyListeners();
-  }
 
   void toggleShareAnonData(bool value) {
     shareAnonData = value;

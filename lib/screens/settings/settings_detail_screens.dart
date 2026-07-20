@@ -701,13 +701,6 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
       child: Column(
         children: [
           _ToggleRow(
-            icon: Icons.public_rounded,
-            label: AppLocalizations.of(context)!.settingsPublicProfileLabel,
-            value: state.publicProfile,
-            onChanged: (v) => context.read<AppState>().togglePublicProfile(v),
-          ),
-          const SizedBox(height: 10),
-          _ToggleRow(
             icon: Icons.analytics_outlined,
             label: AppLocalizations.of(context)!.settingsShareAnonDataLabel,
             value: state.shareAnonData,
