@@ -31,12 +31,19 @@ class Settings(BaseSettings):
     # Google/Apple Sign-In. Unset until the app owner registers real OAuth
     # clients (Google Cloud Console / Apple Developer) — the endpoints
     # return 501 until these are set, rather than silently under-verifying.
+    #
+    # Two separate Google client IDs because the ID token's audience
+    # (`aud`) depends on which native SDK issued it: the iOS google_sign_in
+    # SDK stamps its own iOS client ID as `aud` regardless of
+    # `serverClientId`, while Android (once configured) uses the web/server
+    # client ID instead — so both are valid audiences to accept.
     google_client_id: Optional[str] = None
+    google_ios_client_id: Optional[str] = None
     apple_client_id: Optional[str] = None
 
     @property
     def google_oauth_configured(self) -> bool:
-        return bool(self.google_client_id)
+        return bool(self.google_client_id or self.google_ios_client_id)
 
     @property
     def apple_oauth_configured(self) -> bool:
