@@ -18,6 +18,7 @@ class PrimaryTextField extends StatefulWidget {
     this.errorText,
     this.helperText,
     this.helperColor,
+    this.maxLines = 1,
   });
 
   final String label;
@@ -28,6 +29,7 @@ class PrimaryTextField extends StatefulWidget {
   final IconData? suffixIcon;
   final VoidCallback? onSuffixTap;
   final ValueChanged<String>? onChanged;
+  final int maxLines;
 
   /// Shown below the field in an error color — takes priority over
   /// [helperText] when both are non-null.
@@ -83,9 +85,12 @@ class _PrimaryTextFieldState extends State<PrimaryTextField> {
         obscureText: widget.obscureText,
         keyboardType: widget.keyboardType,
         onChanged: widget.onChanged,
+        maxLines: widget.maxLines,
+        minLines: widget.maxLines > 1 ? widget.maxLines : null,
         style: const TextStyle(color: AppColors.textPrimary),
         decoration: InputDecoration(
           hintText: widget.label,
+          alignLabelWithHint: widget.maxLines > 1,
           prefixIcon: widget.prefixIcon == null
               ? null
               : Icon(widget.prefixIcon, color: AppColors.textMuted, size: 20),

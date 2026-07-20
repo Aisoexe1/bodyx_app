@@ -5,6 +5,7 @@ import '../data/mock_data.dart';
 import '../l10n/gen/app_localizations.dart';
 import '../logic/health_insights.dart';
 import '../models/achievements.dart';
+import '../models/injury.dart';
 import '../models/models.dart';
 import '../network/announcement_repository.dart';
 import '../network/api_client.dart';
@@ -249,6 +250,11 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     final savedPhotos = await _persistence.loadProgressPhotos();
     if (savedPhotos != null) {
       progressPhotos = savedPhotos;
+    }
+
+    final savedInjuries = await _persistence.loadInjuries();
+    if (savedInjuries != null) {
+      injuries = savedInjuries;
     }
 
     final savedTasksDone = await _persistence.loadPlanTaskDone();
@@ -1288,6 +1294,39 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     );
     _persistMeasurements();
     _syncMeasurementZoneToServer(zone, valueCm);
+    notifyListeners();
+  }
+
+  // ---- Injuries (3D body map) ------------------------------------------
+  // Local-only — no backend endpoint exists for this yet, same as body
+  // measurements' local history before server sync was added.
+  List<Injury> injuries = [];
+
+  // A millisecond timestamp alone can collide (e.g. two entries logged in
+  // the same millisecond in a test, or any sufficiently fast call site) —
+  // this counter guarantees every id logInjury hands out is unique within
+  // the session, which is what removeInjury's id-based lookup depends on.
+  int _injurySeq = 0;
+
+  void logInjury(InjuryBodyPart part, InjuryType type, String description) {
+    final now = DateTime.now();
+    injuries = [
+      Injury(
+        id: '${now.millisecondsSinceEpoch}-${_injurySeq++}',
+        bodyPart: part,
+        type: type,
+        description: description,
+        date: now,
+      ),
+      ...injuries,
+    ];
+    unawaited(_persistence.saveInjuries(injuries));
+    notifyListeners();
+  }
+
+  void removeInjury(String id) {
+    injuries = injuries.where((i) => i.id != id).toList();
+    unawaited(_persistence.saveInjuries(injuries));
     notifyListeners();
   }
 

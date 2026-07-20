@@ -8,7 +8,6 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/glow_card.dart';
 import '../../widgets/common/scale_tap.dart';
-import '../body_metrics/log_metrics_sheet.dart';
 import 'daily_plan_screen.dart';
 import 'mobility_checklist_sheet.dart';
 import 'workout_checklist_sheet.dart';
@@ -238,36 +237,6 @@ class PlanScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: ScaleTap(
-                        onTap: () => showModalBottomSheet(
-                          context: context,
-                          isScrollControlled: true,
-                          backgroundColor: Colors.transparent,
-                          builder: (_) => const LogMetricsSheet(),
-                        ),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                                colors: AppColors.primaryGradient),
-                            borderRadius: BorderRadius.circular(AppRadius.sm),
-                          ),
-                          child: Text(
-                              AppLocalizations.of(context)!
-                                  .planLogFullActivity,
-                              style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w700)),
-                        ),
-                      ),
-                    ),
-                  ],
                 ),
                 const SizedBox(height: 24),
                 _ThisWeekSection(days: state.dailyStats.sublist(state.dailyStats.length - 7)),

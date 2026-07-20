@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../models/injury.dart';
 import '../models/models.dart';
 
 /// Thin wrapper around [SharedPreferences] — everything the user actively
@@ -35,6 +36,7 @@ class PersistenceService {
   static const _kShareAnonData = 'bodyx.share_anon_data';
   static const _kDismissedAnnouncementIds = 'bodyx.dismissed_announcement_ids';
   static const _kAchievementProgress = 'bodyx.achievement_progress';
+  static const _kInjuries = 'bodyx.injuries';
 
   Future<SharedPreferences> get _prefs => SharedPreferences.getInstance();
 
@@ -271,6 +273,18 @@ class PersistenceService {
   Future<void> saveAchievementProgress(AchievementProgress progress) async =>
       (await _prefs)
           .setString(_kAchievementProgress, jsonEncode(progress.toJson()));
+
+  Future<List<Injury>?> loadInjuries() async {
+    final raw = (await _prefs).getString(_kInjuries);
+    if (raw == null) return null;
+    final list = jsonDecode(raw) as List;
+    return list.map((e) => Injury.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  Future<void> saveInjuries(List<Injury> injuries) async {
+    final encoded = jsonEncode(injuries.map((e) => e.toJson()).toList());
+    await (await _prefs).setString(_kInjuries, encoded);
+  }
 
   Future<bool?> loadPublicProfile() async =>
       (await _prefs).getBool(_kPublicProfile);

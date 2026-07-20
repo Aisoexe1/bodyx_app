@@ -10,6 +10,7 @@ import '../../widgets/body/interactive_body.dart';
 import '../../widgets/charts/sparkline.dart';
 import '../../widgets/common/glow_card.dart';
 import '../../widgets/common/scale_tap.dart';
+import 'body3d_screen.dart';
 import 'log_metrics_sheet.dart';
 import 'progress_photos_screen.dart';
 
@@ -56,6 +57,26 @@ class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
                           fontSize: 20,
                           fontWeight: FontWeight.w800,
                           color: AppColors.textPrimary)),
+                ),
+                Tooltip(
+                  message: AppLocalizations.of(context)!.bodyMetricsInjuriesButton,
+                  child: ScaleTap(
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const Body3DScreen()),
+                    ),
+                    child: Container(
+                      margin: const EdgeInsets.only(right: 8),
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceElevated,
+                        borderRadius: BorderRadius.circular(AppRadius.sm),
+                        border: Border.all(color: AppColors.cardBorder),
+                      ),
+                      child: const Icon(Icons.healing_rounded,
+                          color: AppColors.primaryBright, size: 20),
+                    ),
+                  ),
                 ),
                 ScaleTap(
                   onTap: () => Navigator.push(

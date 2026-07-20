@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:bodyx_app/models/achievements.dart';
+import 'package:bodyx_app/models/injury.dart';
 import 'package:bodyx_app/models/models.dart';
 import 'package:bodyx_app/state/app_state.dart';
 import 'package:bodyx_app/state/persistence_service.dart';
@@ -1059,6 +1060,74 @@ void main() {
         awakeMinutes: 0,
       );
       expect(stats.sleepLabel, '7h 34m');
+    });
+
+    test('Injury JSON round-trip preserves every field', () {
+      final injury = Injury(
+        id: '123',
+        bodyPart: InjuryBodyPart.rightKnee,
+        type: InjuryType.tendinitis,
+        description: 'Aches after running',
+        date: DateTime(2026, 5, 3),
+      );
+      final restored = Injury.fromJson(injury.toJson());
+      expect(restored.id, injury.id);
+      expect(restored.bodyPart, injury.bodyPart);
+      expect(restored.type, injury.type);
+      expect(restored.description, injury.description);
+      expect(restored.date, injury.date);
+    });
+  });
+
+  group('injuries (3D body map)', () {
+    test('logInjury adds a new entry to the front of the list', () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      await state.signIn('injury1@bodyx.app', 'pw', rememberMe: true);
+
+      expect(state.injuries, isEmpty);
+      state.logInjury(
+          InjuryBodyPart.leftKnee, InjuryType.sprain, 'Sharp pain when bending');
+      expect(state.injuries.length, 1);
+      expect(state.injuries.first.bodyPart, InjuryBodyPart.leftKnee);
+      expect(state.injuries.first.type, InjuryType.sprain);
+      expect(state.injuries.first.description, 'Sharp pain when bending');
+
+      state.logInjury(InjuryBodyPart.rightAnkle, InjuryType.strain, '');
+      expect(state.injuries.length, 2);
+      expect(state.injuries.first.bodyPart, InjuryBodyPart.rightAnkle);
+    });
+
+    test('removeInjury drops just that entry', () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      await state.signIn('injury2@bodyx.app', 'pw', rememberMe: true);
+
+      state.logInjury(InjuryBodyPart.leftKnee, InjuryType.sprain, 'a');
+      state.logInjury(InjuryBodyPart.rightAnkle, InjuryType.strain, 'b');
+      expect(state.injuries.length, 2);
+
+      final toRemove = state.injuries.last;
+      state.removeInjury(toRemove.id);
+      expect(state.injuries.length, 1);
+      expect(state.injuries.first.bodyPart, InjuryBodyPart.rightAnkle);
+    });
+
+    test('logged injuries survive a restart', () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      await state.signIn('injury3@bodyx.app', 'pw', rememberMe: true);
+
+      state.logInjury(
+          InjuryBodyPart.leftAnkle, InjuryType.sprain, 'Twisted it running');
+
+      final restarted = newTestAppState();
+      await restarted.hydrate();
+
+      expect(restarted.injuries.length, 1);
+      expect(restarted.injuries.first.bodyPart, InjuryBodyPart.leftAnkle);
+      expect(restarted.injuries.first.type, InjuryType.sprain);
+      expect(restarted.injuries.first.description, 'Twisted it running');
     });
   });
 

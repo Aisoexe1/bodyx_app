@@ -172,6 +172,7 @@ class _LogMetricsSheetState extends State<LogMetricsSheet> {
                 min: 3,
                 max: 45,
                 step: 0.5,
+                showSlider: false,
                 onChanged: (v) => setState(() => _bodyFat = v),
               ),
               const SizedBox(height: 24),
@@ -223,6 +224,7 @@ class _ValueStepper extends StatelessWidget {
     required this.max,
     required this.step,
     required this.onChanged,
+    this.showSlider = true,
   });
 
   final String label;
@@ -231,6 +233,7 @@ class _ValueStepper extends StatelessWidget {
   final double max;
   final double step;
   final ValueChanged<double> onChanged;
+  final bool showSlider;
 
   @override
   Widget build(BuildContext context) {
@@ -277,22 +280,23 @@ class _ValueStepper extends StatelessWidget {
               ),
             ],
           ),
-          SliderTheme(
-            data: SliderTheme.of(context).copyWith(
-              activeTrackColor: AppColors.primary,
-              inactiveTrackColor: AppColors.surfaceElevated,
-              thumbColor: AppColors.primaryBright,
-              overlayColor: AppColors.primary.withValues(alpha: 0.2),
-              trackHeight: 4,
-              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
+          if (showSlider)
+            SliderTheme(
+              data: SliderTheme.of(context).copyWith(
+                activeTrackColor: AppColors.primary,
+                inactiveTrackColor: AppColors.surfaceElevated,
+                thumbColor: AppColors.primaryBright,
+                overlayColor: AppColors.primary.withValues(alpha: 0.2),
+                trackHeight: 4,
+                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
+              ),
+              child: Slider(
+                value: value.clamp(min, max),
+                min: min,
+                max: max,
+                onChanged: onChanged,
+              ),
             ),
-            child: Slider(
-              value: value.clamp(min, max),
-              min: min,
-              max: max,
-              onChanged: onChanged,
-            ),
-          ),
         ],
       ),
     );

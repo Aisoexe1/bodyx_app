@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<style>
+  html, body { margin: 0; padding: 0; overflow: hidden; background: transparent; touch-action: none; }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+<script src="three.min.js"></script>
+<script src="OrbitControls.js"></script>
+<script>
+(function () {
+  var BASE_COLOR = 0x1AA6E0;
+  var HILITE_COLOR = 0x5FD8FF;
+  var BG_COLOR = null; // transparent, host page shows through
+
+  var scene = new THREE.Scene();
+  var camera = new THREE.PerspectiveCamera(30, window.innerWidth / window.innerHeight, 0.1, 100);
+  camera.position.set(0, 0.55, 11.5);
+
+  var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setPixelRatio(window.devicePixelRatio || 1);
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setClearColor(0x000000, 0);
+  document.body.appendChild(renderer.domElement);
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.65));
+  var key = new THREE.DirectionalLight(0xffffff, 0.9);
+  key.position.set(3, 5, 4);
+  scene.add(key);
+  var fill = new THREE.DirectionalLight(0x5fd8ff, 0.35);
+  fill.position.set(-4, -1, -3);
+  scene.add(fill);
+
+  var controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enablePan = false;
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.12;
+  controls.minDistance = 7;
+  controls.maxDistance = 17;
+  controls.target.set(0, 0.55, 0);
+  controls.update();
+
+  var figure = new THREE.Group();
+  scene.add(figure);
+
+  var parts = []; // { mesh, partId }
+  var materialCache = {};
+
+  function materialFor(colorHex) {
+    if (!materialCache[colorHex]) {
+      materialCache[colorHex] = new THREE.MeshStandardMaterial({
+        color: colorHex, roughness: 0.55, metalness: 0.15
+      });
+    }
+    return materialCache[colorHex];
+  }
+
+  function register(mesh, partId) {
+    mesh.userData.partId = partId;
+    mesh.userData.baseColor = BASE_COLOR;
+    parts.push(mesh);
+    figure.add(mesh);
+    return mesh;
+  }
+
+  function addSphere(partId, radius, x, y, z, scaleXYZ) {
+    var geo = new THREE.SphereGeometry(radius, 20, 16);
+    var mesh = new THREE.Mesh(geo, materialFor(BASE_COLOR).clone());
+    mesh.position.set(x, y, z);
+    if (scaleXYZ) mesh.scale.set(scaleXYZ[0], scaleXYZ[1], scaleXYZ[2]);
+    return register(mesh, partId);
+  }
+
+  function addBox(partId, w, h, d, x, y, z) {
+    var geo = new THREE.BoxGeometry(w, h, d, 2, 2, 2);
+    var mesh = new THREE.Mesh(geo, materialFor(BASE_COLOR).clone());
+    mesh.position.set(x, y, z);
+    return register(mesh, partId);
+  }
+
+  // A cylinder segment connecting two joint points, used for limb bones.
+  function addLimb(partId, radiusTop, radiusBottom, from, to) {
+    var start = new THREE.Vector3(from[0], from[1], from[2]);
+    var end = new THREE.Vector3(to[0], to[1], to[2]);
+    var length = start.distanceTo(end);
+    var geo = new THREE.CylinderGeometry(radiusTop, radiusBottom, length, 14, 1);
+    var mesh = new THREE.Mesh(geo, materialFor(BASE_COLOR).clone());
+    var mid = start.clone().add(end).multiplyScalar(0.5);
+    mesh.position.copy(mid);
+    mesh.quaternion.setFromUnitVectors(
+      new THREE.Vector3(0, 1, 0),
+      end.clone().sub(start).normalize()
+    );
+    return register(mesh, partId);
+  }
+
+  // ---- Build the figure ------------------------------------------------
+  // Head / neck
+  addSphere('head', 0.46, 0, 2.92, 0);
+  addLimb('neck', 0.19, 0.22, [0, 2.6, 0], [0, 2.34, 0]);
+
+  // Torso: split front/back so a rotated view distinguishes chest/back and
+  // abdomen/lower-back as genuinely different tappable meshes.
+  addBox('chest', 1.02, 0.72, 0.24, 0, 1.92, 0.16);
+  addBox('upperBack', 1.02, 0.72, 0.24, 0, 1.92, -0.16);
+  addBox('abdomen', 0.86, 0.62, 0.2, 0, 1.28, 0.14);
+  addBox('lowerBack', 0.86, 0.62, 0.2, 0, 1.28, -0.14);
+  // Pelvis block ties the torso to the legs; not independently tappable —
+  // grouped visually with the hips.
+  var pelvis = addBox('pelvis', 0.78, 0.34, 0.42, 0, 0.78, 0);
+
+  // Arms (slight outward "A" pose so limbs don't overlap the torso).
+  [-1, 1].forEach(function (side) {
+    var tag = side < 0 ? 'left' : 'right';
+    var shoulder = [0.62 * side, 2.06, 0];
+    var elbow = [1.02 * side, 1.28, 0.06];
+    var wrist = [1.22 * side, 0.56, 0.1];
+    var handTip = [1.28 * side, 0.32, 0.12];
+
+    addSphere(tag + 'Shoulder', 0.21, shoulder[0], shoulder[1], shoulder[2]);
+    addLimb(tag + 'UpperArm', 0.155, 0.135, shoulder, elbow);
+    addSphere(tag + 'Elbow', 0.155, elbow[0], elbow[1], elbow[2]);
+    addLimb(tag + 'Forearm', 0.13, 0.11, elbow, wrist);
+    addSphere(tag + 'Wrist', 0.15, wrist[0], wrist[1], wrist[2], [0.9, 1.6, 0.7]);
+  });
+
+  // Legs.
+  [-1, 1].forEach(function (side) {
+    var tag = side < 0 ? 'left' : 'right';
+    var hip = [0.32 * side, 0.66, 0];
+    var knee = [0.34 * side, -0.52, 0.04];
+    var ankle = [0.33 * side, -1.62, 0.02];
+
+    addSphere(tag + 'Hip', 0.22, hip[0], hip[1], hip[2]);
+    addLimb(tag + 'Thigh', 0.21, 0.18, hip, knee);
+    addSphere(tag + 'Knee', 0.18, knee[0], knee[1], knee[2]);
+    addLimb(tag + 'Calf', 0.16, 0.12, knee, ankle);
+    addSphere(tag + 'Ankle', 0.15, ankle[0], ankle[1], ankle[2], [1, 0.8, 1.6]);
+  });
+
+  figure.position.y = -0.15;
+
+  // ---- Interaction: tap vs. drag-to-rotate ------------------------------
+  var raycaster = new THREE.Raycaster();
+  var pointerDown = null;
+  var selected = null;
+
+  function setSelected(mesh) {
+    if (selected && selected !== mesh) {
+      selected.material.color.setHex(selected.userData.baseColor);
+      selected.material.emissive && selected.material.emissive.setHex(0x000000);
+    }
+    selected = mesh;
+    if (mesh) {
+      mesh.material.color.setHex(HILITE_COLOR);
+      mesh.material.emissive && mesh.material.emissive.setHex(0x0a3a4a);
+    }
+  }
+
+  function ndcFromEvent(evt) {
+    var rect = renderer.domElement.getBoundingClientRect();
+    var cx = (evt.touches && evt.touches.length) ? evt.touches[0].clientX : evt.clientX;
+    var cy = (evt.touches && evt.touches.length) ? evt.touches[0].clientY : evt.clientY;
+    return {
+      x: ((cx - rect.left) / rect.width) * 2 - 1,
+      y: -((cy - rect.top) / rect.height) * 2 + 1,
+      clientX: cx, clientY: cy
+    };
+  }
+
+  var lastTapAt = 0;
+
+  function onPointerDown(evt) {
+    var p = ndcFromEvent(evt);
+    pointerDown = { x: p.clientX, y: p.clientY };
+  }
+
+  function onPointerUp(evt) {
+    if (!pointerDown) return;
+    var p = ndcFromEvent(evt);
+    var dx = p.clientX - pointerDown.x;
+    var dy = p.clientY - pointerDown.y;
+    var moved = Math.sqrt(dx * dx + dy * dy);
+    pointerDown = null;
+    if (moved > 8) return; // treated as a drag/rotate, not a tap
+
+    // Guards against duplicate pointerup dispatches (some WebView/host
+    // environments fire more than one for a single physical tap).
+    var now = Date.now();
+    if (now - lastTapAt < 350) return;
+    lastTapAt = now;
+
+    raycaster.setFromCamera({ x: p.x, y: p.y }, camera);
+    var hits = raycaster.intersectObjects(parts, false);
+    if (hits.length === 0) return;
+    var mesh = hits[0].object;
+    setSelected(mesh);
+    if (window.FlutterChannel && window.FlutterChannel.postMessage) {
+      window.FlutterChannel.postMessage(mesh.userData.partId);
+    } else if (window.parent) {
+      // Standalone-browser fallback for local testing.
+      window.parent.postMessage({ bodyPart: mesh.userData.partId }, '*');
+      console.log('tapped:', mesh.userData.partId);
+    }
+  }
+
+  renderer.domElement.addEventListener('pointerdown', onPointerDown, { passive: true });
+  renderer.domElement.addEventListener('pointerup', onPointerUp, { passive: true });
+
+  window.addEventListener('resize', function () {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+
+  // Exposed for Flutter to clear the highlighted part after the injury
+  // sheet is dismissed, and for local debugging in a plain browser tab.
+  window.clearSelection = function () { setSelected(null); };
+
+  (function animate() {
+    requestAnimationFrame(animate);
+    controls.update();
+    renderer.render(scene, camera);
+  })();
+})();
+</script>
+</body>
+</html>
