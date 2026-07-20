@@ -10,7 +10,7 @@ import '../../theme/app_theme.dart';
 import '../../widgets/common/inputs_buttons.dart';
 import '../../widgets/common/scale_tap.dart';
 
-/// Opened after tapping a zone on [Body3DView] — pick what kind of injury
+/// Opened after tapping a zone on [InteractiveInjuryBody] — pick what kind of injury
 /// it is and describe how it feels, then [AppState.logInjury] it.
 class InjuryLogSheet extends StatefulWidget {
   const InjuryLogSheet({super.key, required this.bodyPart});

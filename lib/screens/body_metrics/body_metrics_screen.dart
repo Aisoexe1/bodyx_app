@@ -10,7 +10,7 @@ import '../../widgets/body/interactive_body.dart';
 import '../../widgets/charts/sparkline.dart';
 import '../../widgets/common/glow_card.dart';
 import '../../widgets/common/scale_tap.dart';
-import 'body3d_screen.dart';
+import 'injury_body_screen.dart';
 import 'log_metrics_sheet.dart';
 import 'progress_photos_screen.dart';
 
@@ -63,7 +63,8 @@ class _BodyMetricsScreenState extends State<BodyMetricsScreen> {
                   child: ScaleTap(
                     onTap: () => Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const Body3DScreen()),
+                      MaterialPageRoute(
+                          builder: (_) => const InjuryBodyScreen()),
                     ),
                     child: Container(
                       margin: const EdgeInsets.only(right: 8),

@@ -26,8 +26,6 @@ dependencies:
   flutter_secure_storage: ^9.2.2
   google_sign_in: ^6.2.2
   sign_in_with_apple: ^6.1.4
-  webview_flutter: ^4.14.1
-
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -39,9 +37,6 @@ flutter:
   generate: true
   assets:
     - assets/images/logo.png
-    - assets/body3d/body.html
-    - assets/body3d/three.min.js
-    - assets/body3d/OrbitControls.js
 
 flutter_launcher_icons:
   image_path: "assets/icon/icon_source.png"

@@ -1,6 +1,6 @@
-/// Every tappable zone on the 3D body figure (`assets/body3d/body.html`) —
-/// values match that scene's mesh `partId` strings exactly (`byName` is
-/// used to go from a WebView tap straight to an enum, no switch needed).
+/// Every tappable zone on the body diagram (`InteractiveInjuryBody`) — see
+/// `lib/widgets/body/body_geometry.dart`'s `BodySilhouette.injuryZones()`
+/// for where each one is positioned.
 enum InjuryBodyPart {
   head,
   neck,

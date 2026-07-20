@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../models/injury.dart';
 import '../../models/models.dart';
 
 enum BodyView { front, back }
@@ -27,6 +28,22 @@ class ZoneGeom {
 }
 
 enum LabelSide { none, left, right }
+
+/// Same shape as [ZoneGeom] but keyed by [InjuryBodyPart] instead of
+/// [MuscleZone] — a separate type because the injury tracker needs joints
+/// (elbow, knee, wrist, ankle) that measurement zones have no use for, not
+/// because the two features draw differently.
+class InjuryZoneGeom {
+  const InjuryZoneGeom({
+    required this.part,
+    required this.center,
+    required this.radius,
+  });
+
+  final InjuryBodyPart part;
+  final Offset center; // fractional, 0..1
+  final Size radius; // fractional half-extents
+}
 
 /// Normalized humanoid silhouette contour points + zone hotspots for a
 /// given gender/view combination. Values are gender-tuned so the female
@@ -254,6 +271,125 @@ class BodySilhouette {
         center: Offset(0.5 + 0.055, 0.90),
         radius: Size(0.035, 0.06),
       ),
+    ];
+  }
+
+  /// The 27-zone layout the injury tracker uses — joints (elbow/knee/
+  /// wrist/ankle) that [zones] has no reason to include, laid out along the
+  /// same limb capsules/torso path so it sits on the identical silhouette.
+  /// Arm/leg zones don't change between front and back (a 2D capsule can't
+  /// show "the back of an elbow" any differently) — only torso zones do.
+  List<InjuryZoneGeom> injuryZones() {
+    final armX = shoulderHalfWidth + 0.055;
+    final legX = hipHalfWidth * 0.55;
+
+    final limbZones = <InjuryZoneGeom>[];
+    for (final side in [-1.0, 1.0]) {
+      final tag = side < 0 ? 'left' : 'right';
+      limbZones.addAll([
+        InjuryZoneGeom(
+          part: InjuryBodyPart.values.byName('${tag}Shoulder'),
+          center: Offset(0.5 + side * (shoulderHalfWidth + 0.02), 0.215),
+          radius: const Size(0.045, 0.03),
+        ),
+        InjuryZoneGeom(
+          part: InjuryBodyPart.values.byName('${tag}UpperArm'),
+          center: Offset(0.5 + side * armX, 0.29),
+          radius: const Size(0.035, 0.05),
+        ),
+        InjuryZoneGeom(
+          part: InjuryBodyPart.values.byName('${tag}Elbow'),
+          center: Offset(0.5 + side * armX, 0.375),
+          radius: const Size(0.03, 0.028),
+        ),
+        InjuryZoneGeom(
+          part: InjuryBodyPart.values.byName('${tag}Forearm'),
+          center: Offset(0.5 + side * (armX + 0.005), 0.44),
+          radius: const Size(0.03, 0.05),
+        ),
+        InjuryZoneGeom(
+          part: InjuryBodyPart.values.byName('${tag}Wrist'),
+          center: Offset(0.5 + side * (armX + 0.005), 0.495),
+          radius: const Size(0.028, 0.026),
+        ),
+        InjuryZoneGeom(
+          part: InjuryBodyPart.values.byName('${tag}Hip'),
+          center: Offset(0.5 + side * (legX + 0.015), 0.57),
+          radius: const Size(0.04, 0.03),
+        ),
+        InjuryZoneGeom(
+          part: InjuryBodyPart.values.byName('${tag}Thigh'),
+          center: Offset(0.5 + side * legX, 0.67),
+          radius: const Size(0.05, 0.1),
+        ),
+        InjuryZoneGeom(
+          part: InjuryBodyPart.values.byName('${tag}Knee'),
+          center: Offset(0.5 + side * legX, 0.765),
+          radius: const Size(0.04, 0.03),
+        ),
+        InjuryZoneGeom(
+          part: InjuryBodyPart.values.byName('${tag}Calf'),
+          center: Offset(0.5 + side * (legX - 0.005), 0.835),
+          radius: const Size(0.035, 0.055),
+        ),
+        InjuryZoneGeom(
+          part: InjuryBodyPart.values.byName('${tag}Ankle'),
+          center: Offset(0.5 + side * (legX - 0.005), 0.895),
+          radius: const Size(0.032, 0.025),
+        ),
+      ]);
+    }
+
+    const head = InjuryZoneGeom(
+      part: InjuryBodyPart.head,
+      center: Offset(0.5, 0.085),
+      radius: Size(0.05, 0.05),
+    );
+    const neck = InjuryZoneGeom(
+      part: InjuryBodyPart.neck,
+      center: Offset(0.5, 0.165),
+      radius: Size(0.03, 0.02),
+    );
+    const pelvis = InjuryZoneGeom(
+      part: InjuryBodyPart.pelvis,
+      center: Offset(0.5, 0.445),
+      radius: Size(0.06, 0.025),
+    );
+
+    if (view == BodyView.front) {
+      return [
+        head,
+        neck,
+        const InjuryZoneGeom(
+          part: InjuryBodyPart.chest,
+          center: Offset(0.5, 0.26),
+          radius: Size(0.1, 0.045),
+        ),
+        const InjuryZoneGeom(
+          part: InjuryBodyPart.abdomen,
+          center: Offset(0.5, 0.345),
+          radius: Size(0.065, 0.055),
+        ),
+        pelvis,
+        ...limbZones,
+      ];
+    }
+
+    return [
+      head,
+      neck,
+      const InjuryZoneGeom(
+        part: InjuryBodyPart.upperBack,
+        center: Offset(0.5, 0.265),
+        radius: Size(0.095, 0.06),
+      ),
+      const InjuryZoneGeom(
+        part: InjuryBodyPart.lowerBack,
+        center: Offset(0.5, 0.4),
+        radius: Size(0.08, 0.05),
+      ),
+      pelvis,
+      ...limbZones,
     ];
   }
 }
