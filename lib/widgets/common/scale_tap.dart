@@ -10,6 +10,7 @@ class ScaleTap extends StatefulWidget {
     super.key,
     required this.child,
     this.onTap,
+    this.onLongPress,
     this.scaleTo = 0.96,
     this.borderRadius,
     this.haptic = true,
@@ -17,6 +18,7 @@ class ScaleTap extends StatefulWidget {
 
   final Widget child;
   final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
   final double scaleTo;
   final BorderRadius? borderRadius;
   final bool haptic;
@@ -55,6 +57,7 @@ class _ScaleTapState extends State<ScaleTap>
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: widget.onTap,
+      onLongPress: widget.onLongPress,
       onTapDown: _onDown,
       onTapUp: _onUp,
       onTapCancel: _onCancel,

@@ -480,6 +480,7 @@ void main() {
 
       state.addExercise('Squats', 3, 10);
       expect(state.todayWorkoutSets.length, 7);
+      expect(state.todayWorkoutSets.every((s) => s.rpe == null), true);
     });
 
     test('removeExercise drops only that exercise\'s sets', () async {
@@ -519,6 +520,39 @@ void main() {
       await restarted.hydrate();
       expect(restarted.todayWorkoutCompletedSets, 1);
       expect(restarted.todayWorkoutSets[1].done, true);
+    });
+
+    test('setWorkoutSetRpe rates a completed set and persists across restart',
+        () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      await state.signIn('rpe@bodyx.app', 'pw', rememberMe: true);
+      state.addExercise('Deadlift', 2, 5);
+
+      state.toggleWorkoutSet(0);
+      state.setWorkoutSetRpe(0, 8);
+      expect(state.todayWorkoutSets[0].rpe, 8);
+      expect(state.todayWorkoutSets[1].rpe, isNull);
+
+      final restarted = newTestAppState();
+      await restarted.hydrate();
+      expect(restarted.todayWorkoutSets[0].rpe, 8);
+    });
+
+    test('un-marking a set clears its rpe — it was never actually performed',
+        () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      await state.signIn('rpe2@bodyx.app', 'pw', rememberMe: true);
+      state.addExercise('Deadlift', 1, 5);
+
+      state.toggleWorkoutSet(0);
+      state.setWorkoutSetRpe(0, 9);
+      expect(state.todayWorkoutSets[0].rpe, 9);
+
+      state.toggleWorkoutSet(0);
+      expect(state.todayWorkoutSets[0].done, false);
+      expect(state.todayWorkoutSets[0].rpe, isNull);
     });
 
     test('toggleWorkoutTimer starts and stops, banking elapsed seconds',

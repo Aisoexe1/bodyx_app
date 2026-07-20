@@ -328,6 +328,7 @@ class WorkoutSet {
     required this.setNumber,
     required this.targetReps,
     this.done = false,
+    this.rpe,
   });
 
   final String exercise;
@@ -335,11 +336,18 @@ class WorkoutSet {
   final int targetReps;
   bool done;
 
+  /// Rate of Perceived Exertion, 1-10 (1 = very easy, 10 = maximal effort).
+  /// Null until the user rates the set — asked for right after marking a
+  /// set done; cleared if the set is un-marked, since an un-done set was
+  /// never actually performed.
+  int? rpe;
+
   Map<String, dynamic> toJson() => {
         'exercise': exercise,
         'setNumber': setNumber,
         'targetReps': targetReps,
         'done': done,
+        'rpe': rpe,
       };
 
   factory WorkoutSet.fromJson(Map<String, dynamic> json) => WorkoutSet(
@@ -347,6 +355,7 @@ class WorkoutSet {
         setNumber: json['setNumber'] as int,
         targetReps: json['targetReps'] as int,
         done: json['done'] as bool,
+        rpe: json['rpe'] as int?,
       );
 }
 

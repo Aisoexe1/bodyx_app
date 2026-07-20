@@ -751,7 +751,20 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   void toggleWorkoutSet(int index) {
     final set = todayWorkoutSets[index];
     set.done = !set.done;
-    if (set.done) HapticFeedback.mediumImpact();
+    if (set.done) {
+      HapticFeedback.mediumImpact();
+    } else {
+      // An un-done set was never actually performed — its rating shouldn't
+      // linger and be shown as if it still applies.
+      set.rpe = null;
+    }
+    _persistWorkoutSets();
+    notifyListeners();
+  }
+
+  /// Rate of Perceived Exertion for a completed set — see [WorkoutSet.rpe].
+  void setWorkoutSetRpe(int index, int rpe) {
+    todayWorkoutSets[index].rpe = rpe;
     _persistWorkoutSets();
     notifyListeners();
   }

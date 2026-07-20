@@ -383,6 +383,10 @@
     }
   },
   "workoutChecklistComplete": "Тренировка завершена 💪",
+  "rpePickerTitle": "Оцени подход",
+  "rpePickerSubtitle": "Насколько тяжело это было?",
+  "rpePickerLowLabel": "1 · Очень легко",
+  "rpePickerHighLabel": "10 · Максимальное усилие",
   "profileTitle": "Профиль",
   "profileDefaultAvatarInitial": "А",
   "profileDefaultName": "Атлет",

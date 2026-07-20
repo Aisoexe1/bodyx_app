@@ -383,6 +383,10 @@
     }
   },
   "workoutChecklistComplete": "Workout complete 💪",
+  "rpePickerTitle": "Rate this set",
+  "rpePickerSubtitle": "How hard did that feel?",
+  "rpePickerLowLabel": "1 · Very easy",
+  "rpePickerHighLabel": "10 · Maximal effort",
   "profileTitle": "Profile",
   "profileDefaultAvatarInitial": "A",
   "profileDefaultName": "Athlete",
