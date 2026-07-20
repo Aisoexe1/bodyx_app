@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:bodyx_app/l10n/gen/app_localizations.dart';
@@ -45,22 +46,75 @@ class _LogMealSheetState extends State<LogMealSheet> {
     for (final c in FoodCategory.values) c: GlobalKey(),
   };
 
+  // Captured from DraggableScrollableSheet's builder on every build — used
+  // to jump to a category whose section hasn't been laid out yet (see
+  // _jumpToCategory), since Scrollable.ensureVisible can only find a
+  // section that's already mounted.
+  ScrollController? _resultsScrollController;
+
   @override
   void dispose() {
     _nameController.dispose();
     super.dispose();
   }
 
-  void _jumpToCategory(FoodCategory category) {
+  /// A category tapped in the pinned chip row is usually already mounted
+  /// (ensureVisible handles it directly) — but ordinary sliver laziness
+  /// means a category far enough down the list was never built in the
+  /// first place, so its GlobalKey has no context yet and ensureVisible
+  /// would silently no-op. In that case, jump to a rough estimated offset
+  /// first (proportional to the category's position among [groups], using
+  /// the sliver's own best-known scroll extent) — that forces the target
+  /// region to actually build — then ensureVisible again for exact
+  /// alignment now that it exists.
+  Future<void> _jumpToCategory(
+    FoodCategory category,
+    List<MapEntry<FoodCategory, List<FoodItem>>> groups,
+  ) async {
     HapticFeedback.selectionClick();
     final ctx = _categoryKeys[category]?.currentContext;
-    if (ctx == null) return;
-    Scrollable.ensureVisible(
-      ctx,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeOutCubic,
-      alignment: 0,
+    if (ctx != null) {
+      await Scrollable.ensureVisible(
+        ctx,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutCubic,
+        alignment: 0,
+      );
+      return;
+    }
+
+    final controller = _resultsScrollController;
+    if (controller == null || !controller.hasClients) return;
+    final index = groups.indexWhere((g) => g.key == category);
+    if (index <= 0) return; // index 0 (or not found) is always mounted
+    final estimate =
+        controller.position.maxScrollExtent * index / groups.length;
+    await controller.animateTo(
+      estimate.clamp(0, controller.position.maxScrollExtent),
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOut,
     );
+
+    // The scroll position updates as soon as the animation above
+    // completes, but the sliver doesn't mount elements at that new
+    // position until its next build/layout pass — which can take a couple
+    // of frames to actually happen. Poll for a few frames rather than
+    // assuming one wait is enough.
+    for (var attempt = 0; attempt < 6; attempt++) {
+      if (!mounted) return;
+      await SchedulerBinding.instance.endOfFrame;
+      final retryCtx = _categoryKeys[category]?.currentContext;
+      if (retryCtx != null && retryCtx.mounted) {
+        await Scrollable.ensureVisible(
+          retryCtx,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOutCubic,
+          alignment: 0,
+        );
+        return;
+      }
+      await Future<void>.delayed(const Duration(milliseconds: 16));
+    }
   }
 
   String get _timeLabel {
@@ -126,6 +180,7 @@ class _LogMealSheetState extends State<LogMealSheet> {
       maxChildSize: 0.95,
       expand: false,
       builder: (context, scrollController) {
+        _resultsScrollController = scrollController;
         return Container(
           decoration: const BoxDecoration(
             color: AppColors.surface,
@@ -133,6 +188,7 @@ class _LogMealSheetState extends State<LogMealSheet> {
           ),
           child: CustomScrollView(
             controller: scrollController,
+            cacheExtent: 5000,
             slivers: [
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(
@@ -228,7 +284,7 @@ class _LogMealSheetState extends State<LogMealSheet> {
                   pinned: true,
                   delegate: _CategoryChipsHeaderDelegate(
                     groups: foodGroups,
-                    onTap: _jumpToCategory,
+                    onTap: (category) => _jumpToCategory(category, foodGroups),
                   ),
                 ),
               SliverPadding(
@@ -528,6 +584,10 @@ class _CategoryChipsHeaderDelegate extends SliverPersistentHeaderDelegate {
         height: _chipHeight,
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
+          // At most 8 categories exist — cheap to build them all upfront
+          // rather than have the last couple require a horizontal swipe
+          // just to become tappable.
+          cacheExtent: 2000,
           itemCount: groups.length,
           separatorBuilder: (_, __) => const SizedBox(width: 8),
           itemBuilder: (context, i) {
