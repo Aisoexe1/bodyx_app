@@ -260,12 +260,12 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     }
 
     if (gained > 0) {
-      final levelBefore = petLevel;
+      final stageBefore = petStage;
       petXp += gained;
       unawaited(_persistence.savePetXp(petXp));
       unawaited(_persistence.saveTodayAwardedPetGoals(_petAwardedToday));
       _syncPetXpToServer();
-      _notifyPetLevelUpIfNeeded(levelBefore);
+      _notifyPetLevelUpIfNeeded(stageBefore);
       notifyListeners();
     }
   }
@@ -286,9 +286,12 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
 
   /// Fires a "your dragon leveled up" notification whenever XP just added
   /// crossed into a new [PetStage] — called after every place [petXp] can
-  /// increase (goal completion, admin boost, achievement bonus).
-  void _notifyPetLevelUpIfNeeded(int levelBefore) {
-    if (petLevel <= levelBefore) return;
+  /// increase (goal completion, admin boost, achievement bonus). Compares
+  /// stage rather than raw [petLevel]: past [PetStage.legendaryDragon] the
+  /// level keeps climbing but the stage is capped, so there's nothing new
+  /// to announce.
+  void _notifyPetLevelUpIfNeeded(PetStage stageBefore) {
+    if (petStage == stageBefore) return;
     final l10n = lookupAppLocalizations(_effectiveLocale);
     _notifyBestEffort(() => NotificationService.instance.showPetLevelUp(
           _effectiveLocale,
@@ -315,11 +318,11 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   /// to bypass real progression on a non-admin account.
   void adminBoostPet() {
     if (!isAdminAccount) return;
-    final levelBefore = petLevel;
+    final stageBefore = petStage;
     petXp += _petXpAdminBoost;
     unawaited(_persistence.savePetXp(petXp));
     _syncPetXpToServer();
-    _notifyPetLevelUpIfNeeded(levelBefore);
+    _notifyPetLevelUpIfNeeded(stageBefore);
     notifyListeners();
   }
 
@@ -1996,11 +1999,11 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       }
     }
     if (petXpBonus > 0) {
-      final levelBefore = petLevel;
+      final stageBefore = petStage;
       petXp += petXpBonus;
       unawaited(_persistence.savePetXp(petXp));
       _syncPetXpToServer();
-      _notifyPetLevelUpIfNeeded(levelBefore);
+      _notifyPetLevelUpIfNeeded(stageBefore);
     }
     _persistAchievements();
   }
