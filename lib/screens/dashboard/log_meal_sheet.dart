@@ -188,7 +188,7 @@ class _LogMealSheetState extends State<LogMealSheet> {
           ),
           child: CustomScrollView(
             controller: scrollController,
-            cacheExtent: 5000,
+            cacheExtent: 20000,
             slivers: [
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(
