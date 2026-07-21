@@ -23,6 +23,12 @@ String foodCategoryLabel(BuildContext context, FoodCategory category) {
       return l10n.foodCategoryNuts;
     case FoodCategory.grains:
       return l10n.foodCategoryGrains;
+    case FoodCategory.sweets:
+      return l10n.foodCategorySweets;
+    case FoodCategory.drinks:
+      return l10n.foodCategoryDrinks;
+    case FoodCategory.prepared:
+      return l10n.foodCategoryPrepared;
     case FoodCategory.other:
       return l10n.foodCategoryOther;
   }

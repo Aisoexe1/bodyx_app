@@ -46,7 +46,7 @@ class CaloriesCard extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             AppLocalizations.of(context)!.progressCaloriesSummary(
-                '${state.tdee.round()}',
+                '${state.calorieTarget.round()}',
                 '${surplus >= 0 ? '+' : ''}$surplus'),
             style: const TextStyle(color: AppColors.textMuted, fontSize: 12.5),
           ),

@@ -45,6 +45,9 @@
   "foodCategoryDairy": "Dairy",
   "foodCategoryNuts": "Nuts & seeds",
   "foodCategoryGrains": "Grains",
+  "foodCategorySweets": "Sweets & pastries",
+  "foodCategoryDrinks": "Drinks",
+  "foodCategoryPrepared": "Prepared dishes",
   "foodCategoryOther": "Other",
   "bodyDataTitle": "Your body data",
   "bodyDataSubtitle": "We use this to calculate your plan\nand personalize your experience",
@@ -240,11 +243,11 @@
   "dashboardBodyScanEmptyTitle": "No check-in yet",
   "dashboardBodyScanEmptySubtitle": "Tap to log your first weigh-in",
   "logMealTitle": "Meal",
-  "logMealCaloriesToday": "{eaten} / {tdee} kcal today",
+  "logMealCaloriesToday": "{eaten} / {target} kcal today",
   "@logMealCaloriesToday": {
     "placeholders": {
       "eaten": {},
-      "tdee": {}
+      "target": {}
     }
   },
   "logMealSearchTab": "Find food",
@@ -418,12 +421,11 @@
   "healthStatusWeightMostlyFat": "Gain is mostly fat",
   "healthStatusWeightGainingMuscle": "Great — you're gaining muscle",
   "healthStatusWeightNeedsAdjustment": "Calorie adjustment needed",
-  "healthStatusCalorieDeficit": "A deficit won't let you grow",
-  "healthStatusCalorieBarelySurplus": "Barely any surplus",
-  "healthStatusCalorieSurplusTooBig": "Surplus is too big",
-  "healthStatusCalorieOnTrack": "Surplus is on track — ideal for growth",
-  "healthStatusCalorieLowSurplus": "Low surplus — growth will be slow",
-  "healthStatusCalorieFatGainRisk": "Risk of gaining excess fat",
+  "healthStatusCalorieOnTarget": "Right on target for your goal",
+  "healthStatusCalorieSlightlyOver": "A bit over target",
+  "healthStatusCalorieWellOver": "Well over target",
+  "healthStatusCalorieSlightlyUnder": "A bit under target",
+  "healthStatusCalorieWellUnder": "Well under target",
   "healthStatusProteinNoTarget": "—",
   "healthStatusProteinMet": "Protein target met",
   "healthStatusProteinSlightlyLow": "Slightly short on protein",
@@ -452,11 +454,11 @@
       "calories": {}
     }
   },
-  "progressCaloriesSummary": "Target ~{tdee} kcal · Surplus {surplus}",
+  "progressCaloriesSummary": "Target ~{target} kcal · {delta}",
   "@progressCaloriesSummary": {
     "placeholders": {
-      "tdee": {},
-      "surplus": {}
+      "target": {},
+      "delta": {}
     }
   },
   "progressHeartRateBpm": "{bpm} bpm",

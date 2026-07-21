@@ -6,8 +6,10 @@ import 'package:bodyx_app/models/models.dart';
 void main() {
   group('water', () {
     test('goal scales with weight and adds a workout-day bonus', () {
-      final rest = HealthInsights.waterGoalMl(weightKg: 80, isWorkoutDay: false);
-      final workout = HealthInsights.waterGoalMl(weightKg: 80, isWorkoutDay: true);
+      final rest =
+          HealthInsights.waterGoalMl(weightKg: 80, isWorkoutDay: false);
+      final workout =
+          HealthInsights.waterGoalMl(weightKg: 80, isWorkoutDay: true);
 
       expect(rest, 2560); // 80 * 32
       expect(workout, rest + 500);
@@ -34,7 +36,8 @@ void main() {
       final onPace = HealthInsights.waterStatus(
         consumedMl: 1500,
         goalMl: 2500,
-        now: DateTime(2026, 1, 1, 15, 0), // 8/16 waking hours elapsed -> expected 1250
+        now: DateTime(
+            2026, 1, 1, 15, 0), // 8/16 waking hours elapsed -> expected 1250
       );
       expect(onPace.level, StatusLevel.good);
 
@@ -102,17 +105,104 @@ void main() {
       expect(active, greaterThan(sedentary));
     });
 
-    test('surplus status follows the documented bands', () {
-      expect(HealthInsights.calorieSurplusStatus(-100).level, StatusLevel.bad);
-      expect(HealthInsights.calorieSurplusStatus(20).level, StatusLevel.bad);
-      expect(HealthInsights.calorieSurplusStatus(120).level, StatusLevel.warn);
-      expect(HealthInsights.calorieSurplusStatus(350).level, StatusLevel.good);
-      expect(HealthInsights.calorieSurplusStatus(600).level, StatusLevel.warn);
-      expect(HealthInsights.calorieSurplusStatus(900).level, StatusLevel.bad);
+    test(
+        'calorie target shifts below TDEE for weight loss, above for muscle gain',
+        () {
+      const tdee = 2500.0;
+      final loseWeight =
+          HealthInsights.calorieTarget(tdee: tdee, goal: 'Lose weight');
+      final buildMuscle =
+          HealthInsights.calorieTarget(tdee: tdee, goal: 'Build muscle');
+      final maintain =
+          HealthInsights.calorieTarget(tdee: tdee, goal: 'Maintain weight');
+
+      expect(loseWeight, closeTo(2000, 0.001)); // 80%
+      expect(buildMuscle, closeTo(2750, 0.001)); // 110%
+      expect(maintain, closeTo(2500, 0.001));
+      expect(loseWeight, lessThan(tdee));
+      expect(buildMuscle, greaterThan(tdee));
     });
 
-    test('protein target is 1.8g per kg', () {
-      expect(HealthInsights.proteinTargetG(80), closeTo(144, 0.001));
+    test('lose-weight status rewards staying at/under target, not a surplus',
+        () {
+      expect(
+          HealthInsights.calorieStatus(
+                  consumed: 1800, target: 2000, goal: 'Lose weight')
+              .level,
+          StatusLevel.good);
+      expect(
+          HealthInsights.calorieStatus(
+                  consumed: 2200, target: 2000, goal: 'Lose weight')
+              .level,
+          StatusLevel.warn);
+      expect(
+          HealthInsights.calorieStatus(
+                  consumed: 2600, target: 2000, goal: 'Lose weight')
+              .level,
+          StatusLevel.bad);
+    });
+
+    test('build-muscle status flags eating too little to grow', () {
+      expect(
+          HealthInsights.calorieStatus(
+                  consumed: 2700, target: 2750, goal: 'Build muscle')
+              .level,
+          StatusLevel.good);
+      expect(
+          HealthInsights.calorieStatus(
+                  consumed: 2200, target: 2750, goal: 'Build muscle')
+              .level,
+          StatusLevel.bad);
+      expect(
+          HealthInsights.calorieStatus(
+                  consumed: 3600, target: 2750, goal: 'Build muscle')
+              .level,
+          StatusLevel.bad);
+    });
+
+    test('protein target scales with goal, highest for weight loss', () {
+      final loseWeight = HealthInsights.proteinTargetG(80, goal: 'Lose weight');
+      final buildMuscle =
+          HealthInsights.proteinTargetG(80, goal: 'Build muscle');
+      final maintain =
+          HealthInsights.proteinTargetG(80, goal: 'Maintain weight');
+      final endurance =
+          HealthInsights.proteinTargetG(80, goal: 'Improve endurance');
+
+      expect(loseWeight, closeTo(160, 0.001)); // 2.0 g/kg
+      expect(buildMuscle, closeTo(144, 0.001)); // 1.8 g/kg
+      expect(maintain, closeTo(128, 0.001)); // 1.6 g/kg
+      expect(endurance, closeTo(120, 0.001)); // 1.5 g/kg
+      expect(loseWeight, greaterThan(buildMuscle));
+    });
+
+    test(
+        'step goal is higher for weight loss and endurance than for muscle gain',
+        () {
+      expect(HealthInsights.stepGoalFor('Lose weight'), 12000);
+      expect(HealthInsights.stepGoalFor('Improve endurance'), 12000);
+      expect(HealthInsights.stepGoalFor('Build muscle'), 8000);
+      expect(HealthInsights.stepGoalFor('Maintain weight'), 10000);
+    });
+
+    test('active-calorie goal gets a burn bump for weight loss', () {
+      final loseWeight = HealthInsights.activeCalorieGoal(
+        gender: Gender.male,
+        weightKg: 80,
+        heightCm: 180,
+        age: 25,
+        activityLevel: 'Moderately active',
+        goal: 'Lose weight',
+      );
+      final buildMuscle = HealthInsights.activeCalorieGoal(
+        gender: Gender.male,
+        weightKg: 80,
+        heightCm: 180,
+        age: 25,
+        activityLevel: 'Moderately active',
+        goal: 'Build muscle',
+      );
+      expect(loseWeight, greaterThan(buildMuscle));
     });
 
     test('protein status follows the documented bands', () {
@@ -121,5 +211,4 @@ void main() {
       expect(HealthInsights.proteinStatus(60, 160).level, StatusLevel.bad);
     });
   });
-
 }

@@ -21,12 +21,11 @@ enum StatusKind {
   weightMostlyFat,
   weightGainingMuscle,
   weightNeedsAdjustment,
-  calorieDeficit,
-  calorieBarelySurplus,
-  calorieSurplusTooBig,
-  calorieOnTrack,
-  calorieLowSurplus,
-  calorieFatGainRisk,
+  calorieOnTarget,
+  calorieSlightlyOver,
+  calorieWellOver,
+  calorieSlightlyUnder,
+  calorieWellUnder,
   proteinNoTarget,
   proteinMet,
   proteinSlightlyLow,
@@ -93,16 +92,20 @@ class HealthInsights {
   /// not just fat" signal a raw BMI reading can't express.
   static StatusResult weightVerdict(List<WeightEntry> history) {
     if (history.length < 2) {
-      return const StatusResult(StatusLevel.good, StatusKind.weightNotEnoughData);
+      return const StatusResult(
+          StatusLevel.good, StatusKind.weightNotEnoughData);
     }
     final last = history.last;
-    final weekAgo = _closestEntry(history, last.date.subtract(const Duration(days: 7)));
-    final monthAgo = _closestEntry(history, last.date.subtract(const Duration(days: 30)));
+    final weekAgo =
+        _closestEntry(history, last.date.subtract(const Duration(days: 7)));
+    final monthAgo =
+        _closestEntry(history, last.date.subtract(const Duration(days: 30)));
 
     final weeklyRatePct = (weekAgo == null || weekAgo.kg == 0)
         ? 0.0
         : (last.kg - weekAgo.kg) / weekAgo.kg * 100;
-    final bodyFatDelta = monthAgo == null ? 0.0 : last.bodyFatPct - monthAgo.bodyFatPct;
+    final bodyFatDelta =
+        monthAgo == null ? 0.0 : last.bodyFatPct - monthAgo.bodyFatPct;
 
     if (weeklyRatePct <= 0) {
       return const StatusResult(StatusLevel.bad, StatusKind.weightOffTrack);
@@ -111,12 +114,15 @@ class HealthInsights {
       return const StatusResult(StatusLevel.bad, StatusKind.weightMostlyFat);
     }
     if (weeklyRatePct >= 0.15 && weeklyRatePct <= 0.5 && bodyFatDelta <= 1.0) {
-      return const StatusResult(StatusLevel.good, StatusKind.weightGainingMuscle);
+      return const StatusResult(
+          StatusLevel.good, StatusKind.weightGainingMuscle);
     }
-    return const StatusResult(StatusLevel.warn, StatusKind.weightNeedsAdjustment);
+    return const StatusResult(
+        StatusLevel.warn, StatusKind.weightNeedsAdjustment);
   }
 
-  static WeightEntry? _closestEntry(List<WeightEntry> history, DateTime target) {
+  static WeightEntry? _closestEntry(
+      List<WeightEntry> history, DateTime target) {
     WeightEntry? best;
     Duration? bestGap;
     for (final entry in history) {
@@ -139,7 +145,20 @@ class HealthInsights {
     'Very active': 1.9,
   };
 
-  /// Mifflin-St Jeor BMR × activity multiplier.
+  /// Mifflin-St Jeor basal metabolic rate — calories burned at complete
+  /// rest, before any activity multiplier.
+  static double bmr({
+    required Gender gender,
+    required double weightKg,
+    required double heightCm,
+    required int age,
+  }) {
+    return gender == Gender.male
+        ? 10 * weightKg + 6.25 * heightCm - 5 * age + 5
+        : 10 * weightKg + 6.25 * heightCm - 5 * age - 161;
+  }
+
+  /// Mifflin-St Jeor BMR × activity multiplier — maintenance calories.
   static double tdee({
     required Gender gender,
     required double weightKg,
@@ -147,44 +166,145 @@ class HealthInsights {
     required int age,
     required String activityLevel,
   }) {
-    final bmr = gender == Gender.male
-        ? 10 * weightKg + 6.25 * heightCm - 5 * age + 5
-        : 10 * weightKg + 6.25 * heightCm - 5 * age - 161;
+    final base =
+        bmr(gender: gender, weightKg: weightKg, heightCm: heightCm, age: age);
     final multiplier = _activityMultipliers[activityLevel] ?? 1.375;
-    return bmr * multiplier;
+    return base * multiplier;
   }
 
-  static StatusResult calorieSurplusStatus(int surplus) {
-    if (surplus < 50) {
-      return StatusResult(StatusLevel.bad,
-          surplus < 0 ? StatusKind.calorieDeficit : StatusKind.calorieBarelySurplus);
+  /// Daily intake target derived from maintenance (TDEE) and the user's
+  /// stated goal: ~20% deficit to lose weight, ~10% surplus to build
+  /// muscle, maintenance for everything else. Matches the canonical
+  /// [UserProfile.goal] strings.
+  static double calorieTarget({required double tdee, required String goal}) {
+    switch (goal) {
+      case 'Lose weight':
+        return tdee * 0.80;
+      case 'Build muscle':
+        return tdee * 1.10;
+      default: // 'Maintain weight', 'Improve endurance', legacy values.
+        return tdee;
     }
-    if (surplus > 700) {
-      return const StatusResult(StatusLevel.bad, StatusKind.calorieSurplusTooBig);
-    }
-    if (surplus >= 200 && surplus <= 500) {
-      return const StatusResult(StatusLevel.good, StatusKind.calorieOnTrack);
-    }
-    if (surplus < 200) {
-      return const StatusResult(StatusLevel.warn, StatusKind.calorieLowSurplus);
-    }
-    return const StatusResult(StatusLevel.warn, StatusKind.calorieFatGainRisk);
   }
 
-  /// 1.8g/kg — the middle of the commonly recommended 1.6-2.2g/kg range for
-  /// muscle gain.
-  static double proteinTargetG(double weightKg) => weightKg * 1.8;
+  /// Status of today's intake vs the goal-adjusted [calorieTarget]. The
+  /// semantics flip with the goal: staying under target is the whole point
+  /// of a weight-loss goal, a problem for muscle gain, and a mild warning
+  /// for maintenance.
+  static StatusResult calorieStatus({
+    required int consumed,
+    required int target,
+    required String goal,
+  }) {
+    final delta = consumed - target;
+    switch (goal) {
+      case 'Lose weight':
+        if (delta <= 0) {
+          return const StatusResult(
+              StatusLevel.good, StatusKind.calorieOnTarget);
+        }
+        if (delta <= 300) {
+          return const StatusResult(
+              StatusLevel.warn, StatusKind.calorieSlightlyOver);
+        }
+        return const StatusResult(StatusLevel.bad, StatusKind.calorieWellOver);
+      case 'Build muscle':
+        if (delta < -400) {
+          return const StatusResult(
+              StatusLevel.bad, StatusKind.calorieWellUnder);
+        }
+        if (delta < -150) {
+          return const StatusResult(
+              StatusLevel.warn, StatusKind.calorieSlightlyUnder);
+        }
+        if (delta <= 300) {
+          return const StatusResult(
+              StatusLevel.good, StatusKind.calorieOnTarget);
+        }
+        if (delta <= 600) {
+          return const StatusResult(
+              StatusLevel.warn, StatusKind.calorieSlightlyOver);
+        }
+        return const StatusResult(StatusLevel.bad, StatusKind.calorieWellOver);
+      default: // Maintain weight / Improve endurance.
+        if (delta < -400) {
+          return const StatusResult(
+              StatusLevel.warn, StatusKind.calorieSlightlyUnder);
+        }
+        if (delta <= 200) {
+          return const StatusResult(
+              StatusLevel.good, StatusKind.calorieOnTarget);
+        }
+        if (delta <= 500) {
+          return const StatusResult(
+              StatusLevel.warn, StatusKind.calorieSlightlyOver);
+        }
+        return const StatusResult(StatusLevel.bad, StatusKind.calorieWellOver);
+    }
+  }
+
+  /// Daily step target by goal — more steps when the goal is burning fat
+  /// or building endurance, a normal baseline otherwise.
+  static int stepGoalFor(String goal) {
+    switch (goal) {
+      case 'Lose weight':
+      case 'Improve endurance':
+        return 12000;
+      case 'Build muscle':
+        return 8000;
+      default:
+        return 10000;
+    }
+  }
+
+  /// Daily active-burn target (kcal) — the activity portion of TDEE
+  /// implied by the stated activity level (TDEE − BMR), bumped when the
+  /// goal is weight loss: move more, not just eat less. Compared against
+  /// HealthKit's ACTIVE_ENERGY_BURNED, so BMR must stay out of it.
+  static int activeCalorieGoal({
+    required Gender gender,
+    required double weightKg,
+    required double heightCm,
+    required int age,
+    required String activityLevel,
+    required String goal,
+  }) {
+    final base =
+        bmr(gender: gender, weightKg: weightKg, heightCm: heightCm, age: age);
+    final multiplier = _activityMultipliers[activityLevel] ?? 1.375;
+    final activity = base * (multiplier - 1);
+    final bump = goal == 'Lose weight' ? 250 : 0;
+    return (activity + bump).round();
+  }
+
+  /// Protein g/kg by goal: extra protein preserves muscle in a deficit
+  /// (2.0), supports growth when bulking (1.8), and stays moderate for
+  /// maintenance (1.6) and endurance (1.5).
+  static double proteinTargetG(double weightKg, {required String goal}) {
+    switch (goal) {
+      case 'Lose weight':
+        return weightKg * 2.0;
+      case 'Build muscle':
+        return weightKg * 1.8;
+      case 'Improve endurance':
+        return weightKg * 1.5;
+      default:
+        return weightKg * 1.6;
+    }
+  }
 
   static StatusResult proteinStatus(double consumedG, double targetG) {
-    if (targetG <= 0) return const StatusResult(StatusLevel.good, StatusKind.proteinNoTarget);
+    if (targetG <= 0) {
+      return const StatusResult(StatusLevel.good, StatusKind.proteinNoTarget);
+    }
     final ratio = consumedG / targetG;
     if (ratio >= 0.9) {
       return const StatusResult(StatusLevel.good, StatusKind.proteinMet);
     }
     if (ratio >= 0.7) {
-      return const StatusResult(StatusLevel.warn, StatusKind.proteinSlightlyLow);
+      return const StatusResult(
+          StatusLevel.warn, StatusKind.proteinSlightlyLow);
     }
     return const StatusResult(StatusLevel.bad, StatusKind.proteinTooLow);
   }
-
 }

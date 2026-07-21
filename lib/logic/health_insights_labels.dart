@@ -28,18 +28,16 @@ String statusLabel(BuildContext context, StatusResult result) {
       return l10n.healthStatusWeightGainingMuscle;
     case StatusKind.weightNeedsAdjustment:
       return l10n.healthStatusWeightNeedsAdjustment;
-    case StatusKind.calorieDeficit:
-      return l10n.healthStatusCalorieDeficit;
-    case StatusKind.calorieBarelySurplus:
-      return l10n.healthStatusCalorieBarelySurplus;
-    case StatusKind.calorieSurplusTooBig:
-      return l10n.healthStatusCalorieSurplusTooBig;
-    case StatusKind.calorieOnTrack:
-      return l10n.healthStatusCalorieOnTrack;
-    case StatusKind.calorieLowSurplus:
-      return l10n.healthStatusCalorieLowSurplus;
-    case StatusKind.calorieFatGainRisk:
-      return l10n.healthStatusCalorieFatGainRisk;
+    case StatusKind.calorieOnTarget:
+      return l10n.healthStatusCalorieOnTarget;
+    case StatusKind.calorieSlightlyOver:
+      return l10n.healthStatusCalorieSlightlyOver;
+    case StatusKind.calorieWellOver:
+      return l10n.healthStatusCalorieWellOver;
+    case StatusKind.calorieSlightlyUnder:
+      return l10n.healthStatusCalorieSlightlyUnder;
+    case StatusKind.calorieWellUnder:
+      return l10n.healthStatusCalorieWellUnder;
     case StatusKind.proteinNoTarget:
       return l10n.healthStatusProteinNoTarget;
     case StatusKind.proteinMet:

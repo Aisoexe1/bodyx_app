@@ -223,7 +223,7 @@ class _LogMealSheetState extends State<LogMealSheet> {
                     Text(
                       AppLocalizations.of(context)!.logMealCaloriesToday(
                           state.todayCaloriesEaten.toString(),
-                          state.tdee.round().toString()),
+                          state.calorieTarget.round().toString()),
                       style: const TextStyle(
                           color: AppColors.textMuted, fontSize: 12.5),
                     ),

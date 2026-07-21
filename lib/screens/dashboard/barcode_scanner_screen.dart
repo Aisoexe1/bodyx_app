@@ -52,9 +52,8 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
 
   Future<void> _onDetect(BarcodeCapture capture) async {
     if (_state != _ScanState.scanning) return;
-    final code = capture.barcodes.isEmpty
-        ? null
-        : capture.barcodes.first.rawValue;
+    final code =
+        capture.barcodes.isEmpty ? null : capture.barcodes.first.rawValue;
     if (code == null || code.isEmpty) return;
 
     HapticFeedback.mediumImpact();
@@ -158,8 +157,7 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
             const Center(
               child: CircularProgressIndicator(color: AppColors.primaryBright),
             ),
-          if (_state == _ScanState.notFound)
-            _NotFoundCard(onRetry: _rescan),
+          if (_state == _ScanState.notFound) _NotFoundCard(onRetry: _rescan),
           if (_state == _ScanState.result && _product != null)
             _ProductResultSheet(
               product: _product!,
@@ -260,10 +258,12 @@ class _NotFoundCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     return Align(
       alignment: Alignment.bottomCenter,
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
+      child: SafeArea(
+        top: false,
+        minimum: const EdgeInsets.all(AppSpacing.lg),
         child: GlowCard(
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
@@ -321,130 +321,139 @@ class _ProductResultSheet extends StatelessWidget {
             BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.7),
         decoration: const BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
+          borderRadius:
+              BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
         ),
         padding: const EdgeInsets.fromLTRB(
-            AppSpacing.lg, AppSpacing.md, AppSpacing.lg, AppSpacing.lg),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  if (product.imageUrl != null)
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(AppRadius.sm),
-                      child: Image.network(
-                        product.imageUrl!,
-                        width: 52,
-                        height: 52,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => const GlowIconBadge(
-                            icon: Icons.qr_code_scanner_rounded, size: 52),
-                      ),
-                    )
-                  else
-                    const GlowIconBadge(
-                        icon: Icons.qr_code_scanner_rounded, size: 52),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(product.name,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                                color: AppColors.textPrimary,
-                                fontWeight: FontWeight.w800,
-                                fontSize: 15)),
-                        if (product.brand != null)
-                          Text(product.brand!,
-                              style: const TextStyle(
-                                  color: AppColors.textMuted, fontSize: 12)),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 14),
-              Row(
-                children: [
-                  if (product.nutriScore != null) ...[
-                    _NutriScoreBadge(grade: product.nutriScore!),
-                    const SizedBox(width: 10),
-                  ],
-                  if (product.novaGroup != null)
+            AppSpacing.lg, AppSpacing.md, AppSpacing.lg, 0),
+        child: SafeArea(
+          top: false,
+          minimum: const EdgeInsets.only(bottom: AppSpacing.lg),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    if (product.imageUrl != null)
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(AppRadius.sm),
+                        child: Image.network(
+                          product.imageUrl!,
+                          width: 52,
+                          height: 52,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => const GlowIconBadge(
+                              icon: Icons.qr_code_scanner_rounded, size: 52),
+                        ),
+                      )
+                    else
+                      const GlowIconBadge(
+                          icon: Icons.qr_code_scanner_rounded, size: 52),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(l10n.scanBarcodeNovaLabel,
+                          Text(product.name,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
-                                  color: AppColors.textMuted, fontSize: 10.5)),
-                          Text(_novaLabel(l10n, product.novaGroup!),
-                              style: const TextStyle(
-                                  color: AppColors.textSecondary,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600)),
+                                  color: AppColors.textPrimary,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 15)),
+                          if (product.brand != null)
+                            Text(product.brand!,
+                                style: const TextStyle(
+                                    color: AppColors.textMuted, fontSize: 12)),
                         ],
                       ),
                     ),
-                ],
-              ),
-              if (product.nutriScore != null || product.novaGroup != null)
-                const SizedBox(height: 14),
-              Text(l10n.scanBarcodePer100g,
-                  style: const TextStyle(color: AppColors.textMuted, fontSize: 11.5)),
-              const SizedBox(height: 6),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _macroPreview(l10n.logMealCaloriesLabel,
-                      product.kcalPer100g.round().toString()),
-                  _macroPreview(l10n.logMealProteinLabel,
-                      product.proteinPer100g.round().toString()),
-                  _macroPreview(l10n.logMealCarbsLabel,
-                      product.carbsPer100g.round().toString()),
-                  _macroPreview(
-                      l10n.logMealFatLabel, product.fatPer100g.round().toString()),
-                ],
-              ),
-              const SizedBox(height: 16),
-              CountStepper(
-                label: l10n.logMealGramsLabel,
-                value: grams,
-                min: 10,
-                max: 1000,
-                step: 10,
-                onChanged: onGramsChanged,
-              ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _macroPreview(
-                      l10n.logMealCaloriesLabel, '${product.kcalFor(grams)}'),
-                  _macroPreview(
-                      l10n.logMealProteinLabel, '${product.proteinFor(grams)}'),
-                  _macroPreview(
-                      l10n.logMealCarbsLabel, '${product.carbsFor(grams)}'),
-                  _macroPreview(l10n.logMealFatLabel, '${product.fatFor(grams)}'),
-                ],
-              ),
-              const SizedBox(height: 20),
-              PrimaryButton(label: l10n.scanBarcodeAddButton, onPressed: onLog),
-              const SizedBox(height: 8),
-              SizedBox(
-                width: double.infinity,
-                child: TextButton(
-                  onPressed: onRescan,
-                  child: Text(l10n.scanBarcodeTryAgainButton,
-                      style: const TextStyle(color: AppColors.textMuted)),
+                  ],
                 ),
-              ),
-            ],
+                const SizedBox(height: 14),
+                Row(
+                  children: [
+                    if (product.nutriScore != null) ...[
+                      _NutriScoreBadge(grade: product.nutriScore!),
+                      const SizedBox(width: 10),
+                    ],
+                    if (product.novaGroup != null)
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(l10n.scanBarcodeNovaLabel,
+                                style: const TextStyle(
+                                    color: AppColors.textMuted,
+                                    fontSize: 10.5)),
+                            Text(_novaLabel(l10n, product.novaGroup!),
+                                style: const TextStyle(
+                                    color: AppColors.textSecondary,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600)),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+                if (product.nutriScore != null || product.novaGroup != null)
+                  const SizedBox(height: 14),
+                Text(l10n.scanBarcodePer100g,
+                    style: const TextStyle(
+                        color: AppColors.textMuted, fontSize: 11.5)),
+                const SizedBox(height: 6),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _macroPreview(l10n.logMealCaloriesLabel,
+                        product.kcalPer100g.round().toString()),
+                    _macroPreview(l10n.logMealProteinLabel,
+                        product.proteinPer100g.round().toString()),
+                    _macroPreview(l10n.logMealCarbsLabel,
+                        product.carbsPer100g.round().toString()),
+                    _macroPreview(l10n.logMealFatLabel,
+                        product.fatPer100g.round().toString()),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                CountStepper(
+                  label: l10n.logMealGramsLabel,
+                  value: grams,
+                  min: 10,
+                  max: 1000,
+                  step: 10,
+                  onChanged: onGramsChanged,
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _macroPreview(
+                        l10n.logMealCaloriesLabel, '${product.kcalFor(grams)}'),
+                    _macroPreview(l10n.logMealProteinLabel,
+                        '${product.proteinFor(grams)}'),
+                    _macroPreview(
+                        l10n.logMealCarbsLabel, '${product.carbsFor(grams)}'),
+                    _macroPreview(
+                        l10n.logMealFatLabel, '${product.fatFor(grams)}'),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                PrimaryButton(
+                    label: l10n.scanBarcodeAddButton, onPressed: onLog),
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: TextButton(
+                    onPressed: onRescan,
+                    child: Text(l10n.scanBarcodeTryAgainButton,
+                        style: const TextStyle(color: AppColors.textMuted)),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

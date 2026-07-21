@@ -45,6 +45,9 @@
   "foodCategoryDairy": "Молочные продукты",
   "foodCategoryNuts": "Орехи",
   "foodCategoryGrains": "Крупы и злаки",
+  "foodCategorySweets": "Сладости и выпечка",
+  "foodCategoryDrinks": "Напитки",
+  "foodCategoryPrepared": "Готовые блюда",
   "foodCategoryOther": "Другое",
   "bodyDataTitle": "Ваши данные о теле",
   "bodyDataSubtitle": "Мы используем это, чтобы рассчитать ваш план\nи персонализировать ваш опыт",
@@ -240,11 +243,11 @@
   "dashboardBodyScanEmptyTitle": "Пока нет отметок",
   "dashboardBodyScanEmptySubtitle": "Нажмите, чтобы записать первый вес",
   "logMealTitle": "Приём пищи",
-  "logMealCaloriesToday": "{eaten} / {tdee} ккал сегодня",
+  "logMealCaloriesToday": "{eaten} / {target} ккал сегодня",
   "@logMealCaloriesToday": {
     "placeholders": {
       "eaten": {},
-      "tdee": {}
+      "target": {}
     }
   },
   "logMealSearchTab": "Найти продукт",
@@ -418,12 +421,11 @@
   "healthStatusWeightMostlyFat": "Набор идёт почти весь в жир",
   "healthStatusWeightGainingMuscle": "Отлично — набираешь мышцы",
   "healthStatusWeightNeedsAdjustment": "Требуется корректировка калорий",
-  "healthStatusCalorieDeficit": "Дефицит не даст расти",
-  "healthStatusCalorieBarelySurplus": "Профицита почти нет",
-  "healthStatusCalorieSurplusTooBig": "Профицит слишком большой",
-  "healthStatusCalorieOnTrack": "Профицит в норме — идеально для роста",
-  "healthStatusCalorieLowSurplus": "Профицита мало — рост будет медленным",
-  "healthStatusCalorieFatGainRisk": "Риск набрать лишний жир",
+  "healthStatusCalorieOnTarget": "В точку — соответствует вашей цели",
+  "healthStatusCalorieSlightlyOver": "Небольшой перебор",
+  "healthStatusCalorieWellOver": "Существенный перебор",
+  "healthStatusCalorieSlightlyUnder": "Немного недобор",
+  "healthStatusCalorieWellUnder": "Существенный недобор",
   "healthStatusProteinNoTarget": "—",
   "healthStatusProteinMet": "Норма по белку выполнена",
   "healthStatusProteinSlightlyLow": "Немного не хватает белка",
@@ -452,11 +454,11 @@
       "calories": {}
     }
   },
-  "progressCaloriesSummary": "Цель ~{tdee} ккал · Профицит {surplus}",
+  "progressCaloriesSummary": "Цель ~{target} ккал · {delta}",
   "@progressCaloriesSummary": {
     "placeholders": {
-      "tdee": {},
-      "surplus": {}
+      "target": {},
+      "delta": {}
     }
   },
   "progressHeartRateBpm": "{bpm} уд/мин",
