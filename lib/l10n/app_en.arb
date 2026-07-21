@@ -716,6 +716,22 @@
   "notificationWorkoutReminderBody": "Check your plan and get moving — you've got this.",
   "notificationHydrationReminderTitle": "Hydration check",
   "notificationHydrationReminderBody": "Have you hit your water goal today?",
+  "notificationAchievementUnlockedTitle": "Achievement unlocked 🏆",
+  "notificationAchievementUnlockedBody": "{title} — {description}",
+  "@notificationAchievementUnlockedBody": {
+    "placeholders": {
+      "title": {},
+      "description": {}
+    }
+  },
+  "notificationPetLevelUpTitle": "Your dragon leveled up! 🐲",
+  "notificationPetLevelUpBody": "Now a {stage} — {description}",
+  "@notificationPetLevelUpBody": {
+    "placeholders": {
+      "stage": {},
+      "description": {}
+    }
+  },
   "mobilityChecklistAddAnotherActivity": "+ Add another activity",
   "mobilityChecklistCompleteBanner": "Mobility complete 🧘",
   "mobilityChecklistEmptyTitle": "No mobility activities yet",

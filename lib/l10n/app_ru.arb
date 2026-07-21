@@ -716,6 +716,22 @@
   "notificationWorkoutReminderBody": "Загляните в план и приступайте — у вас всё получится.",
   "notificationHydrationReminderTitle": "Проверка гидратации",
   "notificationHydrationReminderBody": "Вы уже выполнили норму воды на сегодня?",
+  "notificationAchievementUnlockedTitle": "Достижение разблокировано 🏆",
+  "notificationAchievementUnlockedBody": "{title} — {description}",
+  "@notificationAchievementUnlockedBody": {
+    "placeholders": {
+      "title": {},
+      "description": {}
+    }
+  },
+  "notificationPetLevelUpTitle": "Ваш дракон повысил уровень! 🐲",
+  "notificationPetLevelUpBody": "Теперь это {stage} — {description}",
+  "@notificationPetLevelUpBody": {
+    "placeholders": {
+      "stage": {},
+      "description": {}
+    }
+  },
   "mobilityChecklistAddAnotherActivity": "+ Добавить ещё активность",
   "mobilityChecklistCompleteBanner": "Мобильность выполнена 🧘",
   "mobilityChecklistEmptyTitle": "Активностей по мобильности пока нет",

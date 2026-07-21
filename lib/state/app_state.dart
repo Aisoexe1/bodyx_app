@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../data/mock_data.dart';
 import '../l10n/gen/app_localizations.dart';
+import '../logic/achievement_labels.dart';
 import '../logic/health_insights.dart';
+import '../logic/pet_labels.dart';
 import '../models/achievements.dart';
 import '../models/injury.dart';
 import '../models/models.dart';
@@ -258,12 +260,44 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     }
 
     if (gained > 0) {
+      final levelBefore = petLevel;
       petXp += gained;
       unawaited(_persistence.savePetXp(petXp));
       unawaited(_persistence.saveTodayAwardedPetGoals(_petAwardedToday));
       _syncPetXpToServer();
+      _notifyPetLevelUpIfNeeded(levelBefore);
       notifyListeners();
     }
+  }
+
+  /// Best-effort local notification — mirrors [_syncHydrationReminder]'s
+  /// swallow-on-failure policy (no platform channel in tests, no OS
+  /// permission granted yet) so a notification failure never breaks real
+  /// app logic like XP/achievement bookkeeping.
+  void _notifyBestEffort(Future<void> Function() send) {
+    unawaited(() async {
+      try {
+        await send();
+      } catch (e) {
+        debugPrint('Notification failed: $e');
+      }
+    }());
+  }
+
+  /// Fires a "your dragon leveled up" notification whenever XP just added
+  /// crossed into a new [PetStage] — called after every place [petXp] can
+  /// increase (goal completion, admin boost, achievement bonus).
+  void _notifyPetLevelUpIfNeeded(int levelBefore) {
+    if (petLevel <= levelBefore) return;
+    final l10n = lookupAppLocalizations(_effectiveLocale);
+    _notifyBestEffort(() => NotificationService.instance.showPetLevelUp(
+          _effectiveLocale,
+          l10n.notificationPetLevelUpTitle,
+          l10n.notificationPetLevelUpBody(
+            petStageName(l10n, petStage),
+            petStageDescription(l10n, petStage),
+          ),
+        ));
   }
 
   /// True for accounts with elevated backend privileges (`role` is
@@ -281,9 +315,11 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   /// to bypass real progression on a non-admin account.
   void adminBoostPet() {
     if (!isAdminAccount) return;
+    final levelBefore = petLevel;
     petXp += _petXpAdminBoost;
     unawaited(_persistence.savePetXp(petXp));
     _syncPetXpToServer();
+    _notifyPetLevelUpIfNeeded(levelBefore);
     notifyListeners();
   }
 
@@ -1240,11 +1276,11 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     _recordMobilityCompletion();
     _persistMobilityActivities();
     final l10n = lookupAppLocalizations(_effectiveLocale);
-    unawaited(NotificationService.instance.showActivityCompleted(
-      _effectiveLocale,
-      l10n.mobilityActivityCompletedTitle,
-      l10n.mobilityActivityCompletedBody(activity.name),
-    ));
+    _notifyBestEffort(() => NotificationService.instance.showActivityCompleted(
+          _effectiveLocale,
+          l10n.mobilityActivityCompletedTitle,
+          l10n.mobilityActivityCompletedBody(activity.name),
+        ));
     notifyListeners();
   }
 
@@ -1932,6 +1968,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     // and there's a single number ([petXp]) behind both progression
     // systems instead of two disconnected meters.
     var petXpBonus = 0;
+    final newlyUnlocked = <AchievementDef>[];
     for (final def in kAchievementCatalog) {
       if (unlockedAchievementIds.contains(def.id)) continue;
       if (counters[def.family]! >= def.threshold) {
@@ -1939,13 +1976,31 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
         achievementUnlockedAt[def.id] = DateTime.now();
         unlockedNew = true;
         petXpBonus += pointsForTier(def.tier);
+        newlyUnlocked.add(def);
       }
     }
     if (unlockedNew) HapticFeedback.mediumImpact();
+    if (newlyUnlocked.isNotEmpty) {
+      final l10n = lookupAppLocalizations(_effectiveLocale);
+      for (final def in newlyUnlocked) {
+        _notifyBestEffort(() => NotificationService.instance
+            .showAchievementUnlocked(
+              _effectiveLocale,
+              l10n.notificationAchievementUnlockedTitle,
+              l10n.notificationAchievementUnlockedBody(
+                achievementTitleFor(l10n, def.id),
+                achievementDescriptionFor(l10n, def.id),
+              ),
+              id: def.id.hashCode & 0x7fffffff,
+            ));
+      }
+    }
     if (petXpBonus > 0) {
+      final levelBefore = petLevel;
       petXp += petXpBonus;
       unawaited(_persistence.savePetXp(petXp));
       _syncPetXpToServer();
+      _notifyPetLevelUpIfNeeded(levelBefore);
     }
     _persistAchievements();
   }
