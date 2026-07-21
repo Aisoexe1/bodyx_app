@@ -15,7 +15,6 @@ class AdminUserDoc(me.Document):
     email = me.StringField(required=True)
     username = me.StringField(required=True)
     password_hash = me.StringField(required=True)
-    name = me.StringField()
     gender = me.StringField(choices=["male", "female"])
     height_cm = me.FloatField()
     weight_kg = me.FloatField()

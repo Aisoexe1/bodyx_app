@@ -4,6 +4,21 @@ import '../models/models.dart';
 import 'api_client.dart';
 import 'token_storage.dart';
 
+/// Thrown by [AuthRepository.loginWithGoogle]/[loginWithApple] when the
+/// backend has verified the token but found no existing account for that
+/// email — the caller must collect a username from the user and call
+/// [AuthRepository.completeGoogleSignUp]/[completeAppleSignUp] with the
+/// same token to actually create the account.
+class OAuthNeedsUsername implements Exception {
+  OAuthNeedsUsername({required this.email, required this.token});
+  final String email;
+
+  /// The Google idToken or Apple identityToken — re-sent verbatim to the
+  /// matching `complete` endpoint (tokens are short-lived but easily long
+  /// enough to cover the time it takes to type a username).
+  final String token;
+}
+
 /// Owns the account lifecycle: register/login create a session (JWT stored
 /// securely), [restoreSession] silently re-validates a stored session on
 /// app launch, and [signOut] clears it. All network/token concerns are
@@ -33,15 +48,31 @@ abstract class AuthRepository {
     required String newPassword,
   });
 
-  /// Verifies a Google ID token server-side and logs in, creating the
-  /// account on first sign-in. Throws [ApiException] (401 invalid token,
-  /// 501 if the backend's Google client ID isn't configured yet).
+  /// Verifies a Google ID token server-side and logs in an existing
+  /// same-provider account. Throws [OAuthNeedsUsername] if this email has
+  /// no account yet (call [completeGoogleSignUp] next). Throws
+  /// [ApiException] (401 invalid token, 409 if the email belongs to a
+  /// different sign-in method, 501 if the backend's Google client ID isn't
+  /// configured yet).
   Future<UserProfile> loginWithGoogle(String idToken);
 
-  /// Verifies an Apple identity token server-side and logs in, creating the
-  /// account on first sign-in. Throws [ApiException] (401 invalid token,
-  /// 501 if the backend's Apple client ID isn't configured yet).
+  /// Creates a new Google-authenticated account with [username] (already
+  /// validated available) and logs in. Throws [ApiException] on a 409
+  /// (email or username taken in the moment between the two calls).
+  Future<UserProfile> completeGoogleSignUp(String idToken, String username);
+
+  /// Verifies an Apple identity token server-side and logs in an existing
+  /// same-provider account. Throws [OAuthNeedsUsername] if this email has
+  /// no account yet (call [completeAppleSignUp] next). Throws
+  /// [ApiException] (401 invalid token, 409 if the email belongs to a
+  /// different sign-in method, 501 if the backend's Apple client ID isn't
+  /// configured yet).
   Future<UserProfile> loginWithApple(String identityToken);
+
+  /// Creates a new Apple-authenticated account with [username] (already
+  /// validated available) and logs in. Throws [ApiException] on a 409
+  /// (email or username taken in the moment between the two calls).
+  Future<UserProfile> completeAppleSignUp(String identityToken, String username);
 
   /// Returns the restored profile if a stored session is still valid, or
   /// `null` if there's no session, the token expired/was rejected, or the
@@ -117,6 +148,17 @@ class ApiAuthRepository implements AuthRepository {
   Future<UserProfile> loginWithGoogle(String idToken) async {
     final json = await _client.post('/auth/oauth/google', {'idToken': idToken})
         as Map<String, dynamic>;
+    if (json['needsUsername'] == true) {
+      throw OAuthNeedsUsername(email: json['email'] as String, token: idToken);
+    }
+    await _tokenStorage.saveToken(json['accessToken'] as String);
+    return UserProfile.fromJson(json['user'] as Map<String, dynamic>);
+  }
+
+  @override
+  Future<UserProfile> completeGoogleSignUp(String idToken, String username) async {
+    final json = await _client.post('/auth/oauth/google/complete',
+        {'idToken': idToken, 'username': username}) as Map<String, dynamic>;
     await _tokenStorage.saveToken(json['accessToken'] as String);
     return UserProfile.fromJson(json['user'] as Map<String, dynamic>);
   }
@@ -125,6 +167,17 @@ class ApiAuthRepository implements AuthRepository {
   Future<UserProfile> loginWithApple(String identityToken) async {
     final json = await _client.post('/auth/oauth/apple', {'identityToken': identityToken})
         as Map<String, dynamic>;
+    if (json['needsUsername'] == true) {
+      throw OAuthNeedsUsername(email: json['email'] as String, token: identityToken);
+    }
+    await _tokenStorage.saveToken(json['accessToken'] as String);
+    return UserProfile.fromJson(json['user'] as Map<String, dynamic>);
+  }
+
+  @override
+  Future<UserProfile> completeAppleSignUp(String identityToken, String username) async {
+    final json = await _client.post('/auth/oauth/apple/complete',
+        {'identityToken': identityToken, 'username': username}) as Map<String, dynamic>;
     await _tokenStorage.saveToken(json['accessToken'] as String);
     return UserProfile.fromJson(json['user'] as Map<String, dynamic>);
   }

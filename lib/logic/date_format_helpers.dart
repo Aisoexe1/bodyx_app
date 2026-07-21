@@ -1,18 +1,24 @@
+import 'package:flutter/widgets.dart';
+
+import '../l10n/gen/app_localizations.dart';
+
 /// Formats the gap between two dates the way progress-photo comparisons
 /// want to read it: tight day counts for short gaps, months for medium
 /// gaps, and years+months once it's been over a year — so "37 days apart"
 /// and "14 months apart" both read naturally instead of a flat day count
 /// that gets unwieldy past a few months.
-String formatElapsed(DateTime from, DateTime to) {
+String formatElapsed(BuildContext context, DateTime from, DateTime to) {
+  final l10n = AppLocalizations.of(context)!;
   final days = to.difference(from).inDays.abs();
 
-  if (days == 0) return 'Same day';
+  if (days == 0) return l10n.progressCompareSameDay;
   if (days < 60) {
-    return days == 1 ? '1 day apart' : '$days days apart';
+    return l10n.progressCompareElapsedLabel(l10n.progressCompareUnitDays(days));
   }
   if (days < 365) {
     final months = (days / 30).round();
-    return months <= 1 ? '1 month apart' : '$months months apart';
+    return l10n
+        .progressCompareElapsedLabel(l10n.progressCompareUnitMonths(months));
   }
 
   var years = days ~/ 365;
@@ -21,8 +27,8 @@ String formatElapsed(DateTime from, DateTime to) {
     years += 1;
     remMonths = 0;
   }
-  final yearPart = years == 1 ? '1 year' : '$years years';
-  if (remMonths == 0) return '$yearPart apart';
-  final monthPart = remMonths == 1 ? '1 month' : '$remMonths months';
-  return '$yearPart $monthPart apart';
+  final yearPart = l10n.progressCompareUnitYears(years);
+  if (remMonths == 0) return l10n.progressCompareElapsedLabel(yearPart);
+  final monthPart = l10n.progressCompareUnitMonths(remMonths);
+  return l10n.progressCompareElapsedLabel('$yearPart $monthPart');
 }

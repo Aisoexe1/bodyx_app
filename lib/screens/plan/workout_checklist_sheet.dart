@@ -11,6 +11,7 @@ import '../../widgets/common/inputs_buttons.dart';
 import '../../widgets/common/scale_tap.dart';
 import '../../widgets/common/timer_bar.dart';
 import 'add_exercise_sheet.dart';
+import 'rpe_picker_sheet.dart';
 
 /// A real, checkable set-by-set workout list built entirely by the user —
 /// no fixed template. Starts empty; exercises are added on demand, each
@@ -67,6 +68,31 @@ class _WorkoutChecklistSheetState extends State<WorkoutChecklistSheet> {
     );
     if (confirmed && mounted) {
       context.read<AppState>().removeExercise(exercise);
+    }
+  }
+
+  /// Toggles [index]'s done state; if that just marked it done, immediately
+  /// asks for an RPE rating. Re-tapping an already-rated done set (rather
+  /// than un-checking it) is handled separately via long-press, so a single
+  /// tap always means "toggle done" — consistent with the pre-existing tap
+  /// semantics on this chip.
+  Future<void> _toggleSet(int index) async {
+    final appState = context.read<AppState>();
+    appState.toggleWorkoutSet(index);
+    final set = appState.todayWorkoutSets[index];
+    if (!set.done) return;
+    final rpe = await showRpePicker(context, initialRpe: set.rpe);
+    if (rpe != null && mounted) {
+      appState.setWorkoutSetRpe(index, rpe);
+    }
+  }
+
+  Future<void> _editRpe(int index) async {
+    final appState = context.read<AppState>();
+    final current = appState.todayWorkoutSets[index].rpe;
+    final rpe = await showRpePicker(context, initialRpe: current);
+    if (rpe != null && mounted) {
+      appState.setWorkoutSetRpe(index, rpe);
     }
   }
 
@@ -215,9 +241,9 @@ class _WorkoutChecklistSheetState extends State<WorkoutChecklistSheet> {
                               children: indices.map((i) {
                                 final set = sets[i];
                                 return ScaleTap(
-                                  onTap: () => context
-                                      .read<AppState>()
-                                      .toggleWorkoutSet(i),
+                                  onTap: () => _toggleSet(i),
+                                  onLongPress:
+                                      set.done ? () => _editRpe(i) : null,
                                   child: Container(
                                     width: 64,
                                     padding: const EdgeInsets.symmetric(
@@ -259,6 +285,14 @@ class _WorkoutChecklistSheetState extends State<WorkoutChecklistSheet> {
                                                 color: set.done
                                                     ? AppColors.success
                                                     : AppColors.textMuted)),
+                                        if (set.done && set.rpe != null) ...[
+                                          const SizedBox(height: 2),
+                                          Text('RPE ${set.rpe}',
+                                              style: const TextStyle(
+                                                  fontSize: 9,
+                                                  fontWeight: FontWeight.w700,
+                                                  color: AppColors.textMuted)),
+                                        ],
                                       ],
                                     ),
                                   ),

@@ -32,7 +32,7 @@ class _UsernameScreenState extends State<UsernameScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(describeApiError(e))));
+            .showSnackBar(SnackBar(content: Text(describeApiError(context, e))));
       }
     } finally {
       if (mounted) setState(() => _loading = false);

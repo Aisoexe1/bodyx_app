@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:bodyx_app/l10n/gen/app_localizations.dart';
+import '../../logic/achievement_labels.dart';
 import '../../logic/goal_labels.dart';
+import '../../logic/units.dart';
+import '../../models/achievements.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
@@ -9,6 +12,7 @@ import '../../widgets/common/glow_card.dart';
 import '../../widgets/common/scale_tap.dart';
 import '../body_metrics/body_metrics_screen.dart';
 import '../settings/settings_detail_screens.dart';
+import 'achievements_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -52,8 +56,8 @@ class ProfileScreen extends StatelessWidget {
                         ),
                         child: Center(
                           child: Text(
-                            (user?.name.isNotEmpty ?? false)
-                                ? user!.name[0].toUpperCase()
+                            (user?.username.isNotEmpty ?? false)
+                                ? user!.username[0].toUpperCase()
                                 : AppLocalizations.of(context)!
                                     .profileDefaultAvatarInitial,
                             style: const TextStyle(
@@ -65,17 +69,12 @@ class ProfileScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                          user?.name ??
+                          user?.username ??
                               AppLocalizations.of(context)!.profileDefaultName,
                           style: const TextStyle(
                               color: AppColors.textPrimary,
                               fontWeight: FontWeight.w800,
                               fontSize: 18)),
-                      Text(
-                          AppLocalizations.of(context)!.profileUsernameHandle(
-                              user?.username ?? 'athlete'),
-                          style: const TextStyle(
-                              color: AppColors.textMuted, fontSize: 12.5)),
                       const SizedBox(height: 16),
                       Row(
                         children: [
@@ -83,18 +82,18 @@ class ProfileScreen extends StatelessWidget {
                               child: _StatPill(
                                   label: AppLocalizations.of(context)!
                                       .profileHeightLabel,
-                                  value: AppLocalizations.of(context)!
-                                      .profileHeightValue(user?.heightCm
-                                              .toStringAsFixed(0) ??
-                                          '--'))),
+                                  value: user == null
+                                      ? '--'
+                                      : formatHeight(context, user.heightCm,
+                                          user.unitsMetric))),
                           Expanded(
                               child: _StatPill(
                                   label: AppLocalizations.of(context)!
                                       .profileWeightLabel,
-                                  value: AppLocalizations.of(context)!
-                                      .profileWeightValue(user?.weightKg
-                                              .toStringAsFixed(0) ??
-                                          '--'))),
+                                  value: user == null
+                                      ? '--'
+                                      : formatWeight(context, user.weightKg,
+                                          user.unitsMetric))),
                           Expanded(
                               child: _StatPill(
                                   label: AppLocalizations.of(context)!
@@ -131,6 +130,8 @@ class ProfileScreen extends StatelessWidget {
                     ],
                   ),
                 ),
+                const SizedBox(height: 20),
+                _RankCard(state: state),
                 const SizedBox(height: 24),
                 _GroupLabel(
                     AppLocalizations.of(context)!.profileAccountGroupLabel),
@@ -216,6 +217,93 @@ class ProfileScreen extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Rank + points summary, tappable through to the full [AchievementsScreen]
+/// — the app's entry point for the achievement/rank system.
+class _RankCard extends StatelessWidget {
+  const _RankCard({required this.state});
+  final AppState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final rank = state.rank;
+    final color = rankColor(rank);
+    final next = nextRank(rank);
+    final end = nextRankThreshold(rank);
+    final points = state.achievementPoints;
+
+    return ScaleTap(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const AchievementsScreen()),
+      ),
+      child: GlowCard(
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: color.withValues(alpha: 0.16),
+                border: Border.all(color: color, width: 2),
+              ),
+              child: Icon(Icons.military_tech_rounded, color: color, size: 24),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(rankName(context, rank),
+                          style: TextStyle(
+                              color: color,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 15)),
+                      const SizedBox(width: 8),
+                      Text(l10n.achievementsPointsLabel(points),
+                          style: const TextStyle(
+                              color: AppColors.textMuted, fontSize: 12)),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
+                    child: LinearProgressIndicator(
+                      value: end == null
+                          ? 1.0
+                          : ((points - rankStartThreshold(rank)) /
+                                  (end - rankStartThreshold(rank)))
+                              .clamp(0.0, 1.0),
+                      minHeight: 6,
+                      backgroundColor: AppColors.surfaceElevated,
+                      valueColor: AlwaysStoppedAnimation<Color>(color),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    next == null
+                        ? l10n.achievementsMaxRank
+                        : l10n.achievementsNextRankProgress(
+                            end! - points, rankName(context, next)),
+                    style: const TextStyle(
+                        color: AppColors.textMuted, fontSize: 11),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 6),
+            const Icon(Icons.chevron_right_rounded,
+                color: AppColors.textMuted, size: 20),
+          ],
+        ),
       ),
     );
   }

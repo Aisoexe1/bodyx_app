@@ -48,7 +48,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(describeApiError(e))));
+            .showSnackBar(SnackBar(content: Text(describeApiError(context, e))));
       }
     } finally {
       if (mounted) setState(() => _loading = false);

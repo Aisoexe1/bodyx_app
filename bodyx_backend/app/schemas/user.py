@@ -25,7 +25,6 @@ class UserCreate(CamelModel):
     email: EmailStr
     username: str = Field(min_length=3, max_length=32)
     password: str = Field(min_length=6, max_length=128)
-    name: str = "Alex"
     gender: Gender = Gender.male
     height_cm: float = 190
     weight_kg: float = 75
@@ -66,13 +65,31 @@ class GoogleAuthRequest(CamelModel):
     id_token: str
 
 
+class GoogleAuthCompleteRequest(CamelModel):
+    id_token: str
+    username: str = Field(min_length=3, max_length=32)
+
+
 class AppleAuthRequest(CamelModel):
     identity_token: str
 
 
+class AppleAuthCompleteRequest(CamelModel):
+    identity_token: str
+    username: str = Field(min_length=3, max_length=32)
+
+
+class OAuthNeedsUsernameResponse(CamelModel):
+    """Returned instead of a [Token] when an OAuth sign-in's email has no
+    existing account yet — the client must collect a username and call the
+    matching `/oauth/{provider}/complete` endpoint to actually create it."""
+
+    needs_username: bool = True
+    email: EmailStr
+
+
 class UserUpdate(CamelModel):
     username: Optional[str] = Field(default=None, min_length=3, max_length=32)
-    name: Optional[str] = None
     gender: Optional[Gender] = None
     height_cm: Optional[float] = None
     weight_kg: Optional[float] = None
@@ -87,7 +104,6 @@ class UserPublic(CamelModel):
     id: PyObjectId = Field(alias="id")
     email: EmailStr
     username: str
-    name: str
     gender: Gender
     height_cm: float
     weight_kg: float

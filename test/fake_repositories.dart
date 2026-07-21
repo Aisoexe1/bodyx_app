@@ -38,7 +38,6 @@ class FakeAuthRepository implements AuthRepository {
     return UserProfile(
       email: email,
       username: resolvedUsername,
-      name: resolvedUsername.isEmpty ? 'Athlete' : resolvedUsername,
     );
   }
 
@@ -70,17 +69,38 @@ class FakeAuthRepository implements AuthRepository {
   Object? googleLoginThrows;
   Object? appleLoginThrows;
 
+  /// When true, [loginWithGoogle]/[loginWithApple] simulate a brand-new
+  /// email (no existing account) by throwing [OAuthNeedsUsername] instead
+  /// of returning a profile directly — matching what the real backend does
+  /// for a first-time sign-in.
+  bool googleNeedsUsername = false;
+  bool appleNeedsUsername = false;
+
   @override
   Future<UserProfile> loginWithGoogle(String idToken) async {
     if (googleLoginThrows != null) throw googleLoginThrows!;
+    if (googleNeedsUsername) {
+      throw OAuthNeedsUsername(email: 'google-user@bodyx.app', token: idToken);
+    }
     return UserProfile(email: 'google-user@bodyx.app', username: 'googleuser');
   }
 
   @override
+  Future<UserProfile> completeGoogleSignUp(String idToken, String username) async =>
+      UserProfile(email: 'google-user@bodyx.app', username: username);
+
+  @override
   Future<UserProfile> loginWithApple(String identityToken) async {
     if (appleLoginThrows != null) throw appleLoginThrows!;
+    if (appleNeedsUsername) {
+      throw OAuthNeedsUsername(email: 'apple-user@bodyx.app', token: identityToken);
+    }
     return UserProfile(email: 'apple-user@bodyx.app', username: 'appleuser');
   }
+
+  @override
+  Future<UserProfile> completeAppleSignUp(String identityToken, String username) async =>
+      UserProfile(email: 'apple-user@bodyx.app', username: username);
 
   @override
   Future<UserProfile?> restoreSession() async => restoredSession;
@@ -130,7 +150,15 @@ class UnreachableAuthRepository implements AuthRepository {
       throw const SocketException('Network is unreachable');
 
   @override
+  Future<UserProfile> completeGoogleSignUp(String idToken, String username) =>
+      throw const SocketException('Network is unreachable');
+
+  @override
   Future<UserProfile> loginWithApple(String identityToken) =>
+      throw const SocketException('Network is unreachable');
+
+  @override
+  Future<UserProfile> completeAppleSignUp(String identityToken, String username) =>
       throw const SocketException('Network is unreachable');
 
   @override

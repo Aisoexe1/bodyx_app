@@ -44,7 +44,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(describeApiError(e))));
+            .showSnackBar(SnackBar(content: Text(describeApiError(context, e))));
       }
     }
   }
@@ -57,7 +57,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(describeApiError(e))));
+            .showSnackBar(SnackBar(content: Text(describeApiError(context, e))));
       }
     }
   }

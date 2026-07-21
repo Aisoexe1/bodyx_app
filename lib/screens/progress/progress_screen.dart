@@ -2,17 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:bodyx_app/l10n/gen/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../logic/health_insights.dart';
+import '../../logic/health_insights_labels.dart';
+import '../../logic/units.dart';
 import '../../models/models.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
 import '../../theme/status_colors.dart';
-import '../../widgets/charts/macro_bars.dart';
 import '../../widgets/charts/sleep_donut_chart.dart';
 import '../../widgets/charts/steps_bar_chart.dart';
 import '../../widgets/charts/weight_line_chart.dart';
+import '../../widgets/common/calories_card.dart';
 import '../../widgets/common/glow_card.dart';
 import '../../widgets/common/progress_ring.dart';
+import '../../widgets/common/scale_tap.dart';
+import '../body_metrics/log_metrics_sheet.dart';
 
 class ProgressScreen extends StatefulWidget {
   const ProgressScreen({super.key});
@@ -27,6 +31,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
+    final unitsMetric = state.user?.unitsMetric ?? true;
     final weightHistory = state.weightHistory;
     // A brand new account has no weigh-ins yet — don't assume there's
     // always a first/last entry to diff.
@@ -34,6 +39,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
     final lastWeight = hasWeightHistory ? weightHistory.last : null;
     final delta =
         hasWeightHistory ? lastWeight!.kg - weightHistory.first.kg : 0.0;
+    final weightChange7d = _weightChangeLast7Days(weightHistory);
     final stats = state.dailyStats;
     final windowed = _rangeIndex == 0
         ? _calendarWeek(stats)
@@ -81,7 +87,12 @@ class _ProgressScreenState extends State<ProgressScreen> {
                                 StatChip(
                                   label: AppLocalizations.of(context)!
                                       .progressWeightDelta(
-                                          '${delta <= 0 ? '' : '+'}${delta.toStringAsFixed(1)}'),
+                                          '${delta <= 0 ? '' : '+'}${(unitsMetric ? delta : kgToLb(delta)).toStringAsFixed(1)}',
+                                          unitsMetric
+                                              ? AppLocalizations.of(context)!
+                                                  .settingsKgUnit
+                                              : AppLocalizations.of(context)!
+                                                  .bodyDataUnitLb),
                                   color: delta <= 0
                                       ? AppColors.success
                                       : AppColors.warning,
@@ -95,42 +106,63 @@ class _ProgressScreenState extends State<ProgressScreen> {
                             Text(
                                 AppLocalizations.of(context)!
                                     .progressWeightValue(
-                                        '${lastWeight!.kg.round()}'),
+                                        (unitsMetric
+                                                ? lastWeight!.kg
+                                                : kgToLb(lastWeight!.kg))
+                                            .round()
+                                            .toString(),
+                                        unitsMetric
+                                            ? AppLocalizations.of(context)!
+                                                .settingsKgUnit
+                                            : AppLocalizations.of(context)!
+                                                .bodyDataUnitLb),
                                 style: const TextStyle(
                                     color: AppColors.textPrimary,
                                     fontWeight: FontWeight.w800,
                                     fontSize: 28)),
                             const SizedBox(height: 12),
-                            WeightLineChart(entries: weightHistory),
+                            WeightLineChart(
+                                entries: weightHistory,
+                                unitsMetric: unitsMetric),
                           ],
                         )
-                      : Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                const Icon(Icons.monitor_weight_outlined,
-                                    color: AppColors.textMuted, size: 20),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                      AppLocalizations.of(context)!
-                                          .progressWeightEmptyTitle,
-                                      style: const TextStyle(
-                                          color: AppColors.textPrimary,
-                                          fontWeight: FontWeight.w700,
-                                          fontSize: 14)),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                                AppLocalizations.of(context)!
-                                    .progressWeightEmptySubtitle,
-                                style: const TextStyle(
-                                    color: AppColors.textMuted,
-                                    fontSize: 12.5)),
-                          ],
+                      : ScaleTap(
+                          onTap: () => showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            backgroundColor: Colors.transparent,
+                            builder: (_) => const LogMetricsSheet(),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  const Icon(Icons.monitor_weight_outlined,
+                                      color: AppColors.textMuted, size: 20),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                        AppLocalizations.of(context)!
+                                            .progressWeightEmptyTitle,
+                                        style: const TextStyle(
+                                            color: AppColors.textPrimary,
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: 14)),
+                                  ),
+                                  const Icon(Icons.chevron_right_rounded,
+                                      color: AppColors.textMuted, size: 20),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                  AppLocalizations.of(context)!
+                                      .progressWeightEmptySubtitle,
+                                  style: const TextStyle(
+                                      color: AppColors.textMuted,
+                                      fontSize: 12.5)),
+                            ],
+                          ),
                         ),
                 ),
                 if (state.user?.goal == 'Build muscle') ...[
@@ -142,16 +174,23 @@ class _ProgressScreenState extends State<ProgressScreen> {
                   children: [
                     Expanded(
                       child: _RingStatCard(
-                        label: AppLocalizations.of(context)!.progressBodyFatLabel,
-                        value: hasWeightHistory
-                            ? AppLocalizations.of(context)!
-                                .progressBodyFatValue(
-                                    lastWeight!.bodyFatPct.toStringAsFixed(1))
+                        label: AppLocalizations.of(context)!
+                            .progressWeightChangeLabel,
+                        value: weightChange7d != null
+                            ? AppLocalizations.of(context)!.progressWeightDelta(
+                                '${weightChange7d <= 0 ? '' : '+'}${(unitsMetric ? weightChange7d : kgToLb(weightChange7d)).toStringAsFixed(1)}',
+                                unitsMetric
+                                    ? AppLocalizations.of(context)!
+                                        .settingsKgUnit
+                                    : AppLocalizations.of(context)!
+                                        .bodyDataUnitLb)
                             : '—',
-                        progress: hasWeightHistory
-                            ? (lastWeight!.bodyFatPct / 30).clamp(0, 1)
+                        progress: weightChange7d != null
+                            ? (weightChange7d.abs() / 3).clamp(0, 1)
                             : 0.0,
-                        color: AppColors.warning,
+                        color: (weightChange7d ?? 0) <= 0
+                            ? AppColors.success
+                            : AppColors.warning,
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -199,13 +238,13 @@ class _ProgressScreenState extends State<ProgressScreen> {
                     subtitle:
                         AppLocalizations.of(context)!.progressCaloriesSubtitle),
                 const SizedBox(height: 12),
-                _CaloriesCard(state: state),
+                CaloriesCard(state: state),
                 const SizedBox(height: 24),
                 SectionHeader(
                   title: AppLocalizations.of(context)!.progressSleepTitle,
                   subtitle: todayStats.sleepStagesSynced
-                      ? "Today's breakdown · synced from Health"
-                      : "Today's breakdown · estimated (enable Health sync in Settings for real stages)",
+                      ? AppLocalizations.of(context)!.progressSleepSubtitleSynced
+                      : AppLocalizations.of(context)!.progressSleepSubtitleEstimated,
                 ),
                 const SizedBox(height: 12),
                 GlowCard(
@@ -260,6 +299,24 @@ class _ProgressScreenState extends State<ProgressScreen> {
       );
     });
   }
+
+  /// Change since the most recent entry at least 7 days before the latest
+  /// one, so the ring shows a recent trend rather than the same
+  /// since-the-beginning delta already shown in the weight card above.
+  /// Null when there isn't a week of history yet.
+  double? _weightChangeLast7Days(List<WeightEntry> history) {
+    if (history.length < 2) return null;
+    final last = history.last;
+    final cutoff = last.date.subtract(const Duration(days: 7));
+    WeightEntry? weekAgo;
+    for (final entry in history) {
+      if (!entry.date.isAfter(cutoff)) {
+        weekAgo = entry;
+      }
+    }
+    if (weekAgo == null || identical(weekAgo, last)) return null;
+    return last.kg - weekAgo.kg;
+  }
 }
 
 /// Reads the weight trend and body-fat% trend together as one verdict —
@@ -288,7 +345,7 @@ class _WeightVerdictCard extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(verdict.label,
+            child: Text(statusLabel(context, verdict),
                 style: const TextStyle(
                     color: AppColors.textPrimary,
                     fontWeight: FontWeight.w700,
@@ -300,70 +357,16 @@ class _WeightVerdictCard extends StatelessWidget {
   }
 }
 
-/// Shows the surplus as a difference (eaten - TDEE), never a raw calorie
-/// count on its own — plus a protein target, since a surplus without
-/// enough protein mostly builds fat, not muscle.
-class _CaloriesCard extends StatelessWidget {
-  const _CaloriesCard({required this.state});
-  final AppState state;
-
-  @override
-  Widget build(BuildContext context) {
-    final surplus = state.calorieSurplus;
-    final status = state.calorieSurplusStatus;
-    final color = statusColor(status.level);
-    final totalProtein =
-        state.meals.fold<int>(0, (sum, m) => sum + m.proteinG);
-    final totalCarbs = state.meals.fold<int>(0, (sum, m) => sum + m.carbsG);
-    final totalFat = state.meals.fold<int>(0, (sum, m) => sum + m.fatG);
-
-    return GlowCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                  AppLocalizations.of(context)!.progressCaloriesEaten(
-                      '${state.todayCaloriesEaten}'),
-                  style: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 24)),
-              const Spacer(),
-              StatChip(label: status.label, color: color),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            AppLocalizations.of(context)!.progressCaloriesSummary(
-                '${state.tdee.round()}',
-                '${surplus >= 0 ? '+' : ''}$surplus'),
-            style: const TextStyle(color: AppColors.textMuted, fontSize: 12.5),
-          ),
-          const SizedBox(height: 20),
-          MacroBars(
-            proteinG: totalProtein,
-            carbsG: totalCarbs,
-            fatG: totalFat,
-            proteinGoal: state.proteinTargetG.round(),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _RangeSelector extends StatelessWidget {
   const _RangeSelector({required this.index, required this.onChanged});
   final int index;
   final ValueChanged<int> onChanged;
 
-  static const _labels = ['Week', 'Month', 'Year'];
-
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final labels = [l10n.progressRangeWeek, l10n.progressRangeMonth, l10n.progressRangeYear];
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
@@ -372,7 +375,7 @@ class _RangeSelector extends StatelessWidget {
         border: Border.all(color: AppColors.cardBorder),
       ),
       child: Row(
-        children: List.generate(_labels.length, (i) {
+        children: List.generate(labels.length, (i) {
           final active = i == index;
           return Expanded(
             child: GestureDetector(
@@ -386,7 +389,7 @@ class _RangeSelector extends StatelessWidget {
                   borderRadius: BorderRadius.circular(AppRadius.pill),
                 ),
                 child: Text(
-                  _labels[i],
+                  labels[i],
                   style: TextStyle(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w700,

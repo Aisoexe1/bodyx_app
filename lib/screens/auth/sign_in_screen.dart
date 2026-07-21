@@ -7,6 +7,8 @@ import '../../state/app_state.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/inputs_buttons.dart';
+import '../../widgets/common/language_picker.dart';
+import '../../widgets/common/scale_tap.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -20,6 +22,7 @@ class _SignInScreenState extends State<SignInScreen> {
   final _password = TextEditingController();
   bool _obscure = true;
   bool _loading = false;
+  bool _rememberMe = false;
 
   @override
   void dispose() {
@@ -36,11 +39,13 @@ class _SignInScreenState extends State<SignInScreen> {
     }
     setState(() => _loading = true);
     try {
-      await context.read<AppState>().signIn(_email.text, _password.text);
+      await context
+          .read<AppState>()
+          .signIn(_email.text, _password.text, rememberMe: _rememberMe);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(describeApiError(e))));
+            .showSnackBar(SnackBar(content: Text(describeApiError(context, e))));
       }
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -55,7 +60,7 @@ class _SignInScreenState extends State<SignInScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(describeApiError(e))));
+            .showSnackBar(SnackBar(content: Text(describeApiError(context, e))));
       }
     }
   }
@@ -68,13 +73,14 @@ class _SignInScreenState extends State<SignInScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(describeApiError(e))));
+            .showSnackBar(SnackBar(content: Text(describeApiError(context, e))));
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final languageCode = context.watch<AppState>().locale?.languageCode ?? 'en';
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -84,7 +90,35 @@ class _SignInScreenState extends State<SignInScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 24),
+              Align(
+                alignment: Alignment.topRight,
+                child: ScaleTap(
+                  onTap: () => showLanguagePicker(context),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceElevated,
+                      borderRadius: BorderRadius.circular(AppRadius.pill),
+                      border: Border.all(color: AppColors.cardBorder),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.language_rounded,
+                            size: 16, color: AppColors.textMuted),
+                        const SizedBox(width: 6),
+                        Text(languageCode.toUpperCase(),
+                            style: const TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w700)),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
               Text(AppLocalizations.of(context)!.signInWelcomeBack,
                   style: const TextStyle(
                       fontSize: 30,
@@ -111,6 +145,33 @@ class _SignInScreenState extends State<SignInScreen> {
                     ? Icons.visibility_off_outlined
                     : Icons.visibility_outlined,
                 onSuffixTap: () => setState(() => _obscure = !_obscure),
+              ),
+              const SizedBox(height: 10),
+              GestureDetector(
+                onTap: () => setState(() => _rememberMe = !_rememberMe),
+                behavior: HitTestBehavior.opaque,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: Checkbox(
+                        value: _rememberMe,
+                        onChanged: (v) =>
+                            setState(() => _rememberMe = v ?? true),
+                        activeColor: AppColors.primary,
+                        side: const BorderSide(color: AppColors.cardBorder),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(6)),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Text(AppLocalizations.of(context)!.signInRememberMe,
+                        style: const TextStyle(
+                            color: AppColors.textSecondary, fontSize: 13.5)),
+                  ],
+                ),
               ),
               const SizedBox(height: 16),
               PrimaryButton(

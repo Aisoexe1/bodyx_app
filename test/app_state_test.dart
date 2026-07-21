@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:bodyx_app/models/achievements.dart';
+import 'package:bodyx_app/models/injury.dart';
 import 'package:bodyx_app/models/models.dart';
+import 'package:bodyx_app/models/scanned_product.dart';
 import 'package:bodyx_app/state/app_state.dart';
 import 'package:bodyx_app/state/persistence_service.dart';
 
@@ -28,7 +31,7 @@ void main() {
     test('logging water is what first raises today above 0', () async {
       final state = newTestAppState();
       await state.hydrate();
-      await state.signIn('water@bodyx.app', 'pw');
+      await state.signIn('water@bodyx.app', 'pw', rememberMe: true);
 
       expect(state.dailyStats.last.waterMl, 0);
 
@@ -40,7 +43,7 @@ void main() {
         () async {
       final state = newTestAppState();
       await state.hydrate();
-      await state.signIn('water2@bodyx.app', 'pw');
+      await state.signIn('water2@bodyx.app', 'pw', rememberMe: true);
 
       state.logWater(200);
       state.logWater(500);
@@ -70,7 +73,7 @@ void main() {
       final state = newTestAppState();
       await state.hydrate();
 
-      await state.signIn('taylor@bodyx.app', 'whatever');
+      await state.signIn('taylor@bodyx.app', 'whatever', rememberMe: true);
 
       expect(state.authStage, AuthStage.done);
       expect(state.user, isNotNull);
@@ -107,11 +110,47 @@ void main() {
       expect(state.bodyMeasurements.keys.toSet(), MuscleZone.values.toSet());
     });
 
+    test(
+        'submitBodyData persists the imperial/metric choice made during onboarding',
+        () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      state.submitSignUp('imperial@bodyx.app', 'pw');
+      await state.submitUsername('imperialuser');
+
+      state.submitBodyData(
+        gender: Gender.male,
+        heightCm: 180,
+        weightKg: 80,
+        age: 30,
+        unitsMetric: false,
+      );
+
+      expect(state.user!.unitsMetric, false);
+    });
+
+    test('signIn with rememberMe: false does not survive a restart',
+        () async {
+      final state = newTestAppState();
+      await state.hydrate();
+
+      await state.signIn('taylor@bodyx.app', 'whatever', rememberMe: false);
+      // Still signed in for the current app run.
+      expect(state.authStage, AuthStage.done);
+      expect(state.user, isNotNull);
+
+      final restarted = newTestAppState();
+      await restarted.hydrate();
+      restarted.finishSplash();
+      expect(restarted.authStage, AuthStage.signIn,
+          reason: 'an un-remembered session must not survive a restart');
+    });
+
     test('signOut clears the session and does not auto-restore it',
         () async {
       final state = newTestAppState();
       await state.hydrate();
-      await state.signIn('taylor@bodyx.app', 'whatever');
+      await state.signIn('taylor@bodyx.app', 'whatever', rememberMe: true);
 
       state.signOut();
       expect(state.user, isNull);
@@ -134,7 +173,7 @@ void main() {
       // even though every call to the fake backend throws a connectivity
       // error — this is what keeps the app usable before/without a live
       // server, matching every other network feature's offline fallback.
-      await state.signIn('offline@bodyx.app', 'pw');
+      await state.signIn('offline@bodyx.app', 'pw', rememberMe: true);
 
       expect(state.authStage, AuthStage.done);
       expect(state.user, isNotNull);
@@ -173,6 +212,26 @@ void main() {
       expect(state.authStage, AuthStage.done);
       expect(state.user, isNotNull);
       expect(state.user!.email, 'google-user@bodyx.app');
+    });
+
+    test(
+        'signInWithGoogle moves to chooseUsername for a brand-new email instead of auto-creating',
+        () async {
+      final authRepo = FakeAuthRepository()..googleNeedsUsername = true;
+      final state = newTestAppState(authRepository: authRepo);
+      await state.hydrate();
+
+      await state.signInWithGoogle('fake-id-token');
+
+      expect(state.authStage, AuthStage.chooseUsername);
+      expect(state.user, isNull,
+          reason: 'no account should exist yet — only after submitUsername');
+
+      await state.submitUsername('chosenhandle');
+
+      expect(state.authStage, AuthStage.done);
+      expect(state.user!.email, 'google-user@bodyx.app');
+      expect(state.user!.username, 'chosenhandle');
     });
 
     test('signInWithApple logs the user in on success', () async {
@@ -272,7 +331,7 @@ void main() {
     test('user profile and onboarding survive a restart', () async {
       final state = newTestAppState();
       await state.hydrate();
-      await state.signIn('persist@bodyx.app', 'pw');
+      await state.signIn('persist@bodyx.app', 'pw', rememberMe: true);
 
       final restarted = newTestAppState();
       await restarted.hydrate();
@@ -286,7 +345,7 @@ void main() {
     test('logged weight entries survive a restart', () async {
       final state = newTestAppState();
       await state.hydrate();
-      await state.signIn('weight@bodyx.app', 'pw');
+      await state.signIn('weight@bodyx.app', 'pw', rememberMe: true);
       final before = state.weightHistory.length;
 
       state.logWeight(81.4, 19.5);
@@ -305,7 +364,7 @@ void main() {
     test('logged body measurements survive a restart', () async {
       final state = newTestAppState();
       await state.hydrate();
-      await state.signIn('measure@bodyx.app', 'pw');
+      await state.signIn('measure@bodyx.app', 'pw', rememberMe: true);
 
       state.logMeasurement(MuscleZone.chest, 106.5);
       final expectedHistoryLength =
@@ -334,7 +393,7 @@ void main() {
     test('alert read-state survives a restart', () async {
       final state = newTestAppState();
       await state.hydrate();
-      await state.signIn('alerts@bodyx.app', 'pw');
+      await state.signIn('alerts@bodyx.app', 'pw', rememberMe: true);
 
       final unreadBefore = state.unreadAlertCount;
       expect(unreadBefore, greaterThan(0));
@@ -352,7 +411,7 @@ void main() {
         () async {
       final state = newTestAppState(authRepository: UnreachableAuthRepository());
       await state.hydrate();
-      await state.signIn('delete@bodyx.app', 'pw');
+      await state.signIn('delete@bodyx.app', 'pw', rememberMe: true);
 
       await state.deleteAccount(); // server DELETE throws → flag persisted
 
@@ -370,7 +429,7 @@ void main() {
     test('notification settings survive a restart', () async {
       final state = newTestAppState();
       await state.hydrate();
-      await state.signIn('settings@bodyx.app', 'pw');
+      await state.signIn('settings@bodyx.app', 'pw', rememberMe: true);
 
       state.toggleNotifications(false);
       state.toggleWorkoutReminders(false);
@@ -386,7 +445,7 @@ void main() {
         () async {
       final state = newTestAppState();
       await state.hydrate();
-      await state.signIn('meals@bodyx.app', 'pw');
+      await state.signIn('meals@bodyx.app', 'pw', rememberMe: true);
 
       expect(state.meals, isEmpty);
       state.logMeal(const MealEntry(
@@ -412,7 +471,7 @@ void main() {
     test('removeMeal drops just that entry', () async {
       final state = newTestAppState();
       await state.hydrate();
-      await state.signIn('removemeal@bodyx.app', 'pw');
+      await state.signIn('removemeal@bodyx.app', 'pw', rememberMe: true);
 
       state.logMeal(const MealEntry(
         name: 'Oats',
@@ -451,7 +510,7 @@ void main() {
         () async {
       final state = newTestAppState();
       await state.hydrate();
-      await state.signIn('workout@bodyx.app', 'pw');
+      await state.signIn('workout@bodyx.app', 'pw', rememberMe: true);
 
       state.addExercise('Bench Press', 4, 8);
       expect(state.todayWorkoutSets.length, 4);
@@ -463,12 +522,13 @@ void main() {
 
       state.addExercise('Squats', 3, 10);
       expect(state.todayWorkoutSets.length, 7);
+      expect(state.todayWorkoutSets.every((s) => s.rpe == null), true);
     });
 
     test('removeExercise drops only that exercise\'s sets', () async {
       final state = newTestAppState();
       await state.hydrate();
-      await state.signIn('workout2@bodyx.app', 'pw');
+      await state.signIn('workout2@bodyx.app', 'pw', rememberMe: true);
 
       state.addExercise('Bench Press', 2, 8);
       state.addExercise('Squats', 3, 10);
@@ -484,7 +544,7 @@ void main() {
         () async {
       final state = newTestAppState();
       await state.hydrate();
-      await state.signIn('workout3@bodyx.app', 'pw');
+      await state.signIn('workout3@bodyx.app', 'pw', rememberMe: true);
       state.addExercise('Squats', 3, 10);
 
       expect(state.todayWorkoutCompletedSets, 0);
@@ -504,11 +564,44 @@ void main() {
       expect(restarted.todayWorkoutSets[1].done, true);
     });
 
+    test('setWorkoutSetRpe rates a completed set and persists across restart',
+        () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      await state.signIn('rpe@bodyx.app', 'pw', rememberMe: true);
+      state.addExercise('Deadlift', 2, 5);
+
+      state.toggleWorkoutSet(0);
+      state.setWorkoutSetRpe(0, 8);
+      expect(state.todayWorkoutSets[0].rpe, 8);
+      expect(state.todayWorkoutSets[1].rpe, isNull);
+
+      final restarted = newTestAppState();
+      await restarted.hydrate();
+      expect(restarted.todayWorkoutSets[0].rpe, 8);
+    });
+
+    test('un-marking a set clears its rpe — it was never actually performed',
+        () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      await state.signIn('rpe2@bodyx.app', 'pw', rememberMe: true);
+      state.addExercise('Deadlift', 1, 5);
+
+      state.toggleWorkoutSet(0);
+      state.setWorkoutSetRpe(0, 9);
+      expect(state.todayWorkoutSets[0].rpe, 9);
+
+      state.toggleWorkoutSet(0);
+      expect(state.todayWorkoutSets[0].done, false);
+      expect(state.todayWorkoutSets[0].rpe, isNull);
+    });
+
     test('toggleWorkoutTimer starts and stops, banking elapsed seconds',
         () async {
       final state = newTestAppState();
       await state.hydrate();
-      await state.signIn('workout4@bodyx.app', 'pw');
+      await state.signIn('workout4@bodyx.app', 'pw', rememberMe: true);
 
       expect(state.isWorkoutTimerRunning, false);
       expect(state.todayWorkoutElapsed, Duration.zero);
@@ -529,7 +622,7 @@ void main() {
         () async {
       final state = newTestAppState();
       await state.hydrate();
-      await state.signIn('workout5@bodyx.app', 'pw');
+      await state.signIn('workout5@bodyx.app', 'pw', rememberMe: true);
 
       state.toggleWorkoutTimer();
       state.toggleWorkoutTimer();
@@ -559,7 +652,7 @@ void main() {
     test('addMobilityActivity, toggle, and removeMobilityActivity', () async {
       final state = newTestAppState();
       await state.hydrate();
-      await state.signIn('mobility@bodyx.app', 'pw');
+      await state.signIn('mobility@bodyx.app', 'pw', rememberMe: true);
 
       state.addMobilityActivity('Hip flexor stretch', 5);
       state.addMobilityActivity('Foam rolling', 10);
@@ -752,7 +845,7 @@ void main() {
         () async {
       final state = newTestAppState();
       await state.hydrate();
-      await state.signIn('photos@bodyx.app', 'pw');
+      await state.signIn('photos@bodyx.app', 'pw', rememberMe: true);
 
       expect(state.progressPhotos, isEmpty);
 
@@ -783,19 +876,19 @@ void main() {
     test('updateProfile only touches provided fields', () async {
       final state = newTestAppState();
       await state.hydrate();
-      await state.signIn('profile@bodyx.app', 'pw');
+      await state.signIn('profile@bodyx.app', 'pw', rememberMe: true);
       final originalUsername = state.user!.username;
 
-      state.updateProfile(name: 'New Name');
+      state.updateProfile(goal: 'New Goal');
 
-      expect(state.user!.name, 'New Name');
+      expect(state.user!.goal, 'New Goal');
       expect(state.user!.username, originalUsername);
     });
 
     test('updateGender regenerates measurements for every zone', () async {
       final state = newTestAppState();
       await state.hydrate();
-      await state.signIn('gender@bodyx.app', 'pw');
+      await state.signIn('gender@bodyx.app', 'pw', rememberMe: true);
 
       state.updateGender(Gender.female);
 
@@ -807,7 +900,7 @@ void main() {
     test('updateHeightWeightAge applies only non-null fields', () async {
       final state = newTestAppState();
       await state.hydrate();
-      await state.signIn('hwage@bodyx.app', 'pw');
+      await state.signIn('hwage@bodyx.app', 'pw', rememberMe: true);
       final originalHeight = state.user!.heightCm;
 
       state.updateHeightWeightAge(weightKg: 70, age: 30);
@@ -820,7 +913,7 @@ void main() {
     test('toggleUnits flips the metric flag', () async {
       final state = newTestAppState();
       await state.hydrate();
-      await state.signIn('units@bodyx.app', 'pw');
+      await state.signIn('units@bodyx.app', 'pw', rememberMe: true);
       final before = state.user!.unitsMetric;
 
       state.toggleUnits();
@@ -922,7 +1015,7 @@ void main() {
         () async {
       final onboarding = newTestAppState();
       await onboarding.hydrate();
-      await onboarding.signIn('announce@bodyx.app', 'pw');
+      await onboarding.signIn('announce@bodyx.app', 'pw', rememberMe: true);
 
       final announcement = Announcement(
         id: 'ann-1',
@@ -946,7 +1039,7 @@ void main() {
     test('dismissAnnouncement removes it from activeAnnouncements', () async {
       final onboarding = newTestAppState();
       await onboarding.hydrate();
-      await onboarding.signIn('announce2@bodyx.app', 'pw');
+      await onboarding.signIn('announce2@bodyx.app', 'pw', rememberMe: true);
 
       final announcement = Announcement(
         id: 'ann-2',
@@ -972,7 +1065,7 @@ void main() {
     test('a dismissed announcement stays dismissed across a restart', () async {
       final onboarding = newTestAppState();
       await onboarding.hydrate();
-      await onboarding.signIn('announce3@bodyx.app', 'pw');
+      await onboarding.signIn('announce3@bodyx.app', 'pw', rememberMe: true);
 
       final announcement = Announcement(
         id: 'ann-3',
@@ -1032,7 +1125,6 @@ void main() {
       final user = UserProfile(
         email: 'json@bodyx.app',
         username: 'jsonuser',
-        name: 'JSON Tester',
         gender: Gender.female,
         heightCm: 172.5,
         weightKg: 63.2,
@@ -1047,7 +1139,6 @@ void main() {
 
       expect(restored.email, user.email);
       expect(restored.username, user.username);
-      expect(restored.name, user.name);
       expect(restored.gender, user.gender);
       expect(restored.heightCm, user.heightCm);
       expect(restored.weightKg, user.weightKg);
@@ -1138,6 +1229,333 @@ void main() {
         awakeMinutes: 0,
       );
       expect(stats.sleepLabel, '7h 34m');
+    });
+
+    test('ScannedProduct scales per-100g macros to the chosen gram amount',
+        () {
+      const product = ScannedProduct(
+        barcode: '3017620422003',
+        name: 'Nutella',
+        nutriScore: NutriScoreGrade.e,
+        novaGroup: 4,
+        kcalPer100g: 539,
+        proteinPer100g: 6.3,
+        carbsPer100g: 57.5,
+        fatPer100g: 30.9,
+      );
+
+      expect(product.kcalFor(100), 539);
+      expect(product.kcalFor(30), 162); // 539 * 0.3 = 161.7, rounds to 162
+      expect(product.proteinFor(50), 3); // 6.3 * 0.5 = 3.15, rounds to 3
+      expect(product.carbsFor(200), 115);
+      expect(product.fatFor(0), 0);
+    });
+
+    test('Injury JSON round-trip preserves every field', () {
+      final injury = Injury(
+        id: '123',
+        bodyPart: InjuryBodyPart.rightKnee,
+        type: InjuryType.tendinitis,
+        description: 'Aches after running',
+        date: DateTime(2026, 5, 3),
+      );
+      final restored = Injury.fromJson(injury.toJson());
+      expect(restored.id, injury.id);
+      expect(restored.bodyPart, injury.bodyPart);
+      expect(restored.type, injury.type);
+      expect(restored.description, injury.description);
+      expect(restored.date, injury.date);
+    });
+  });
+
+  group('injuries (3D body map)', () {
+    test('logInjury adds a new entry to the front of the list', () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      await state.signIn('injury1@bodyx.app', 'pw', rememberMe: true);
+
+      expect(state.injuries, isEmpty);
+      state.logInjury(
+          InjuryBodyPart.leftKnee, InjuryType.sprain, 'Sharp pain when bending');
+      expect(state.injuries.length, 1);
+      expect(state.injuries.first.bodyPart, InjuryBodyPart.leftKnee);
+      expect(state.injuries.first.type, InjuryType.sprain);
+      expect(state.injuries.first.description, 'Sharp pain when bending');
+
+      state.logInjury(InjuryBodyPart.rightAnkle, InjuryType.strain, '');
+      expect(state.injuries.length, 2);
+      expect(state.injuries.first.bodyPart, InjuryBodyPart.rightAnkle);
+    });
+
+    test('removeInjury drops just that entry', () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      await state.signIn('injury2@bodyx.app', 'pw', rememberMe: true);
+
+      state.logInjury(InjuryBodyPart.leftKnee, InjuryType.sprain, 'a');
+      state.logInjury(InjuryBodyPart.rightAnkle, InjuryType.strain, 'b');
+      expect(state.injuries.length, 2);
+
+      final toRemove = state.injuries.last;
+      state.removeInjury(toRemove.id);
+      expect(state.injuries.length, 1);
+      expect(state.injuries.first.bodyPart, InjuryBodyPart.rightAnkle);
+    });
+
+    test('logged injuries survive a restart', () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      await state.signIn('injury3@bodyx.app', 'pw', rememberMe: true);
+
+      state.logInjury(
+          InjuryBodyPart.leftAnkle, InjuryType.sprain, 'Twisted it running');
+
+      final restarted = newTestAppState();
+      await restarted.hydrate();
+
+      expect(restarted.injuries.length, 1);
+      expect(restarted.injuries.first.bodyPart, InjuryBodyPart.leftAnkle);
+      expect(restarted.injuries.first.type, InjuryType.sprain);
+      expect(restarted.injuries.first.description, 'Twisted it running');
+    });
+  });
+
+  group('achievements and rank', () {
+    test(
+        'logging meals unlocks nutrition achievements at the right thresholds',
+        () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      await state.signIn('achieve-meals@bodyx.app', 'pw', rememberMe: true);
+
+      state.logMeal(const MealEntry(
+        name: 'Oats',
+        time: '08:00',
+        kcal: 300,
+        proteinG: 10,
+        carbsG: 50,
+        fatG: 5,
+        icon: Icons.breakfast_dining_rounded,
+      ));
+      expect(state.totalMealsLogged, 1);
+      expect(state.unlockedAchievementIds.contains('nutrition_bronze'), true);
+      expect(state.unlockedAchievementIds.contains('nutrition_silver'), false);
+      expect(state.achievementPoints, 10);
+
+      for (var i = 0; i < 24; i++) {
+        state.logMeal(const MealEntry(
+          name: 'Snack',
+          time: '10:00',
+          kcal: 100,
+          proteinG: 5,
+          carbsG: 10,
+          fatG: 2,
+          icon: Icons.icecream_rounded,
+        ));
+      }
+      expect(state.totalMealsLogged, 25);
+      expect(state.unlockedAchievementIds.contains('nutrition_silver'), true);
+      expect(state.achievementPoints, 10 + 25);
+    });
+
+    test(
+        'a full workout day only counts once no matter how many times sets are toggled',
+        () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      await state.signIn('achieve-workout@bodyx.app', 'pw', rememberMe: true);
+      state.addExercise('Squats', 2, 10);
+
+      state.toggleWorkoutSet(0);
+      state.toggleWorkoutSet(1);
+      expect(state.totalWorkoutsCompleted, 1);
+      expect(state.unlockedAchievementIds.contains('workout_bronze'), true);
+
+      state.toggleWorkoutSet(0);
+      state.toggleWorkoutSet(0);
+      expect(state.totalWorkoutsCompleted, 1);
+    });
+
+    test('mobility completions increment the counter across the toggle path',
+        () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      await state.signIn('achieve-mobility@bodyx.app', 'pw', rememberMe: true);
+
+      for (var i = 0; i < 10; i++) {
+        state.addMobilityActivity('Stretch $i', 5);
+      }
+      for (var i = 0; i < 10; i++) {
+        state.toggleMobilityActivity(i);
+      }
+      expect(state.totalMobilityCompleted, 10);
+      expect(state.unlockedAchievementIds.contains('mobility_bronze'), true);
+      expect(state.unlockedAchievementIds.contains('mobility_silver'), true);
+    });
+
+    test('meeting the water goal only counts once per day', () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      await state.signIn('achieve-water@bodyx.app', 'pw', rememberMe: true);
+
+      state.logWater(state.individualizedWaterGoalMl);
+      expect(state.totalWaterGoalDaysMet, 1);
+      expect(state.unlockedAchievementIds.contains('hydration_bronze'), true);
+
+      state.logWater(200);
+      expect(state.totalWaterGoalDaysMet, 1);
+    });
+
+    test('a perfect ending day starts a 1-day streak on the next resume',
+        () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      await state.signIn('achieve-streak@bodyx.app', 'pw', rememberMe: true);
+
+      final yesterday = DateTime.now().subtract(const Duration(days: 1));
+      final endingDay =
+          DateTime(yesterday.year, yesterday.month, yesterday.day);
+      final updated = List<DailyStats>.from(state.dailyStats);
+      updated[updated.length - 1] = DailyStats(
+        date: endingDay,
+        steps: 0,
+        stepGoal: 10000,
+        calories: 0,
+        calorieGoal: 2200,
+        sleepMinutes: 0,
+        sleepGoalMinutes: 480,
+        waterMl: 3000,
+        waterGoalMl: 2500,
+        lightSleepMinutes: 0,
+        deepSleepMinutes: 0,
+        remSleepMinutes: 0,
+        awakeMinutes: 0,
+      );
+      state.dailyStats = updated;
+      state.logMeal(const MealEntry(
+        name: 'Dinner',
+        time: '19:00',
+        kcal: 500,
+        proteinG: 30,
+        carbsG: 40,
+        fatG: 15,
+        icon: Icons.restaurant_rounded,
+      ));
+      state.addMobilityActivity('Stretch', 5);
+      state.toggleMobilityActivity(0);
+
+      state.didChangeAppLifecycleState(AppLifecycleState.resumed);
+
+      expect(state.currentStreak, 1);
+      expect(state.longestStreak, 1);
+      expect(state.unlockedAchievementIds.contains('streak_bronze'), false);
+    });
+
+    test('a non-perfect ending day resets the streak back to 0', () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      await state.signIn('achieve-streak2@bodyx.app', 'pw', rememberMe: true);
+
+      final yesterday = DateTime.now().subtract(const Duration(days: 1));
+      final endingDay =
+          DateTime(yesterday.year, yesterday.month, yesterday.day);
+
+      final perfectDay = List<DailyStats>.from(state.dailyStats);
+      perfectDay[perfectDay.length - 1] = DailyStats(
+        date: endingDay,
+        steps: 0,
+        stepGoal: 10000,
+        calories: 0,
+        calorieGoal: 2200,
+        sleepMinutes: 0,
+        sleepGoalMinutes: 480,
+        waterMl: 3000,
+        waterGoalMl: 2500,
+        lightSleepMinutes: 0,
+        deepSleepMinutes: 0,
+        remSleepMinutes: 0,
+        awakeMinutes: 0,
+      );
+      state.dailyStats = perfectDay;
+      state.logMeal(const MealEntry(
+        name: 'Dinner',
+        time: '19:00',
+        kcal: 500,
+        proteinG: 30,
+        carbsG: 40,
+        fatG: 15,
+        icon: Icons.restaurant_rounded,
+      ));
+      state.addMobilityActivity('Stretch', 5);
+      state.toggleMobilityActivity(0);
+      state.didChangeAppLifecycleState(AppLifecycleState.resumed);
+      expect(state.currentStreak, 1);
+
+      // A later resume whose ending day has nothing logged (today's fields
+      // were already wiped empty by the rollover above) breaks the streak.
+      final furtherBack = DateTime.now().subtract(const Duration(days: 5));
+      final brokenDay = List<DailyStats>.from(state.dailyStats);
+      brokenDay[brokenDay.length - 1] = DailyStats(
+        date: DateTime(furtherBack.year, furtherBack.month, furtherBack.day),
+        steps: 0,
+        stepGoal: 10000,
+        calories: 0,
+        calorieGoal: 2200,
+        sleepMinutes: 0,
+        sleepGoalMinutes: 480,
+        waterMl: 0,
+        waterGoalMl: 2500,
+        lightSleepMinutes: 0,
+        deepSleepMinutes: 0,
+        remSleepMinutes: 0,
+        awakeMinutes: 0,
+      );
+      state.dailyStats = brokenDay;
+      state.didChangeAppLifecycleState(AppLifecycleState.resumed);
+
+      expect(state.currentStreak, 0);
+    });
+
+    test('achievementPoints sums unlocked tiers and rank derives from the total',
+        () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      await state.signIn('achieve-rank@bodyx.app', 'pw', rememberMe: true);
+
+      expect(state.achievementPoints, 0);
+      expect(state.rank, Rank.bronze);
+
+      state.unlockedAchievementIds.addAll(['streak_gold', 'workout_gold']);
+      expect(state.achievementPoints, 150);
+      expect(state.rank, Rank.silver);
+
+      state.unlockedAchievementIds.add('nutrition_platinum');
+      expect(state.achievementPoints, 350);
+      expect(state.rank, Rank.gold);
+    });
+
+    test('achievement progress survives a restart', () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      await state.signIn('achieve-restart@bodyx.app', 'pw', rememberMe: true);
+
+      state.logMeal(const MealEntry(
+        name: 'Oats',
+        time: '08:00',
+        kcal: 300,
+        proteinG: 10,
+        carbsG: 50,
+        fatG: 5,
+        icon: Icons.breakfast_dining_rounded,
+      ));
+      expect(state.unlockedAchievementIds.contains('nutrition_bronze'), true);
+
+      final restarted = newTestAppState();
+      await restarted.hydrate();
+
+      expect(restarted.totalMealsLogged, 1);
+      expect(
+          restarted.unlockedAchievementIds.contains('nutrition_bronze'), true);
     });
   });
 }

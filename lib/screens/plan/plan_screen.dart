@@ -8,8 +8,8 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/glow_card.dart';
 import '../../widgets/common/scale_tap.dart';
-import '../body_metrics/log_metrics_sheet.dart';
 import 'daily_plan_screen.dart';
+import 'daily_summary_screen.dart';
 import 'mobility_checklist_sheet.dart';
 import 'workout_checklist_sheet.dart';
 
@@ -197,80 +197,10 @@ class PlanScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
-                GlowCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(AppLocalizations.of(context)!.planTodaysGoals,
-                          style: const TextStyle(
-                              color: AppColors.textPrimary,
-                              fontWeight: FontWeight.w800,
-                              fontSize: 15)),
-                      const SizedBox(height: 16),
-                      _ProgressLine(
-                        label: AppLocalizations.of(context)!.planSteps,
-                        value: stats.stepProgress,
-                        trailing: AppLocalizations.of(context)!
-                            .planStepsProgress(
-                          stats.steps.toString(),
-                          stats.stepGoal.toString(),
-                        ),
-                        color: AppColors.primaryBright,
-                      ),
-                      const SizedBox(height: 14),
-                      _ProgressLine(
-                        label: AppLocalizations.of(context)!.planCalories,
-                        value: stats.calorieProgress,
-                        trailing: AppLocalizations.of(context)!
-                            .planCaloriesProgress(
-                          stats.calories.toString(),
-                          stats.calorieGoal.toString(),
-                        ),
-                        color: AppColors.warning,
-                      ),
-                      const SizedBox(height: 14),
-                      _ProgressLine(
-                        label: AppLocalizations.of(context)!.planSleep,
-                        value: stats.sleepProgress,
-                        trailing: stats.sleepLabel,
-                        color: AppColors.info,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: ScaleTap(
-                        onTap: () => showModalBottomSheet(
-                          context: context,
-                          isScrollControlled: true,
-                          backgroundColor: Colors.transparent,
-                          builder: (_) => const LogMetricsSheet(),
-                        ),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                                colors: AppColors.primaryGradient),
-                            borderRadius: BorderRadius.circular(AppRadius.sm),
-                          ),
-                          child: Text(
-                              AppLocalizations.of(context)!
-                                  .planLogFullActivity,
-                              style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w700)),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
                 const SizedBox(height: 24),
-                _ThisWeekSection(days: state.dailyStats.sublist(state.dailyStats.length - 7)),
+                _ThisWeekSection(
+                    days:
+                        state.dailyStats.sublist(state.dailyStats.length - 7)),
               ]),
             ),
           ),
@@ -285,13 +215,11 @@ class _ProgressLine extends StatelessWidget {
     required this.label,
     required this.value,
     required this.trailing,
-    this.color = AppColors.primary,
   });
 
   final String label;
   final double value;
   final String trailing;
-  final Color color;
 
   @override
   Widget build(BuildContext context) {
@@ -324,7 +252,7 @@ class _ProgressLine extends StatelessWidget {
               value: t,
               minHeight: 7,
               backgroundColor: AppColors.surfaceElevated,
-              valueColor: AlwaysStoppedAnimation(color),
+              valueColor: const AlwaysStoppedAnimation(AppColors.primary),
             ),
           ),
         ),
@@ -407,63 +335,71 @@ class _ThisWeekSectionState extends State<_ThisWeekSection> {
                       final isToday = i == widget.days.length - 1;
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 10),
-                        child: GlowCard(
-                          borderColor: isToday ? AppColors.primary : null,
-                          child: Row(
-                            children: [
-                              SizedBox(
-                                width: 42,
-                                child: Column(
-                                  children: [
-                                    Text(DateFormat('E').format(day.date),
-                                        style: const TextStyle(
-                                            color: AppColors.textMuted,
-                                            fontSize: 11)),
-                                    Text(DateFormat('d').format(day.date),
-                                        style: TextStyle(
-                                            color: isToday
-                                                ? AppColors.primaryBright
-                                                : AppColors.textPrimary,
-                                            fontWeight: FontWeight.w800,
-                                            fontSize: 15)),
-                                  ],
+                        child: ScaleTap(
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => DailySummaryScreen(stats: day)),
+                          ),
+                          child: GlowCard(
+                            borderColor: isToday ? AppColors.primary : null,
+                            child: Row(
+                              children: [
+                                SizedBox(
+                                  width: 42,
+                                  child: Column(
+                                    children: [
+                                      Text(DateFormat('E').format(day.date),
+                                          style: const TextStyle(
+                                              color: AppColors.textMuted,
+                                              fontSize: 11)),
+                                      Text(DateFormat('d').format(day.date),
+                                          style: TextStyle(
+                                              color: isToday
+                                                  ? AppColors.primaryBright
+                                                  : AppColors.textPrimary,
+                                              fontWeight: FontWeight.w800,
+                                              fontSize: 15)),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                        AppLocalizations.of(context)!
-                                            .planDaySummary(
-                                          day.steps.toString(),
-                                          day.calories.toString(),
-                                        ),
-                                        style: const TextStyle(
-                                            color: AppColors.textPrimary,
-                                            fontSize: 12.5,
-                                            fontWeight: FontWeight.w600)),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                        AppLocalizations.of(context)!
-                                            .planDaySleep(day.sleepLabel),
-                                        style: const TextStyle(
-                                            color: AppColors.textMuted,
-                                            fontSize: 11.5)),
-                                  ],
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                          AppLocalizations.of(context)!
+                                              .planDaySummary(
+                                            day.steps.toString(),
+                                            day.calories.toString(),
+                                          ),
+                                          style: const TextStyle(
+                                              color: AppColors.textPrimary,
+                                              fontSize: 12.5,
+                                              fontWeight: FontWeight.w600)),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                          AppLocalizations.of(context)!
+                                              .planDaySleep(day.sleepLabel),
+                                          style: const TextStyle(
+                                              color: AppColors.textMuted,
+                                              fontSize: 11.5)),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                              Icon(
-                                day.stepProgress >= 1
-                                    ? Icons.check_circle_rounded
-                                    : Icons.circle_outlined,
-                                color: day.stepProgress >= 1
-                                    ? AppColors.success
-                                    : AppColors.textMuted,
-                                size: 20,
-                              ),
-                            ],
+                                Icon(
+                                  day.stepProgress >= 1
+                                      ? Icons.check_circle_rounded
+                                      : Icons.circle_outlined,
+                                  color: day.stepProgress >= 1
+                                      ? AppColors.success
+                                      : AppColors.textMuted,
+                                  size: 20,
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       );

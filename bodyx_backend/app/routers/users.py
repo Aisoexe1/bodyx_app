@@ -34,3 +34,11 @@ async def update_me(
 
     updated = await user_repo.update_user(db, current_user["_id"], updates)
     return user_doc_to_public(updated)
+
+
+@router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_me(
+    current_user: dict = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(_get_db),
+):
+    await user_repo.delete_user(db, current_user["_id"])

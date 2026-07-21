@@ -132,6 +132,7 @@ class _BodyDataScreenState extends State<BodyDataScreen> {
                       heightCm: _metric ? _height : _height * 2.54,
                       weightKg: _metric ? _weight : _weight * 0.4536,
                       age: _age,
+                      unitsMetric: _metric,
                     ),
               ),
               const SizedBox(height: 12),

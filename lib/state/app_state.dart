@@ -4,6 +4,8 @@ import 'package:flutter/services.dart';
 import '../data/mock_data.dart';
 import '../l10n/gen/app_localizations.dart';
 import '../logic/health_insights.dart';
+import '../models/achievements.dart';
+import '../models/injury.dart';
 import '../models/models.dart';
 import '../network/announcement_repository.dart';
 import '../network/api_client.dart';
@@ -69,8 +71,8 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     meals = [];
     progressPhotos = [];
     WidgetsBinding.instance.addObserver(this);
-    _announcementPollTimer =
-        Timer.periodic(const Duration(seconds: 30), (_) => _pollAnnouncements());
+    _announcementPollTimer = Timer.periodic(
+        const Duration(seconds: 30), (_) => _pollAnnouncements());
   }
 
   @override
@@ -105,6 +107,8 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     final today = DateTime(now.year, now.month, now.day);
     if (dailyStats.last.date == today) return;
 
+    _evaluateStreakForEndingDay(dailyStats.last.date);
+
     dailyStats = MockData.emptyDailyStats();
     todayWaterLog = [];
     meals = [];
@@ -124,7 +128,8 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     unawaited(_persistence.saveTodayMeals(meals));
     unawaited(_persistence.saveTodayWorkoutSets(todayWorkoutSets));
     unawaited(_persistence.saveTodayWorkoutTimer(0, null));
-    unawaited(_persistence.saveTodayMobilityActivities(todayMobilityActivities));
+    unawaited(
+        _persistence.saveTodayMobilityActivities(todayMobilityActivities));
     if (healthSyncEnabled) unawaited(syncHealthData());
     _pushWidgetOverview();
     notifyListeners();
@@ -304,8 +309,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       locale = Locale(savedLocaleCode);
     }
 
-    final savedDismissedIds =
-        await _persistence.loadDismissedAnnouncementIds();
+    final savedDismissedIds = await _persistence.loadDismissedAnnouncementIds();
     _dismissedAnnouncementIds
       ..clear()
       ..addAll(savedDismissedIds);
@@ -335,6 +339,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     }
     user = savedUser;
     bodyViewerGender = savedUser.gender;
+    _applyGoalAdjustedTargets();
 
     final savedWeight = await _persistence.loadWeightHistory();
     if (savedWeight != null && savedWeight.isNotEmpty) {
@@ -349,6 +354,11 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     final savedPhotos = await _persistence.loadProgressPhotos();
     if (savedPhotos != null) {
       progressPhotos = savedPhotos;
+    }
+
+    final savedInjuries = await _persistence.loadInjuries();
+    if (savedInjuries != null) {
+      injuries = savedInjuries;
     }
 
     final savedTasksDone = await _persistence.loadPlanTaskDone();
@@ -367,12 +377,34 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
 
     notificationsEnabled =
         await _persistence.loadNotificationsEnabled() ?? notificationsEnabled;
-    workoutRemindersEnabled = await _persistence.loadWorkoutRemindersEnabled() ??
-        workoutRemindersEnabled;
+    workoutRemindersEnabled =
+        await _persistence.loadWorkoutRemindersEnabled() ??
+            workoutRemindersEnabled;
     healthSyncEnabled =
         await _persistence.loadHealthSyncEnabled() ?? healthSyncEnabled;
-    publicProfile = await _persistence.loadPublicProfile() ?? publicProfile;
     shareAnonData = await _persistence.loadShareAnonData() ?? shareAnonData;
+
+    // Must load before [savedWaterLog] below — that triggers
+    // [_applyTodayWaterTotal], which checks the water-goal guard fields
+    // this restores.
+    final savedAchievements = await _persistence.loadAchievementProgress();
+    if (savedAchievements != null) {
+      totalWorkoutsCompleted = savedAchievements.totalWorkoutsCompleted;
+      totalMobilityCompleted = savedAchievements.totalMobilityCompleted;
+      totalMealsLogged = savedAchievements.totalMealsLogged;
+      totalWaterGoalDaysMet = savedAchievements.totalWaterGoalDaysMet;
+      currentStreak = savedAchievements.currentStreak;
+      longestStreak = savedAchievements.longestStreak;
+      _lastStreakDate = savedAchievements.lastStreakDate;
+      _lastWorkoutCompleteDate = savedAchievements.lastWorkoutCompleteDate;
+      _lastWaterGoalMetDate = savedAchievements.lastWaterGoalMetDate;
+      unlockedAchievementIds
+        ..clear()
+        ..addAll(savedAchievements.unlockedAchievementIds);
+      achievementUnlockedAt
+        ..clear()
+        ..addAll(savedAchievements.achievementUnlockedAt);
+    }
 
     final savedWaterLog = await _persistence.loadTodayWaterLog();
     if (savedWaterLog != null && savedWaterLog.isNotEmpty) {
@@ -454,7 +486,8 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
         _persistMeasurements();
       }
     } catch (e) {
-      debugPrint('Failed to pull weight/measurements during session restore: $e');
+      debugPrint(
+          'Failed to pull weight/measurements during session restore: $e');
     }
 
     try {
@@ -467,6 +500,47 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
 
   void _persistUser() {
     if (user != null) unawaited(_persistence.saveUserProfile(user!));
+    _applyGoalAdjustedTargets();
+  }
+
+  /// Keeps today's step/active-calorie targets in step with the user's
+  /// stated goal (see [HealthInsights.stepGoalFor] /
+  /// [HealthInsights.activeCalorieGoal]) — called wherever [user] is set or
+  /// edited, so a goal change takes effect immediately instead of the
+  /// dashboard showing yesterday's flat defaults.
+  void _applyGoalAdjustedTargets() {
+    if (user == null || dailyStats.isEmpty) return;
+    final today = dailyStats.last;
+    final newStepGoal = HealthInsights.stepGoalFor(user!.goal);
+    final newCalorieGoal = HealthInsights.activeCalorieGoal(
+      gender: user!.gender,
+      weightKg: user!.weightKg,
+      heightCm: user!.heightCm,
+      age: user!.age,
+      activityLevel: user!.activityLevel,
+      goal: user!.goal,
+    );
+    if (today.stepGoal == newStepGoal && today.calorieGoal == newCalorieGoal) {
+      return;
+    }
+    final updated = List<DailyStats>.from(dailyStats);
+    updated[updated.length - 1] = DailyStats(
+      date: today.date,
+      steps: today.steps,
+      stepGoal: newStepGoal,
+      calories: today.calories,
+      calorieGoal: newCalorieGoal,
+      sleepMinutes: today.sleepMinutes,
+      sleepGoalMinutes: today.sleepGoalMinutes,
+      waterMl: today.waterMl,
+      waterGoalMl: today.waterGoalMl,
+      lightSleepMinutes: today.lightSleepMinutes,
+      deepSleepMinutes: today.deepSleepMinutes,
+      remSleepMinutes: today.remSleepMinutes,
+      awakeMinutes: today.awakeMinutes,
+      sleepStagesSynced: today.sleepStagesSynced,
+    );
+    dailyStats = updated;
   }
 
   void _persistPlanTasks() => unawaited(
@@ -495,7 +569,6 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     try {
       await _profileRepository.updateMe({
         'username': user!.username,
-        'name': user!.name,
         'gender': user!.gender.name,
         'heightCm': user!.heightCm,
         'weightKg': user!.weightKg,
@@ -536,7 +609,8 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   void _syncMeasurementZoneToServer(MuscleZone zone, double valueCm) =>
       unawaited(_pushMeasurementZoneToServer(zone, valueCm));
 
-  Future<void> _pushMeasurementZoneToServer(MuscleZone zone, double valueCm) async {
+  Future<void> _pushMeasurementZoneToServer(
+      MuscleZone zone, double valueCm) async {
     if (!_hasSession) return;
     try {
       await _measurementRepository.updateZone(zone, valueCm);
@@ -551,6 +625,14 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   String? _pendingPassword;
   String? _pendingResetEmail;
   String? get pendingResetEmail => _pendingResetEmail;
+
+  // Set instead of _pendingPassword when [AuthStage.chooseUsername] was
+  // reached via Google/Apple sign-in rather than local sign-up — tells
+  // [submitUsername] which repository call to make, and carries the
+  // provider's token through to the matching `complete` call.
+  String? _pendingOAuthProvider; // 'google' | 'apple' | null
+  String? _pendingOAuthToken;
+
   UserProfile? user;
 
   /// Dev-mode only: the raw reset code echoed back by the backend when no
@@ -611,6 +693,8 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   void submitSignUp(String email, String password) {
     _pendingEmail = email.trim().isEmpty ? 'you@bodyx.app' : email.trim();
     _pendingPassword = password;
+    _pendingOAuthProvider = null;
+    _pendingOAuthToken = null;
     authStage = AuthStage.chooseUsername;
     notifyListeners();
   }
@@ -623,10 +707,19 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   /// app — the same "local always works" behavior every other network
   /// feature here already has (health sync, profile/weight/measurement
   /// sync all swallow connectivity failures rather than erroring out).
-  Future<void> signIn(String email, String password) async {
-    final resolvedEmail = email.trim().isEmpty ? 'alex@bodyx.app' : email.trim();
+  /// [rememberMe] controls whether the session survives an app restart —
+  /// when false (the default — an explicit opt-in is required to stay
+  /// signed in), the sign-in still succeeds for the current app run, but
+  /// neither the "onboarding done" flag nor the Keychain token are kept, so
+  /// [hydrate] finds no session next launch and the user has to sign in
+  /// again (see [hydrate]'s `onboardingDone` gate).
+  Future<void> signIn(String email, String password,
+      {bool rememberMe = false}) async {
+    final resolvedEmail =
+        email.trim().isEmpty ? 'alex@bodyx.app' : email.trim();
     try {
-      user = await _authRepository.login(email: resolvedEmail, password: password);
+      user =
+          await _authRepository.login(email: resolvedEmail, password: password);
     } on ApiException {
       rethrow;
     } catch (_) {
@@ -639,16 +732,33 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     }
     authStage = AuthStage.done;
     _hasSession = true;
-    _persistUser();
-    unawaited(_persistence.setOnboardingDone(true));
+    if (rememberMe) {
+      _persistUser();
+      unawaited(_persistence.setOnboardingDone(true));
+    } else {
+      unawaited(_authRepository.signOut());
+    }
     notifyListeners();
   }
 
-  /// Verifies [idToken] server-side and logs in, creating the account on
-  /// first sign-in. Throws [ApiException] on an invalid token or if the
+  /// Verifies [idToken] server-side and logs in an existing account. If
+  /// this email has no account yet, moves to [AuthStage.chooseUsername]
+  /// instead (see [OAuthNeedsUsername]) rather than creating one with an
+  /// auto-generated handle. Throws [ApiException] on an invalid token, a
+  /// 409 (email already used by a different sign-in method), or if the
   /// backend's Google client ID isn't configured yet (501).
   Future<void> signInWithGoogle(String idToken) async {
-    user = await _authRepository.loginWithGoogle(idToken);
+    try {
+      user = await _authRepository.loginWithGoogle(idToken);
+    } on OAuthNeedsUsername catch (e) {
+      _pendingOAuthProvider = 'google';
+      _pendingOAuthToken = e.token;
+      _pendingEmail = e.email;
+      _pendingPassword = null;
+      authStage = AuthStage.chooseUsername;
+      notifyListeners();
+      return;
+    }
     authStage = AuthStage.done;
     _hasSession = true;
     _persistUser();
@@ -656,11 +766,24 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     notifyListeners();
   }
 
-  /// Verifies [identityToken] server-side and logs in, creating the account
-  /// on first sign-in. Throws [ApiException] on an invalid token or if the
+  /// Verifies [identityToken] server-side and logs in an existing account.
+  /// If this email has no account yet, moves to [AuthStage.chooseUsername]
+  /// instead (see [OAuthNeedsUsername]) rather than creating one with an
+  /// auto-generated handle. Throws [ApiException] on an invalid token, a
+  /// 409 (email already used by a different sign-in method), or if the
   /// backend's Apple client ID isn't configured yet (501).
   Future<void> signInWithApple(String identityToken) async {
-    user = await _authRepository.loginWithApple(identityToken);
+    try {
+      user = await _authRepository.loginWithApple(identityToken);
+    } on OAuthNeedsUsername catch (e) {
+      _pendingOAuthProvider = 'apple';
+      _pendingOAuthToken = e.token;
+      _pendingEmail = e.email;
+      _pendingPassword = null;
+      authStage = AuthStage.chooseUsername;
+      notifyListeners();
+      return;
+    }
     authStage = AuthStage.done;
     _hasSession = true;
     _persistUser();
@@ -668,13 +791,36 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     notifyListeners();
   }
 
-  /// Creates the account against the real backend when one is reachable.
-  /// A real rejection from the server ([ApiException] — duplicate email/
-  /// username) is re-thrown so the username screen can show it. An
-  /// unreachable server falls back to a local-only profile, same as
+  /// Completes whichever sign-up is in progress — local email/password (the
+  /// default) or, if [signInWithGoogle]/[signInWithApple] just moved here
+  /// via [OAuthNeedsUsername], the matching OAuth provider's `complete`
+  /// call. A real rejection from the server ([ApiException] — duplicate
+  /// email/username) is re-thrown so the username screen can show it.
+  /// OAuth completions have no offline fallback (they need the real
+  /// backend to re-verify the token); local sign-up falls back to a
+  /// local-only profile when the server is simply unreachable, same as
   /// [signIn].
   Future<void> submitUsername(String username) async {
-    final resolvedUsername = username.trim().isEmpty ? 'newuser' : username.trim();
+    final resolvedUsername =
+        username.trim().isEmpty ? 'newuser' : username.trim();
+    final oauthProvider = _pendingOAuthProvider;
+    final oauthToken = _pendingOAuthToken;
+    if (oauthProvider != null && oauthToken != null) {
+      user = oauthProvider == 'google'
+          ? await _authRepository.completeGoogleSignUp(
+              oauthToken, resolvedUsername)
+          : await _authRepository.completeAppleSignUp(
+              oauthToken, resolvedUsername);
+      _pendingOAuthProvider = null;
+      _pendingOAuthToken = null;
+      authStage = AuthStage.done;
+      _hasSession = true;
+      _persistUser();
+      unawaited(_persistence.setOnboardingDone(true));
+      notifyListeners();
+      return;
+    }
+
     try {
       user = await _authRepository.register(
         email: _pendingEmail ?? 'you@bodyx.app',
@@ -687,7 +833,6 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       user = UserProfile(
         email: _pendingEmail ?? 'you@bodyx.app',
         username: resolvedUsername,
-        name: resolvedUsername.isEmpty ? 'Athlete' : resolvedUsername,
       );
     }
     authStage = AuthStage.bodyData;
@@ -699,11 +844,13 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     required double heightCm,
     required double weightKg,
     required int age,
+    bool unitsMetric = true,
   }) {
     user!.gender = gender;
     user!.heightCm = heightCm;
     user!.weightKg = weightKg;
     user!.age = age;
+    user!.unitsMetric = unitsMetric;
     bodyMeasurements = MockData.emptyBodyMeasurements(gender);
     bodyViewerGender = gender;
     authStage = AuthStage.done;
@@ -812,8 +959,8 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   late List<DailyStats> dailyStats;
   int selectedDateIndex = -1; // -1 == "today" (last element)
 
-  DailyStats get selectedStats =>
-      dailyStats[selectedDateIndex == -1 ? dailyStats.length - 1 : selectedDateIndex];
+  DailyStats get selectedStats => dailyStats[
+      selectedDateIndex == -1 ? dailyStats.length - 1 : selectedDateIndex];
 
   void selectDateIndex(int index) {
     selectedDateIndex = index;
@@ -851,7 +998,34 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   void toggleWorkoutSet(int index) {
     final set = todayWorkoutSets[index];
     set.done = !set.done;
-    if (set.done) HapticFeedback.mediumImpact();
+    if (set.done) {
+      HapticFeedback.mediumImpact();
+      _checkWorkoutDayComplete();
+    } else {
+      // An un-done set was never actually performed — its rating shouldn't
+      // linger and be shown as if it still applies.
+      set.rpe = null;
+    }
+    _persistWorkoutSets();
+    notifyListeners();
+  }
+
+  /// Counts a "full workout completed" at most once per calendar day, no
+  /// matter how many times sets are toggled that day.
+  void _checkWorkoutDayComplete() {
+    if (todayWorkoutSets.isEmpty || !todayWorkoutSets.every((s) => s.done)) {
+      return;
+    }
+    final key = _dateKey(DateTime.now());
+    if (_lastWorkoutCompleteDate == key) return;
+    _lastWorkoutCompleteDate = key;
+    totalWorkoutsCompleted += 1;
+    _checkAchievements();
+  }
+
+  /// Rate of Perceived Exertion for a completed set — see [WorkoutSet.rpe].
+  void setWorkoutSetRpe(int index, int rpe) {
+    todayWorkoutSets[index].rpe = rpe;
     _persistWorkoutSets();
     _evaluatePetGoals();
     notifyListeners();
@@ -949,7 +1123,8 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   void _applyExternalWorkoutStop() {
     final startedAt = _workoutTimerStartedAt;
     if (startedAt == null) return;
-    _workoutAccumulatedSeconds += DateTime.now().difference(startedAt).inSeconds;
+    _workoutAccumulatedSeconds +=
+        DateTime.now().difference(startedAt).inSeconds;
     _workoutTimerStartedAt = null;
     unawaited(_persistence.saveTodayWorkoutTimer(
         _workoutAccumulatedSeconds, _workoutTimerStartedAt));
@@ -1025,9 +1200,11 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     final activity = todayMobilityActivities[index];
     activity.done = true;
     HapticFeedback.heavyImpact();
+    _recordMobilityCompletion();
     _persistMobilityActivities();
     final l10n = lookupAppLocalizations(_effectiveLocale);
     unawaited(NotificationService.instance.showActivityCompleted(
+      _effectiveLocale,
       l10n.mobilityActivityCompletedTitle,
       l10n.mobilityActivityCompletedBody(activity.name),
     ));
@@ -1064,10 +1241,18 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   void toggleMobilityActivity(int index) {
     final activity = todayMobilityActivities[index];
     activity.done = !activity.done;
-    if (activity.done) HapticFeedback.mediumImpact();
+    if (activity.done) {
+      HapticFeedback.mediumImpact();
+      _recordMobilityCompletion();
+    }
     _persistMobilityActivities();
     _evaluatePetGoals();
     notifyListeners();
+  }
+
+  void _recordMobilityCompletion() {
+    totalMobilityCompleted += 1;
+    _checkAchievements();
   }
 
   void _persistMobilityActivities() => unawaited(
@@ -1097,7 +1282,9 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     if (weightHistory.isEmpty) return false;
     final last = weightHistory.last.date;
     final now = DateTime.now();
-    return last.year == now.year && last.month == now.month && last.day == now.day;
+    return last.year == now.year &&
+        last.month == now.month &&
+        last.day == now.day;
   }
 
   // Unlike most other persisted fields in this class, the photo metadata
@@ -1135,16 +1322,27 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   /// Calories actually eaten today — from logged meals, not [DailyStats
   /// .calories] (that field holds *active calories burned*, the same one
   /// Health sync overwrites from HealthKit's ACTIVE_ENERGY_BURNED, so it
-  /// isn't comparable to TDEE the way a surplus needs).
+  /// isn't comparable to TDEE the way an intake target needs).
   int get todayCaloriesEaten => meals.fold<int>(0, (sum, m) => sum + m.kcal);
 
-  int get calorieSurplus => todayCaloriesEaten - tdee.round();
+  /// Goal-adjusted daily intake target — TDEE shifted by ~20% below for
+  /// weight loss, ~10% above for muscle gain, unchanged otherwise. See
+  /// [HealthInsights.calorieTarget].
+  double get calorieTarget => HealthInsights.calorieTarget(
+      tdee: tdee, goal: user?.goal ?? 'Build muscle');
 
-  StatusResult get calorieSurplusStatus =>
-      HealthInsights.calorieSurplusStatus(calorieSurplus);
+  int get calorieSurplus => todayCaloriesEaten - calorieTarget.round();
 
-  double get proteinTargetG =>
-      HealthInsights.proteinTargetG(user?.weightKg ?? 75);
+  StatusResult get calorieSurplusStatus => HealthInsights.calorieStatus(
+        consumed: todayCaloriesEaten,
+        target: calorieTarget.round(),
+        goal: user?.goal ?? 'Build muscle',
+      );
+
+  double get proteinTargetG => HealthInsights.proteinTargetG(
+        user?.weightKg ?? 75,
+        goal: user?.goal ?? 'Build muscle',
+      );
 
   double get todayProteinG =>
       meals.fold<double>(0, (sum, m) => sum + m.proteinG);
@@ -1213,13 +1411,27 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       sleepStagesSynced: today.sleepStagesSynced,
     );
     dailyStats = updated;
+    _checkWaterGoalMet();
     _pushWidgetOverview();
+  }
+
+  /// Counts a "water goal met" day at most once per calendar day.
+  void _checkWaterGoalMet() {
+    final today = dailyStats.last;
+    if (today.waterGoalMl <= 0 || today.waterMl < today.waterGoalMl) return;
+    final key = _dateKey(DateTime.now());
+    if (_lastWaterGoalMetDate == key) return;
+    _lastWaterGoalMetDate = key;
+    totalWaterGoalDaysMet += 1;
+    _checkAchievements();
   }
 
   // ---- Meals --------------------------------------------------------------
 
   void logMeal(MealEntry meal) {
     meals = [...meals, meal];
+    totalMealsLogged += 1;
+    _checkAchievements();
     unawaited(_persistence.saveTodayMeals(meals));
     notifyListeners();
   }
@@ -1257,6 +1469,39 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     );
     _persistMeasurements();
     _syncMeasurementZoneToServer(zone, valueCm);
+    notifyListeners();
+  }
+
+  // ---- Injuries (3D body map) ------------------------------------------
+  // Local-only — no backend endpoint exists for this yet, same as body
+  // measurements' local history before server sync was added.
+  List<Injury> injuries = [];
+
+  // A millisecond timestamp alone can collide (e.g. two entries logged in
+  // the same millisecond in a test, or any sufficiently fast call site) —
+  // this counter guarantees every id logInjury hands out is unique within
+  // the session, which is what removeInjury's id-based lookup depends on.
+  int _injurySeq = 0;
+
+  void logInjury(InjuryBodyPart part, InjuryType type, String description) {
+    final now = DateTime.now();
+    injuries = [
+      Injury(
+        id: '${now.millisecondsSinceEpoch}-${_injurySeq++}',
+        bodyPart: part,
+        type: type,
+        description: description,
+        date: now,
+      ),
+      ...injuries,
+    ];
+    unawaited(_persistence.saveInjuries(injuries));
+    notifyListeners();
+  }
+
+  void removeInjury(String id) {
+    injuries = injuries.where((i) => i.id != id).toList();
+    unawaited(_persistence.saveInjuries(injuries));
     notifyListeners();
   }
 
@@ -1319,8 +1564,8 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
           items.add(AlertItem(
             id: 'sleep_debt',
             title: l10n.alertSleepDebtTitle,
-            subtitle:
-                l10n.alertSleepDebtSubtitle((avgMinutes / 60).toStringAsFixed(1)),
+            subtitle: l10n
+                .alertSleepDebtSubtitle((avgMinutes / 60).toStringAsFixed(1)),
             icon: Icons.bedtime_rounded,
             severity: AlertSeverity.warning,
           ));
@@ -1375,14 +1620,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   bool darkModeLocked = true; // this app is dark-only, shown as a toggle
   bool workoutRemindersEnabled = true;
   bool healthSyncEnabled = false;
-  bool publicProfile = false;
   bool shareAnonData = true;
-
-  void togglePublicProfile(bool value) {
-    publicProfile = value;
-    unawaited(_persistence.savePublicProfile(value));
-    notifyListeners();
-  }
 
   void toggleShareAnonData(bool value) {
     shareAnonData = value;
@@ -1390,9 +1628,14 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     notifyListeners();
   }
 
-  /// Null means "follow system locale". Only set once the user picks a
-  /// language explicitly in Settings.
-  Locale? locale;
+  /// Defaults to English regardless of the device's system language — the
+  /// app used to fall back to "follow system locale" when unset, which
+  /// silently showed Russian/Ukrainian on a matching system even after the
+  /// user picked "English" (that previously mapped to `null` instead of an
+  /// explicit locale). Overwritten by [hydrate] if a choice was persisted,
+  /// and by [setLocale] whenever the user picks one explicitly (in Settings
+  /// or on the sign-in screen).
+  Locale? locale = const Locale('en');
 
   void setLocale(Locale? value) {
     locale = value;
@@ -1414,13 +1657,11 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   void updateProfile({
-    String? name,
     String? username,
     String? goal,
     String? activityLevel,
   }) {
     if (user == null) return;
-    if (name != null) user!.name = name;
     if (username != null) user!.username = username;
     if (goal != null) user!.goal = goal;
     if (activityLevel != null) user!.activityLevel = activityLevel;
@@ -1464,7 +1705,8 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   /// caller can show a "not granted" message instead of leaving the switch
   /// silently ON with reminders that never fire.
   Future<bool> toggleNotifications(bool value) async {
-    final granted = value ? await _syncHydrationReminder(requestFor: true) : true;
+    final granted =
+        value ? await _syncHydrationReminder(requestFor: true) : true;
     notificationsEnabled = value && granted;
     unawaited(_persistence.saveNotificationsEnabled(notificationsEnabled));
     if (!value) unawaited(_syncHydrationReminder(requestFor: false));
@@ -1475,7 +1717,8 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   Future<bool> toggleWorkoutReminders(bool value) async {
     final granted = value ? await _syncWorkoutReminder(requestFor: true) : true;
     workoutRemindersEnabled = value && granted;
-    unawaited(_persistence.saveWorkoutRemindersEnabled(workoutRemindersEnabled));
+    unawaited(
+        _persistence.saveWorkoutRemindersEnabled(workoutRemindersEnabled));
     if (!value) unawaited(_syncWorkoutReminder(requestFor: false));
     notifyListeners();
     return granted;
@@ -1557,7 +1800,8 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     try {
       final updated = <DailyStats>[];
       for (final day in dailyStats) {
-        final snapshot = await HealthService.instance.fetchDailySnapshot(day.date);
+        final snapshot =
+            await HealthService.instance.fetchDailySnapshot(day.date);
         updated.add(_mergeHealthSnapshot(day, snapshot));
       }
       dailyStats = updated;
@@ -1567,7 +1811,8 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
         final carriedBodyFat =
             weightHistory.isNotEmpty ? weightHistory.last.bodyFatPct : 0.0;
         weightHistory = weightSamples
-            .map((s) => WeightEntry(s.date, s.kg, s.bodyFatPct ?? carriedBodyFat))
+            .map((s) =>
+                WeightEntry(s.date, s.kg, s.bodyFatPct ?? carriedBodyFat))
             .toList();
         if (user != null) user!.weightKg = weightHistory.last.kg;
         _persistUser();
@@ -1582,7 +1827,8 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     }
   }
 
-  DailyStats _mergeHealthSnapshot(DailyStats base, HealthDailySnapshot? snapshot) {
+  DailyStats _mergeHealthSnapshot(
+      DailyStats base, HealthDailySnapshot? snapshot) {
     if (snapshot == null) return base;
     return DailyStats(
       date: base.date,
@@ -1601,5 +1847,101 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       sleepStagesSynced:
           snapshot.totalSleepMinutes != null || base.sleepStagesSynced,
     );
+  }
+
+  // ---- Achievements / rank --------------------------------------------------
+  // Lifetime counters that unlock entries in [kAchievementCatalog] — daily
+  // app-engagement habits only. Body measurements are deliberately excluded
+  // (nobody wants to log those every day). Every counter here only ever
+  // increases: once earned, an achievement stays earned even if the user
+  // later undoes the thing that triggered it (e.g. un-checks a workout set).
+  int totalWorkoutsCompleted = 0;
+  int totalMobilityCompleted = 0;
+  int totalMealsLogged = 0;
+  int totalWaterGoalDaysMet = 0;
+  int currentStreak = 0;
+  int longestStreak = 0;
+  DateTime? _lastStreakDate;
+  String? _lastWorkoutCompleteDate;
+  String? _lastWaterGoalMetDate;
+  final Set<String> unlockedAchievementIds = {};
+  final Map<String, DateTime> achievementUnlockedAt = {};
+
+  String _dateKey(DateTime d) =>
+      '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
+  /// Sum of every unlocked achievement's tier points — the overall [Rank]
+  /// is derived from this total, separate from any single achievement's tier.
+  int get achievementPoints => unlockedAchievementIds.fold<int>(0, (sum, id) {
+        final def = kAchievementCatalog.firstWhere((d) => d.id == id);
+        return sum + pointsForTier(def.tier);
+      });
+
+  Rank get rank => rankForPoints(achievementPoints);
+
+  void _checkAchievements() {
+    final counters = <AchievementFamily, int>{
+      AchievementFamily.streak: longestStreak,
+      AchievementFamily.workout: totalWorkoutsCompleted,
+      AchievementFamily.mobility: totalMobilityCompleted,
+      AchievementFamily.hydration: totalWaterGoalDaysMet,
+      AchievementFamily.nutrition: totalMealsLogged,
+    };
+    var unlockedNew = false;
+    for (final def in kAchievementCatalog) {
+      if (unlockedAchievementIds.contains(def.id)) continue;
+      if (counters[def.family]! >= def.threshold) {
+        unlockedAchievementIds.add(def.id);
+        achievementUnlockedAt[def.id] = DateTime.now();
+        unlockedNew = true;
+      }
+    }
+    if (unlockedNew) HapticFeedback.mediumImpact();
+    _persistAchievements();
+  }
+
+  void _persistAchievements() =>
+      unawaited(_persistence.saveAchievementProgress(AchievementProgress(
+        totalWorkoutsCompleted: totalWorkoutsCompleted,
+        totalMobilityCompleted: totalMobilityCompleted,
+        totalMealsLogged: totalMealsLogged,
+        totalWaterGoalDaysMet: totalWaterGoalDaysMet,
+        currentStreak: currentStreak,
+        longestStreak: longestStreak,
+        lastStreakDate: _lastStreakDate,
+        lastWorkoutCompleteDate: _lastWorkoutCompleteDate,
+        lastWaterGoalMetDate: _lastWaterGoalMetDate,
+        unlockedAchievementIds: unlockedAchievementIds,
+        achievementUnlockedAt: achievementUnlockedAt,
+      )));
+
+  /// A "perfect day": water goal met, at least one meal logged, and either
+  /// a full workout or a mobility activity completed. Deliberately excludes
+  /// body measurements — nobody wants to measure themselves every day.
+  bool get _wasTodaySoFarPerfect =>
+      dailyStats.last.waterGoalMl > 0 &&
+      dailyStats.last.waterMl >= dailyStats.last.waterGoalMl &&
+      meals.isNotEmpty &&
+      ((todayWorkoutSets.isNotEmpty && todayWorkoutSets.every((s) => s.done)) ||
+          todayMobilityActivities.any((a) => a.done));
+
+  /// Called from [_rolloverToNewDayIfNeeded] BEFORE today's fields are
+  /// wiped — this is the only point with access to the ending day's actual
+  /// logged data (see that method's doc comment).
+  void _evaluateStreakForEndingDay(DateTime endingDay) {
+    if (!_wasTodaySoFarPerfect) {
+      currentStreak = 0;
+      _persistAchievements();
+      return;
+    }
+    if (_lastStreakDate != null &&
+        endingDay.difference(_lastStreakDate!).inDays == 1) {
+      currentStreak += 1;
+    } else {
+      currentStreak = 1;
+    }
+    _lastStreakDate = endingDay;
+    if (currentStreak > longestStreak) longestStreak = currentStreak;
+    _checkAchievements();
   }
 }

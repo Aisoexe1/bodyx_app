@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:bodyx_app/l10n/gen/app_localizations.dart';
+import '../../logic/units.dart';
 import '../../models/models.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_colors.dart';
@@ -35,6 +36,7 @@ class _LogMetricsSheetState extends State<LogMetricsSheet> {
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
+    final unitsMetric = state.user?.unitsMetric ?? true;
     _measurementValue ??= state.bodyMeasurements[_zone]!.valueCm;
     if (!_initializedWeight) {
       // A brand new account has no prior weigh-in to prefill from — the
@@ -153,12 +155,15 @@ class _LogMetricsSheetState extends State<LogMetricsSheet> {
               ),
             ] else ...[
               _ValueStepper(
-                label: AppLocalizations.of(context)!.logMetricsWeightKgLabel,
-                value: _weight,
-                min: 35,
-                max: 180,
-                step: 0.5,
-                onChanged: (v) => setState(() => _weight = v),
+                label: unitsMetric
+                    ? AppLocalizations.of(context)!.logMetricsWeightKgLabel
+                    : AppLocalizations.of(context)!.logMetricsWeightLbLabel,
+                value: unitsMetric ? _weight : kgToLb(_weight),
+                min: unitsMetric ? 35 : kgToLb(35),
+                max: unitsMetric ? 180 : kgToLb(180),
+                step: unitsMetric ? 0.5 : 1,
+                onChanged: (v) =>
+                    setState(() => _weight = unitsMetric ? v : lbToKg(v)),
               ),
               const SizedBox(height: 16),
               _ValueStepper(
@@ -167,6 +172,7 @@ class _LogMetricsSheetState extends State<LogMetricsSheet> {
                 min: 3,
                 max: 45,
                 step: 0.5,
+                showSlider: false,
                 onChanged: (v) => setState(() => _bodyFat = v),
               ),
               const SizedBox(height: 24),
@@ -218,6 +224,7 @@ class _ValueStepper extends StatelessWidget {
     required this.max,
     required this.step,
     required this.onChanged,
+    this.showSlider = true,
   });
 
   final String label;
@@ -226,6 +233,7 @@ class _ValueStepper extends StatelessWidget {
   final double max;
   final double step;
   final ValueChanged<double> onChanged;
+  final bool showSlider;
 
   @override
   Widget build(BuildContext context) {
@@ -272,22 +280,23 @@ class _ValueStepper extends StatelessWidget {
               ),
             ],
           ),
-          SliderTheme(
-            data: SliderTheme.of(context).copyWith(
-              activeTrackColor: AppColors.primary,
-              inactiveTrackColor: AppColors.surfaceElevated,
-              thumbColor: AppColors.primaryBright,
-              overlayColor: AppColors.primary.withValues(alpha: 0.2),
-              trackHeight: 4,
-              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
+          if (showSlider)
+            SliderTheme(
+              data: SliderTheme.of(context).copyWith(
+                activeTrackColor: AppColors.primary,
+                inactiveTrackColor: AppColors.surfaceElevated,
+                thumbColor: AppColors.primaryBright,
+                overlayColor: AppColors.primary.withValues(alpha: 0.2),
+                trackHeight: 4,
+                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
+              ),
+              child: Slider(
+                value: value.clamp(min, max),
+                min: min,
+                max: max,
+                onChanged: onChanged,
+              ),
             ),
-            child: Slider(
-              value: value.clamp(min, max),
-              min: min,
-              max: max,
-              onChanged: onChanged,
-            ),
-          ),
         ],
       ),
     );

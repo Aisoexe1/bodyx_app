@@ -24,16 +24,25 @@ def verify_google_id_token(token: str) -> dict:
             detail="Google sign-in is not configured yet",
         )
     try:
-        claims = google_id_token.verify_oauth2_token(
-            token, _google_request, settings.google_client_id
-        )
+        # No `audience` passed here — verify_oauth2_token would only accept
+        # a single exact match, but a valid token may carry either the
+        # web/server client ID or the iOS client ID as `aud` (see
+        # Settings.google_ios_client_id). Signature/expiry are still fully
+        # verified; only the audience check moves below.
+        claims = google_id_token.verify_oauth2_token(token, _google_request)
     except Exception as e:
         raise OAuthVerificationError(str(e)) from e
+
+    allowed_audiences = {
+        aud for aud in (settings.google_client_id, settings.google_ios_client_id) if aud
+    }
+    if claims.get("aud") not in allowed_audiences:
+        raise OAuthVerificationError("Google token audience not recognized")
 
     email = claims.get("email")
     if not email:
         raise OAuthVerificationError("Google token did not include an email")
-    return {"email": email, "name": claims.get("name") or email.split("@")[0]}
+    return {"email": email}
 
 
 def verify_apple_identity_token(token: str) -> dict:
@@ -57,4 +66,4 @@ def verify_apple_identity_token(token: str) -> dict:
     email = claims.get("email")
     if not email:
         raise OAuthVerificationError("Apple token did not include an email")
-    return {"email": email, "name": email.split("@")[0]}
+    return {"email": email}

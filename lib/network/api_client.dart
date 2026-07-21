@@ -2,12 +2,18 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
 
+import '../l10n/gen/app_localizations.dart';
 import 'token_storage.dart';
 
 /// Thrown for any non-2xx API response. [message] is the server's `detail`
-/// field when present, otherwise a generic description.
+/// field when present, otherwise a generic description. Server-provided
+/// messages come from our own FastAPI backend and are always in English —
+/// localizing those would require the backend to accept the client's
+/// locale, which is out of scope here; only the purely client-side
+/// fallbacks below (no server response reached at all) are localized.
 class ApiException implements Exception {
   ApiException(this.statusCode, this.message);
   final int statusCode;
@@ -19,15 +25,13 @@ class ApiException implements Exception {
 
 /// Maps any error thrown by the network layer to a short, user-facing
 /// message — used by screens that surface auth failures.
-String describeApiError(Object error) {
+String describeApiError(BuildContext context, Object error) {
   if (error is ApiException) return error.message;
-  if (error is TimeoutException) {
-    return "Can't reach the server. Check your connection and try again.";
+  final l10n = AppLocalizations.of(context)!;
+  if (error is TimeoutException || error is SocketException) {
+    return l10n.apiErrorCantReachServer;
   }
-  if (error is SocketException) {
-    return "Can't reach the server. Check your connection and try again.";
-  }
-  return 'Something went wrong. Please try again.';
+  return l10n.apiErrorGeneric;
 }
 
 /// Thin JSON/HTTP client for the BodyX backend. Every call carries an 8s

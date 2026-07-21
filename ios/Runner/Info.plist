@@ -33,13 +33,10 @@
 	<key>NSHealthUpdateUsageDescription</key>
 	<string>BodyX does not write any data back to Health.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>BodyX uses your camera to take progress photos so you can visually compare your body over time.</string>
+	<string>BodyX uses your camera to take progress photos and to scan product barcodes for quick nutrition lookup.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>BodyX lets you pick an existing photo from your library to add as a progress photo.</string>
-	<!-- Google Sign-In redirect. Replace the scheme below with your actual
-	     REVERSED iOS client ID once created in Google Cloud Console
-	     (Credentials → iOS client → reversed client ID), e.g.
-	     com.googleusercontent.apps.123456789-abcdefg -->
+	<!-- Google Sign-In redirect (reversed iOS client ID). -->
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -47,10 +44,12 @@
 			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.googleusercontent.apps.REPLACE_WITH_GOOGLE_REVERSED_CLIENT_ID</string>
+				<string>com.googleusercontent.apps.674801778590-3t4apcivrea6c82ott9lrncq5bsvhvof</string>
 			</array>
 		</dict>
 	</array>
+	<key>GIDClientID</key>
+	<string>674801778590-3t4apcivrea6c82ott9lrncq5bsvhvof.apps.googleusercontent.com</string>
 	<!-- No UIApplicationSceneManifest: deliberately using the classic
 	     single-window (non-Scene) app lifecycle. The Scene-connection path
 	     (implicit engine attaching to a storyboard-instantiated

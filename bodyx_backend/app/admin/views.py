@@ -23,7 +23,6 @@ class UserAdminView(ModelView):
         "id",
         "email",
         "username",
-        "name",
         "role",
         "is_banned",
         "auth_provider",

@@ -80,10 +80,10 @@ Questions about this policy or your data can be sent to **[REPLACE WITH REAL CON
 
 ## Notes for the developer (delete before publishing)
 
-This policy was drafted from a direct audit of the current BodyX codebase (commit `fe3e35e` on `aisodev`), not from a template — every claim above matches what the code actually does today, with two exceptions that need to become true before the policy is accurate for real users:
+This policy was drafted from a direct audit of the current BodyX codebase (commit `fe3e35e` on `aisodev`), not from a template — every claim above matches what the code actually does today. The two exceptions noted when this was first drafted are both resolved now:
 
-1. **"Transmitted over an encrypted (HTTPS) connection"** — today `API_BASE_URL` defaults to `http://10.0.2.2:8000/api/v1` (a local dev placeholder, plain HTTP), and no production backend is deployed at all yet (task: stand up a real hosted backend). This policy assumes that whatever backend eventually goes live serves HTTPS. Don't submit to the App Store, and don't point real users at this policy, until that's true.
-2. **Account deletion "We send a request to delete your account and associated data from our servers"** — the client sends `DELETE /users/me`, and since commit `c37d54d` a failed attempt is persisted and automatically retried on later launches (the session is never restored for a deleted account). Once a real backend exists, verify server-side deletion actually completes end to end so this promise holds in practice.
+1. **"Transmitted over an encrypted (HTTPS) connection"** — ~~no production backend was deployed yet~~ resolved 2026-07-19: the real backend is live at `https://bodyx-app-1.onrender.com` (Render serves HTTPS by default), and the shipped app's `API_BASE_URL` points at it.
+2. **Account deletion "We send a request to delete your account and associated data from our servers"** — ~~needs verification once a real backend exists~~ resolved 2026-07-19: `DELETE /users/me` is implemented server-side with a cascading delete (weight entries, measurements, support tickets), verified end to end against the live deployment.
 
 Also worth knowing when filling out **App Store Connect's separate "App Privacy" (nutrition label) questionnaire** (a structured form, distinct from this document) — based on the same audit:
 - Health & Fitness data: collected (steps, calories, sleep, water, weight, body-fat %), used for App Functionality, not linked to advertising, not used for tracking.

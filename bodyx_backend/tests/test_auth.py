@@ -197,26 +197,80 @@ async def test_oauth_apple_not_configured_501(client):
     assert resp.status_code == 501
 
 
-async def test_oauth_google_creates_new_user(client, monkeypatch):
+async def test_oauth_google_new_email_needs_username(client, monkeypatch):
     monkeypatch.setattr(
         "app.routers.auth.verify_google_id_token",
-        lambda token: {"email": "newgoogle@bodyx.dev", "name": "New Google User"},
+        lambda token: {"email": "newgoogle@bodyx.dev"},
     )
     resp = await client.post("/api/v1/auth/oauth/google", json={"idToken": "fake-token"})
     assert resp.status_code == 200
     body = resp.json()
+    assert body["needsUsername"] is True
+    assert body["email"] == "newgoogle@bodyx.dev"
+    assert "accessToken" not in body
+
+
+async def test_oauth_google_complete_creates_account_with_chosen_username(client, monkeypatch):
+    monkeypatch.setattr(
+        "app.routers.auth.verify_google_id_token",
+        lambda token: {"email": "newgoogle@bodyx.dev"},
+    )
+    resp = await client.post(
+        "/api/v1/auth/oauth/google/complete",
+        json={"idToken": "fake-token", "username": "newgoogler"},
+    )
+    assert resp.status_code == 201
+    body = resp.json()
     assert body["user"]["email"] == "newgoogle@bodyx.dev"
+    assert body["user"]["username"] == "newgoogler"
     assert "accessToken" in body
 
 
-async def test_oauth_google_logs_in_existing_user_by_email(client, registered_user, monkeypatch):
+async def test_oauth_google_complete_rejects_taken_username(client, registered_user, monkeypatch):
+    # registered_user already owns username "alex" — completing sign-up
+    # with the same handle must be rejected, not silently disambiguated.
     monkeypatch.setattr(
         "app.routers.auth.verify_google_id_token",
-        lambda token: {"email": "alex@bodyx.dev", "name": "Alex"},
+        lambda token: {"email": "newgoogle2@bodyx.dev"},
+    )
+    resp = await client.post(
+        "/api/v1/auth/oauth/google/complete",
+        json={"idToken": "fake-token", "username": "alex"},
+    )
+    assert resp.status_code == 409
+
+
+async def test_oauth_google_conflicts_with_existing_local_account(
+    client, registered_user, monkeypatch
+):
+    # registered_user was created via local email/password registration —
+    # a Google sign-in claiming the same email must not silently log into
+    # that account (it never proved the password), it must be rejected.
+    monkeypatch.setattr(
+        "app.routers.auth.verify_google_id_token",
+        lambda token: {"email": "alex@bodyx.dev"},
     )
     resp = await client.post("/api/v1/auth/oauth/google", json={"idToken": "fake-token"})
+    assert resp.status_code == 409
+
+
+async def test_oauth_google_returning_user_logs_in(client, monkeypatch):
+    monkeypatch.setattr(
+        "app.routers.auth.verify_google_id_token",
+        lambda token: {"email": "returning@bodyx.dev"},
+    )
+    created = await client.post(
+        "/api/v1/auth/oauth/google/complete",
+        json={"idToken": "fake-token", "username": "returninguser"},
+    )
+    assert created.status_code == 201
+    created_id = created.json()["user"]["id"]
+
+    resp = await client.post("/api/v1/auth/oauth/google", json={"idToken": "fake-token"})
     assert resp.status_code == 200
-    assert resp.json()["user"]["id"] == registered_user["user"]["id"]
+    body = resp.json()
+    assert "needsUsername" not in body or not body.get("needsUsername")
+    assert body["user"]["id"] == created_id
 
 
 async def test_oauth_google_invalid_token_401(client, monkeypatch):
@@ -230,39 +284,86 @@ async def test_oauth_google_invalid_token_401(client, monkeypatch):
     assert resp.status_code == 401
 
 
-async def test_oauth_apple_creates_new_user(client, monkeypatch):
+async def test_oauth_apple_new_email_needs_username(client, monkeypatch):
     monkeypatch.setattr(
         "app.routers.auth.verify_apple_identity_token",
-        lambda token: {"email": "newapple@bodyx.dev", "name": "newapple"},
+        lambda token: {"email": "newapple@bodyx.dev"},
     )
     resp = await client.post("/api/v1/auth/oauth/apple", json={"identityToken": "fake-token"})
     assert resp.status_code == 200
-    assert resp.json()["user"]["email"] == "newapple@bodyx.dev"
+    body = resp.json()
+    assert body["needsUsername"] is True
+    assert body["email"] == "newapple@bodyx.dev"
 
 
-async def test_oauth_banned_user_rejected(client, registered_user, monkeypatch):
+async def test_oauth_apple_complete_creates_account_with_chosen_username(client, monkeypatch):
+    monkeypatch.setattr(
+        "app.routers.auth.verify_apple_identity_token",
+        lambda token: {"email": "newapple@bodyx.dev"},
+    )
+    resp = await client.post(
+        "/api/v1/auth/oauth/apple/complete",
+        json={"identityToken": "fake-token", "username": "newappler"},
+    )
+    assert resp.status_code == 201
+    body = resp.json()
+    assert body["user"]["email"] == "newapple@bodyx.dev"
+    assert body["user"]["username"] == "newappler"
+
+
+async def test_oauth_banned_user_rejected(client, monkeypatch):
     import app.database as database_module
     from bson import ObjectId
 
-    db = database_module.get_database()
-    await db.users.update_one(
-        {"_id": ObjectId(registered_user["user"]["id"])}, {"$set": {"is_banned": True}}
-    )
     monkeypatch.setattr(
         "app.routers.auth.verify_google_id_token",
-        lambda token: {"email": "alex@bodyx.dev", "name": "Alex"},
+        lambda token: {"email": "bannedgoogle@bodyx.dev"},
     )
+    created = await client.post(
+        "/api/v1/auth/oauth/google/complete",
+        json={"idToken": "fake-token", "username": "bannedgoogler"},
+    )
+    assert created.status_code == 201
+
+    db = database_module.get_database()
+    await db.users.update_one(
+        {"_id": ObjectId(created.json()["user"]["id"])}, {"$set": {"is_banned": True}}
+    )
+
     resp = await client.post("/api/v1/auth/oauth/google", json={"idToken": "fake-token"})
     assert resp.status_code == 403
 
 
-async def test_oauth_username_collision_gets_disambiguated(client, registered_user, monkeypatch):
-    # registered_user already owns username "alex" — a new Google account
-    # deriving the same base username from its email must not collide.
-    monkeypatch.setattr(
-        "app.routers.auth.verify_google_id_token",
-        lambda token: {"email": "alex@gmail.com", "name": "Alex Gmail"},
+async def test_delete_me_removes_account_and_data(client, registered_user, auth_headers):
+    import app.database as database_module
+    from bson import ObjectId
+
+    db = database_module.get_database()
+    user_id = ObjectId(registered_user["user"]["id"])
+
+    # Give the account a weight entry and a measurement so the cascade has
+    # something real to remove, not just the user document.
+    resp = await client.post("/api/v1/weight", json={"kg": 80, "bodyFatPct": 15}, headers=auth_headers)
+    assert resp.status_code == 201
+    resp = await client.put(
+        "/api/v1/measurements",
+        json={"chest": {"valueCm": 100, "targetCm": 105}},
+        headers=auth_headers,
     )
-    resp = await client.post("/api/v1/auth/oauth/google", json={"idToken": "fake-token"})
     assert resp.status_code == 200
-    assert resp.json()["user"]["username"] != "alex"
+
+    resp = await client.delete("/api/v1/users/me", headers=auth_headers)
+    assert resp.status_code == 204
+
+    assert await db.users.find_one({"_id": user_id}) is None
+    assert await db.weight_entries.find_one({"user_id": user_id}) is None
+    assert await db.body_measurements.find_one({"user_id": user_id}) is None
+
+    # The token must no longer authenticate anything — the account is gone.
+    resp = await client.get("/api/v1/users/me", headers=auth_headers)
+    assert resp.status_code == 401
+
+
+async def test_delete_me_requires_token_401(client):
+    resp = await client.delete("/api/v1/users/me")
+    assert resp.status_code == 401

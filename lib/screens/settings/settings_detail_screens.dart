@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:bodyx_app/l10n/gen/app_localizations.dart';
 import '../../logic/goal_labels.dart';
+import '../../logic/units.dart';
 import '../../models/models.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_colors.dart';
@@ -12,6 +13,7 @@ import '../../widgets/common/confirm_dialog.dart';
 import '../../widgets/common/editable_number_label.dart';
 import '../../widgets/common/glow_card.dart';
 import '../../widgets/common/inputs_buttons.dart';
+import '../../widgets/common/language_picker.dart';
 import '../../widgets/common/scale_tap.dart';
 import 'contact_support_screen.dart';
 
@@ -64,8 +66,6 @@ class EditProfileScreen extends StatefulWidget {
 }
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
-  late final _name =
-      TextEditingController(text: context.read<AppState>().user?.name ?? '');
   late final _username = TextEditingController(
       text: context.read<AppState>().user?.username ?? '');
 
@@ -77,10 +77,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           PrimaryTextField(
-              label: AppLocalizations.of(context)!.settingsFullNameLabel,
-              controller: _name),
-          const SizedBox(height: 14),
-          PrimaryTextField(
               label: AppLocalizations.of(context)!.settingsUsernameLabel,
               controller: _username,
               prefixIcon: Icons.alternate_email_rounded),
@@ -88,8 +84,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           PrimaryButton(
             label: AppLocalizations.of(context)!.settingsSaveChangesButton,
             onPressed: () {
-              context.read<AppState>().updateProfile(
-                  name: _name.text, username: _username.text);
+              context
+                  .read<AppState>()
+                  .updateProfile(username: _username.text);
               Navigator.pop(context);
             },
           ),
@@ -107,19 +104,18 @@ class PersonalDataScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = context.watch<AppState>().user;
+    final unitsMetric = user?.unitsMetric ?? true;
     final rows = <(IconData, String, String, WidgetBuilder)>[
       (
         Icons.straighten_rounded,
         AppLocalizations.of(context)!.settingsHeightLabel,
-        AppLocalizations.of(context)!
-            .settingsHeightValueCm(user?.heightCm.toStringAsFixed(0) ?? '--'),
+        user == null ? '--' : formatHeight(context, user.heightCm, unitsMetric),
         (ctx) => const EditHeightScreen()
       ),
       (
         Icons.monitor_weight_outlined,
         AppLocalizations.of(context)!.settingsWeightLabel,
-        AppLocalizations.of(context)!
-            .settingsWeightValueKg(user?.weightKg.toStringAsFixed(0) ?? '--'),
+        user == null ? '--' : formatWeight(context, user.weightKg, unitsMetric),
         (ctx) => const EditWeightScreen()
       ),
       (
@@ -282,14 +278,19 @@ class EditHeightScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = context.read<AppState>();
+    final unitsMetric = state.user?.unitsMetric ?? true;
+    final heightCm = state.user?.heightCm ?? 175;
     return _NumberEditScreen(
       title: AppLocalizations.of(context)!.settingsEditHeightTitle,
-      unit: AppLocalizations.of(context)!.settingsCmUnit,
-      min: 130,
-      max: 220,
+      unit: unitsMetric
+          ? AppLocalizations.of(context)!.settingsCmUnit
+          : AppLocalizations.of(context)!.bodyDataUnitIn,
+      min: unitsMetric ? 130 : cmToInches(130),
+      max: unitsMetric ? 220 : cmToInches(220),
       step: 1,
-      initial: state.user?.heightCm ?? 175,
-      onSave: (v) => state.updateHeightWeightAge(heightCm: v),
+      initial: unitsMetric ? heightCm : cmToInches(heightCm),
+      onSave: (v) => state.updateHeightWeightAge(
+          heightCm: unitsMetric ? v : inchesToCm(v)),
     );
   }
 }
@@ -299,14 +300,19 @@ class EditWeightScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = context.read<AppState>();
+    final unitsMetric = state.user?.unitsMetric ?? true;
+    final weightKg = state.user?.weightKg ?? 70;
     return _NumberEditScreen(
       title: AppLocalizations.of(context)!.settingsEditWeightTitle,
-      unit: AppLocalizations.of(context)!.settingsKgUnit,
-      min: 35,
-      max: 180,
-      step: 0.5,
-      initial: state.user?.weightKg ?? 70,
-      onSave: (v) => state.updateHeightWeightAge(weightKg: v),
+      unit: unitsMetric
+          ? AppLocalizations.of(context)!.settingsKgUnit
+          : AppLocalizations.of(context)!.bodyDataUnitLb,
+      min: unitsMetric ? 35 : kgToLb(35),
+      max: unitsMetric ? 180 : kgToLb(180),
+      step: unitsMetric ? 0.5 : 1,
+      initial: unitsMetric ? weightKg : kgToLb(weightKg),
+      onSave: (v) =>
+          state.updateHeightWeightAge(weightKg: unitsMetric ? v : lbToKg(v)),
     );
   }
 }
@@ -582,11 +588,9 @@ class _HealthSyncScreenState extends State<HealthSyncScreen> {
             onChanged: (v) => _handleToggle(v),
           ),
           const SizedBox(height: 14),
-          const Text(
-            'Reads steps, calories, sleep, water, weight and body fat '
-            'percentage to keep your dashboard accurate. BodyX never '
-            'writes data back.',
-            style: TextStyle(
+          Text(
+            AppLocalizations.of(context)!.settingsHealthSyncDescription,
+            style: const TextStyle(
               color: AppColors.textMuted,
               fontSize: 12.5,
               height: 1.4,
@@ -633,17 +637,12 @@ class _LanguageRow extends StatelessWidget {
   const _LanguageRow({required this.locale});
   final Locale? locale;
 
-  static const _options = <String, String>{
-    'en': 'English (US)',
-    'ru': 'Русский',
-    'uk': 'Українська',
-  };
-
   @override
   Widget build(BuildContext context) {
-    final label = _options[locale?.languageCode] ?? _options['en']!;
+    final label = kSupportedLocaleLabels[locale?.languageCode] ??
+        kSupportedLocaleLabels['en']!;
     return ScaleTap(
-      onTap: () => _showPicker(context),
+      onTap: () => showLanguagePicker(context),
       child: GlowCard(
         child: Row(
           children: [
@@ -660,37 +659,6 @@ class _LanguageRow extends StatelessWidget {
             const Icon(Icons.chevron_right_rounded,
                 color: AppColors.textMuted, size: 18),
           ],
-        ),
-      ),
-    );
-  }
-
-  void _showPicker(BuildContext context) {
-    final appState = context.read<AppState>();
-    final currentCode = locale?.languageCode ?? 'en';
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: _options.entries.map((entry) {
-            final selected = currentCode == entry.key;
-            return ListTile(
-              title: Text(entry.value,
-                  style: const TextStyle(color: AppColors.textPrimary)),
-              trailing: selected
-                  ? const Icon(Icons.check_rounded,
-                      color: AppColors.primaryBright)
-                  : null,
-              onTap: () {
-                appState.setLocale(entry.key == 'en' ? null : Locale(entry.key));
-                Navigator.pop(sheetContext);
-              },
-            );
-          }).toList(),
         ),
       ),
     );
@@ -733,13 +701,6 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
       child: Column(
         children: [
           _ToggleRow(
-            icon: Icons.public_rounded,
-            label: AppLocalizations.of(context)!.settingsPublicProfileLabel,
-            value: state.publicProfile,
-            onChanged: (v) => context.read<AppState>().togglePublicProfile(v),
-          ),
-          const SizedBox(height: 10),
-          _ToggleRow(
             icon: Icons.analytics_outlined,
             label: AppLocalizations.of(context)!.settingsShareAnonDataLabel,
             value: state.shareAnonData,
@@ -764,49 +725,29 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
 class HelpSupportScreen extends StatelessWidget {
   const HelpSupportScreen({super.key});
 
-  static const _faqs = [
-    (
-      q: 'How is my body scan calculated?',
-      a: 'Log your weight and body-fat % from "Log body weight" on the '
-          'dashboard checklist. We combine the weight trend with the '
-          "body-fat trend so we can tell muscle gain from fat gain, "
-          "instead of just watching the scale number move.",
-    ),
-    (
-      q: 'How do I sync a wearable device?',
-      a: 'Go to Settings → toggle "Sync with Health". Once enabled, BodyX '
-          'pulls steps, active calories burned and sleep from Apple '
-          'Health or Health Connect automatically. No wearable? '
-          'Everything still works with data you log by hand.',
-    ),
-    (
-      q: 'Where do my calorie and protein targets come from?',
-      a: 'Your calorie target (TDEE) is calculated from your age, weight, '
-          'height, gender and activity level using the Mifflin-St Jeor '
-          'formula. Protein target is 1.8g per kg of body weight. Both '
-          'update automatically if you edit your profile.',
-    ),
-    (
-      q: 'How do I track a workout?',
-      a: "Open the Plan tab and tap the workout card — it opens a "
-          "set-by-set checklist. Tap each set as you finish it; progress "
-          "saves automatically, even if you close the app mid-workout.",
-    ),
-    (
-      q: 'Can I export my progress data?',
-      a: "Not yet — that's on the roadmap. Your profile, weight and body "
-          "measurements sync to your account when you're signed in and a "
-          "server is reachable; progress photos, meals, and workouts stay "
-          "on this device only.",
-    ),
-    (
-      q: 'How do I change my daily goals?',
-      a: 'Step and calorie goals are derived from your profile in Profile '
-          '→ Edit profile. Update your weight, height, age or activity '
-          "level and your targets recalculate automatically — there's no "
-          'manual override yet.',
-    ),
-  ];
+  static List<({String q, String a})> _faqs(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return [
+      (q: l10n.settingsFaqBodyScanQuestion, a: l10n.settingsFaqBodyScanAnswer),
+      (
+        q: l10n.settingsFaqSyncWearableQuestion,
+        a: l10n.settingsFaqSyncWearableAnswer
+      ),
+      (q: l10n.settingsFaqTargetsQuestion, a: l10n.settingsFaqTargetsAnswer),
+      (
+        q: l10n.settingsFaqTrackWorkoutQuestion,
+        a: l10n.settingsFaqTrackWorkoutAnswer
+      ),
+      (
+        q: l10n.settingsFaqExportDataQuestion,
+        a: l10n.settingsFaqExportDataAnswer
+      ),
+      (
+        q: l10n.settingsFaqDailyGoalsQuestion,
+        a: l10n.settingsFaqDailyGoalsAnswer
+      ),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -862,7 +803,7 @@ class HelpSupportScreen extends StatelessWidget {
                     letterSpacing: 1)),
           ),
           const SizedBox(height: 10),
-          ..._faqs.map((faq) => Padding(
+          ..._faqs(context).map((faq) => Padding(
                 padding: const EdgeInsets.only(bottom: 10),
                 child: _FaqTile(question: faq.q, answer: faq.a),
               )),
@@ -956,8 +897,8 @@ class AboutScreen extends StatelessWidget {
                   color: AppColors.textPrimary,
                   fontWeight: FontWeight.w800,
                   fontSize: 18)),
-          const Text('Version 1.0.0',
-              style: TextStyle(color: AppColors.textMuted, fontSize: 12.5)),
+          Text(AppLocalizations.of(context)!.settingsAppVersion('1.0.0'),
+              style: const TextStyle(color: AppColors.textMuted, fontSize: 12.5)),
           const SizedBox(height: 20),
           GlowCard(
             child: Column(

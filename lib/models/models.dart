@@ -47,7 +47,6 @@ class UserProfile {
   UserProfile({
     required this.email,
     required this.username,
-    this.name = 'Alex',
     this.gender = Gender.male,
     this.heightCm = 190,
     this.weightKg = 75,
@@ -61,7 +60,6 @@ class UserProfile {
 
   final String email;
   String username;
-  String name;
   Gender gender;
   double heightCm;
   double weightKg;
@@ -81,7 +79,6 @@ class UserProfile {
   Map<String, dynamic> toJson() => {
         'email': email,
         'username': username,
-        'name': name,
         'gender': gender.name,
         'heightCm': heightCm,
         'weightKg': weightKg,
@@ -96,7 +93,6 @@ class UserProfile {
   factory UserProfile.fromJson(Map<String, dynamic> json) => UserProfile(
         email: json['email'] as String,
         username: json['username'] as String,
-        name: json['name'] as String,
         gender: Gender.values.byName(json['gender'] as String),
         heightCm: (json['heightCm'] as num).toDouble(),
         weightKg: (json['weightKg'] as num).toDouble(),
@@ -340,6 +336,7 @@ class WorkoutSet {
     required this.setNumber,
     required this.targetReps,
     this.done = false,
+    this.rpe,
   });
 
   final String exercise;
@@ -347,11 +344,18 @@ class WorkoutSet {
   final int targetReps;
   bool done;
 
+  /// Rate of Perceived Exertion, 1-10 (1 = very easy, 10 = maximal effort).
+  /// Null until the user rates the set — asked for right after marking a
+  /// set done; cleared if the set is un-marked, since an un-done set was
+  /// never actually performed.
+  int? rpe;
+
   Map<String, dynamic> toJson() => {
         'exercise': exercise,
         'setNumber': setNumber,
         'targetReps': targetReps,
         'done': done,
+        'rpe': rpe,
       };
 
   factory WorkoutSet.fromJson(Map<String, dynamic> json) => WorkoutSet(
@@ -359,6 +363,7 @@ class WorkoutSet {
         setNumber: json['setNumber'] as int,
         targetReps: json['targetReps'] as int,
         done: json['done'] as bool,
+        rpe: json['rpe'] as int?,
       );
 }
 
@@ -522,4 +527,80 @@ enum PetStage {
   royalDragon,
   ancientDragon,
   legendaryDragon,
+}
+
+/// Lifetime achievement/rank progress — a single persisted blob (like
+/// [BodyMeasurement], not day-scoped) since it tracks totals across the
+/// account's whole history, not just today.
+class AchievementProgress {
+  const AchievementProgress({
+    this.totalWorkoutsCompleted = 0,
+    this.totalMobilityCompleted = 0,
+    this.totalMealsLogged = 0,
+    this.totalWaterGoalDaysMet = 0,
+    this.currentStreak = 0,
+    this.longestStreak = 0,
+    this.lastStreakDate,
+    this.lastWorkoutCompleteDate,
+    this.lastWaterGoalMetDate,
+    this.unlockedAchievementIds = const {},
+    this.achievementUnlockedAt = const {},
+  });
+
+  final int totalWorkoutsCompleted;
+  final int totalMobilityCompleted;
+  final int totalMealsLogged;
+  final int totalWaterGoalDaysMet;
+  final int currentStreak;
+  final int longestStreak;
+
+  /// Calendar date (midnight) of the last day counted toward [currentStreak].
+  final DateTime? lastStreakDate;
+
+  /// 'yyyy-MM-dd' guard so a full-workout completion only counts once per
+  /// calendar day no matter how many times sets are toggled that day.
+  final String? lastWorkoutCompleteDate;
+
+  /// Same guard as [lastWorkoutCompleteDate], for the water goal.
+  final String? lastWaterGoalMetDate;
+
+  final Set<String> unlockedAchievementIds;
+  final Map<String, DateTime> achievementUnlockedAt;
+
+  Map<String, dynamic> toJson() => {
+        'totalWorkoutsCompleted': totalWorkoutsCompleted,
+        'totalMobilityCompleted': totalMobilityCompleted,
+        'totalMealsLogged': totalMealsLogged,
+        'totalWaterGoalDaysMet': totalWaterGoalDaysMet,
+        'currentStreak': currentStreak,
+        'longestStreak': longestStreak,
+        'lastStreakDate': lastStreakDate?.toIso8601String(),
+        'lastWorkoutCompleteDate': lastWorkoutCompleteDate,
+        'lastWaterGoalMetDate': lastWaterGoalMetDate,
+        'unlockedAchievementIds': unlockedAchievementIds.toList(),
+        'achievementUnlockedAt': achievementUnlockedAt
+            .map((id, date) => MapEntry(id, date.toIso8601String())),
+      };
+
+  factory AchievementProgress.fromJson(Map<String, dynamic> json) =>
+      AchievementProgress(
+        totalWorkoutsCompleted: json['totalWorkoutsCompleted'] as int? ?? 0,
+        totalMobilityCompleted: json['totalMobilityCompleted'] as int? ?? 0,
+        totalMealsLogged: json['totalMealsLogged'] as int? ?? 0,
+        totalWaterGoalDaysMet: json['totalWaterGoalDaysMet'] as int? ?? 0,
+        currentStreak: json['currentStreak'] as int? ?? 0,
+        longestStreak: json['longestStreak'] as int? ?? 0,
+        lastStreakDate: json['lastStreakDate'] == null
+            ? null
+            : DateTime.parse(json['lastStreakDate'] as String),
+        lastWorkoutCompleteDate: json['lastWorkoutCompleteDate'] as String?,
+        lastWaterGoalMetDate: json['lastWaterGoalMetDate'] as String?,
+        unlockedAchievementIds:
+            ((json['unlockedAchievementIds'] as List?) ?? const [])
+                .cast<String>()
+                .toSet(),
+        achievementUnlockedAt:
+            ((json['achievementUnlockedAt'] as Map<String, dynamic>?) ?? {})
+                .map((id, date) => MapEntry(id, DateTime.parse(date as String))),
+      );
 }
