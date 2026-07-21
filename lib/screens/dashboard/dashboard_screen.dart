@@ -10,9 +10,8 @@ import '../../widgets/common/count_up_text.dart';
 import '../../widgets/common/glow_card.dart';
 import '../../widgets/common/progress_ring.dart';
 import '../../widgets/common/scale_tap.dart';
-import '../../widgets/pet/dragon_avatar.dart';
+import '../../widgets/pet/pet_card.dart';
 import '../body_metrics/log_metrics_sheet.dart';
-import '../pet/pet_screen.dart';
 import 'log_meal_sheet.dart';
 import 'water_log_sheet.dart';
 
@@ -47,7 +46,7 @@ class DashboardScreen extends StatelessWidget {
                   ),
                 ],
                 const SizedBox(height: 14),
-                _PetCard(state: state),
+                PetCard(state: state),
                 const SizedBox(height: 24),
                 _DailyOverviewCard(state: state, stats: stats),
                 const SizedBox(height: 20),
@@ -327,72 +326,6 @@ class _AnnouncementBanner extends StatelessWidget {
                 color: AppColors.textMuted, size: 18),
           ),
         ],
-      ),
-    );
-  }
-}
-
-/// Compact tamagotchi-style summary — grows from real goal completion (see
-/// [AppState.todayPetGoals]), tap through to [PetScreen] for the full view.
-class _PetCard extends StatelessWidget {
-  const _PetCard({required this.state});
-  final AppState state;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return ScaleTap(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const PetScreen()),
-      ),
-      child: GlowCard(
-        child: Row(
-          children: [
-            DragonAvatar(stage: state.petStage, size: 46),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(l10n.petCardTitle,
-                          style: const TextStyle(
-                              color: AppColors.textPrimary,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 14)),
-                      const SizedBox(width: 8),
-                      Text(l10n.petLevelShort(state.petLevel),
-                          style: const TextStyle(
-                              color: AppColors.primaryBright,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 12)),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(AppRadius.pill),
-                    child: LinearProgressIndicator(
-                      value: state.petLevelProgress,
-                      minHeight: 6,
-                      backgroundColor: AppColors.surfaceElevated,
-                      valueColor: const AlwaysStoppedAnimation(
-                          AppColors.primaryBright),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(l10n.petXpProgress(state.petXpIntoLevel.toString()),
-                      style: const TextStyle(
-                          color: AppColors.textMuted, fontSize: 11)),
-                ],
-              ),
-            ),
-            const SizedBox(width: 6),
-            const Icon(Icons.chevron_right_rounded,
-                color: AppColors.textMuted),
-          ],
-        ),
       ),
     );
   }
