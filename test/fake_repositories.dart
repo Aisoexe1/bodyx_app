@@ -41,10 +41,15 @@ class FakeAuthRepository implements AuthRepository {
     );
   }
 
+  /// The server's pet XP to hand back on the next [login] — simulates a
+  /// value another device already synced, for testing AppState's
+  /// higher-wins reconciliation.
+  int nextLoginPetXp = 0;
+
   @override
   Future<UserProfile> login({required String email, required String password}) async {
     final derived = email.split('@').first.isEmpty ? 'alex' : email.split('@').first;
-    return UserProfile(email: email, username: derived);
+    return UserProfile(email: email, username: derived, petXp: nextLoginPetXp);
   }
 
   @override
@@ -173,8 +178,14 @@ class UnreachableAuthRepository implements AuthRepository {
 }
 
 class FakeProfileRepository implements ProfileRepository {
+  /// Every `updates` map passed to [updateMe], in call order — lets tests
+  /// assert what AppState actually pushed to the server (e.g. petXp sync).
+  final List<Map<String, dynamic>> updateCalls = [];
+
   @override
-  Future<void> updateMe(Map<String, dynamic> updates) async {}
+  Future<void> updateMe(Map<String, dynamic> updates) async {
+    updateCalls.add(updates);
+  }
 }
 
 class FakeWeightRepository implements WeightRepository {
@@ -274,12 +285,13 @@ class FakeAnnouncementRepository implements AnnouncementRepository {
 AppState newTestAppState({
   PersistenceService? persistence,
   AuthRepository? authRepository,
+  ProfileRepository? profileRepository,
   AnnouncementRepository? announcementRepository,
 }) =>
     AppState(
       persistence: persistence,
       authRepository: authRepository ?? FakeAuthRepository(),
-      profileRepository: FakeProfileRepository(),
+      profileRepository: profileRepository ?? FakeProfileRepository(),
       weightRepository: FakeWeightRepository(),
       measurementRepository: FakeMeasurementRepository(),
       supportRepository: FakeSupportRepository(),

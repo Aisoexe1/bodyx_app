@@ -56,6 +56,7 @@ class UserProfile {
     this.unitsMetric = true,
     this.avatarSeed = 0,
     this.role = 'user',
+    this.petXp = 0,
   });
 
   final String email;
@@ -74,6 +75,13 @@ class UserProfile {
   /// used for admin-only affordances like [AppState.isAdminAccount].
   String role;
 
+  /// The server's last-known copy of [AppState.petXp] — carried through
+  /// login/session-restore purely so [AppState] can reconcile it against
+  /// its own live value (whichever is higher wins, see
+  /// [AppState._reconcilePetXp]). Not the source of truth on its own; once
+  /// reconciled, the app reads/writes [AppState.petXp] exclusively.
+  int petXp;
+
   double get bmi => weightKg / ((heightCm / 100) * (heightCm / 100));
 
   Map<String, dynamic> toJson() => {
@@ -88,6 +96,7 @@ class UserProfile {
         'unitsMetric': unitsMetric,
         'avatarSeed': avatarSeed,
         'role': role,
+        'petXp': petXp,
       };
 
   factory UserProfile.fromJson(Map<String, dynamic> json) => UserProfile(
@@ -102,6 +111,7 @@ class UserProfile {
         unitsMetric: json['unitsMetric'] as bool,
         avatarSeed: json['avatarSeed'] as int,
         role: json['role'] as String? ?? 'user',
+        petXp: json['petXp'] as int? ?? 0,
       );
 }
 

@@ -30,6 +30,7 @@ class UserAdminView(ModelView):
         "height_cm",
         "weight_kg",
         "age",
+        "pet_xp",
         "created_at",
     ]
     exclude_fields_from_create = ["role"]

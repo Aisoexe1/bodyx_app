@@ -261,6 +261,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       petXp += gained;
       unawaited(_persistence.savePetXp(petXp));
       unawaited(_persistence.saveTodayAwardedPetGoals(_petAwardedToday));
+      _syncPetXpToServer();
       notifyListeners();
     }
   }
@@ -282,6 +283,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     if (!isAdminAccount) return;
     petXp += _petXpAdminBoost;
     unawaited(_persistence.savePetXp(petXp));
+    _syncPetXpToServer();
     notifyListeners();
   }
 
@@ -473,6 +475,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     _hasSession = true;
     unawaited(_persistence.setOnboardingDone(true));
     _persistUser();
+    _reconcilePetXp(restoredUser.petXp);
 
     try {
       final serverWeight = await _weightRepository.list();
@@ -580,6 +583,34 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       });
     } catch (e) {
       debugPrint('User sync failed: $e');
+    }
+  }
+
+  /// Pushes the current [petXp] up to the server — called after every
+  /// mutation (goal completion, achievement bonus, admin boost) alongside
+  /// the existing local [PersistenceService.savePetXp], same "local always
+  /// works, server sync best-effort" pattern as the rest of this class.
+  void _syncPetXpToServer() => unawaited(_pushPetXpToServer());
+
+  Future<void> _pushPetXpToServer() async {
+    if (!_hasSession) return;
+    try {
+      await _profileRepository.updateMe({'petXp': petXp});
+    } catch (e) {
+      debugPrint('Pet XP sync failed: $e');
+    }
+  }
+
+  /// Reconciles the server's last-known pet XP (fetched on login/session
+  /// restore) against this device's own value — whichever is higher wins,
+  /// so neither a fresh install nor a long-offline device ever regresses
+  /// the pet, and the loser catches up rather than silently diverging.
+  void _reconcilePetXp(int serverPetXp) {
+    if (serverPetXp > petXp) {
+      petXp = serverPetXp;
+      unawaited(_persistence.savePetXp(petXp));
+    } else if (petXp > serverPetXp) {
+      _syncPetXpToServer();
     }
   }
 
@@ -738,6 +769,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     } else {
       unawaited(_authRepository.signOut());
     }
+    _reconcilePetXp(user!.petXp);
     notifyListeners();
   }
 
@@ -763,6 +795,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     _hasSession = true;
     _persistUser();
     unawaited(_persistence.setOnboardingDone(true));
+    _reconcilePetXp(user!.petXp);
     notifyListeners();
   }
 
@@ -788,6 +821,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     _hasSession = true;
     _persistUser();
     unawaited(_persistence.setOnboardingDone(true));
+    _reconcilePetXp(user!.petXp);
     notifyListeners();
   }
 
@@ -817,6 +851,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       _hasSession = true;
       _persistUser();
       unawaited(_persistence.setOnboardingDone(true));
+      _reconcilePetXp(user!.petXp);
       notifyListeners();
       return;
     }
@@ -860,6 +895,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     unawaited(_persistence.setOnboardingDone(true));
     _syncUserToServer();
     _syncMeasurementsToServer();
+    _reconcilePetXp(user!.petXp);
     notifyListeners();
   }
 
@@ -1909,6 +1945,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     if (petXpBonus > 0) {
       petXp += petXpBonus;
       unawaited(_persistence.savePetXp(petXp));
+      _syncPetXpToServer();
     }
     _persistAchievements();
   }

@@ -891,6 +891,37 @@ void main() {
       ));
       expect(state.petXp, 10);
     });
+
+    test('signing in adopts the server\'s pet XP when it is higher',
+        () async {
+      final authRepo = FakeAuthRepository()..nextLoginPetXp = 200;
+      final state = newTestAppState(authRepository: authRepo);
+      await state.hydrate();
+      // As if this device had already played a bit offline before ever
+      // signing in.
+      state.petXp = 50;
+
+      await state.signIn('pet-sync-a@bodyx.app', 'pw');
+
+      expect(state.petXp, 200);
+    });
+
+    test(
+        'signing in pushes this device\'s higher pet XP up to the server '
+        'instead of regressing', () async {
+      final authRepo = FakeAuthRepository()..nextLoginPetXp = 10;
+      final profileRepo = FakeProfileRepository();
+      final state = newTestAppState(
+          authRepository: authRepo, profileRepository: profileRepo);
+      await state.hydrate();
+      // This device is way ahead of whatever the server last saw.
+      state.petXp = 300;
+
+      await state.signIn('pet-sync-b@bodyx.app', 'pw');
+
+      expect(state.petXp, 300, reason: 'must never regress toward the server');
+      expect(profileRepo.updateCalls.any((u) => u['petXp'] == 300), true);
+    });
   });
 
   group('progress photos', () {
@@ -1186,6 +1217,7 @@ void main() {
         activityLevel: 'Very active',
         unitsMetric: false,
         role: 'admin',
+        petXp: 340,
       );
 
       final restored = UserProfile.fromJson(user.toJson());
@@ -1200,6 +1232,7 @@ void main() {
       expect(restored.activityLevel, user.activityLevel);
       expect(restored.unitsMetric, user.unitsMetric);
       expect(restored.role, user.role);
+      expect(restored.petXp, user.petXp);
     });
 
     test('BodyMeasurement.deltaFromFirst is 0 for empty history', () {
