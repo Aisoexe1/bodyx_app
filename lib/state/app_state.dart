@@ -1007,6 +1007,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       set.rpe = null;
     }
     _persistWorkoutSets();
+    _evaluatePetGoals();
     notifyListeners();
   }
 
@@ -1888,15 +1889,27 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       AchievementFamily.nutrition: totalMealsLogged,
     };
     var unlockedNew = false;
+    // Achievements and the pet share one XP currency: unlocking one pays
+    // out its rank points (10/25/75/200) straight into petXp, on top of
+    // whatever the day's real goals already earned — so a rare lifetime
+    // milestone moves the dragon noticeably more than a daily goal does,
+    // and there's a single number ([petXp]) behind both progression
+    // systems instead of two disconnected meters.
+    var petXpBonus = 0;
     for (final def in kAchievementCatalog) {
       if (unlockedAchievementIds.contains(def.id)) continue;
       if (counters[def.family]! >= def.threshold) {
         unlockedAchievementIds.add(def.id);
         achievementUnlockedAt[def.id] = DateTime.now();
         unlockedNew = true;
+        petXpBonus += pointsForTier(def.tier);
       }
     }
     if (unlockedNew) HapticFeedback.mediumImpact();
+    if (petXpBonus > 0) {
+      petXp += petXpBonus;
+      unawaited(_persistence.savePetXp(petXp));
+    }
     _persistAchievements();
   }
 

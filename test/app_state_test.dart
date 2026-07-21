@@ -692,12 +692,16 @@ void main() {
       final goalMl = state.dailyStats.last.waterGoalMl;
       state.logWater(goalMl);
 
-      expect(state.petXp, 10);
+      // 10 for the daily goal, +10 more from unlocking 'hydration_bronze'
+      // (this account's very first water goal ever) — achievements and the
+      // pet share one XP pool, see _checkAchievements.
+      expect(state.petXp, 20);
       expect(state.isPetGoalAwardedToday('water'), true);
+      expect(state.unlockedAchievementIds, contains('hydration_bronze'));
 
       // Logging more water after the goal is already met must not re-award.
       state.logWater(100);
-      expect(state.petXp, 10);
+      expect(state.petXp, 20);
     });
 
     test('finishing today\'s workout awards workout XP', () async {
@@ -713,7 +717,10 @@ void main() {
 
       state.toggleWorkoutSet(1);
       expect(state.todayPetGoals['workout'], true);
-      expect(state.petXp, 15);
+      // 15 for the daily goal, +10 more from unlocking 'workout_bronze'
+      // (this account's first ever completed workout).
+      expect(state.petXp, 25);
+      expect(state.unlockedAchievementIds, contains('workout_bronze'));
     });
 
     test('a perfect day (every present goal met) adds a bonus on top',
@@ -743,8 +750,10 @@ void main() {
       );
       state.logWater(today.waterGoalMl);
 
-      // water(10) + steps(10) + sleep(10) + perfect-day bonus(25)
-      expect(state.petXp, 55);
+      // water(10) + steps(10) + sleep(10) + perfect-day bonus(25) + this
+      // account's first-ever 'hydration_bronze' unlock (10) paid into the
+      // same pet XP pool.
+      expect(state.petXp, 65);
     });
 
     test('level and stage derive from accumulated XP', () async {
@@ -784,20 +793,26 @@ void main() {
     test('pet XP and today\'s awarded goals survive a restart', () async {
       final state = newTestAppState();
       await state.hydrate();
-      await state.signIn('pet-restart@bodyx.app', 'pw');
+      // rememberMe: true — unlockedAchievementIds only rehydrates once
+      // onboardingDone is set (see hydrate()'s _hasSession gate); petXp
+      // itself loads unconditionally either way.
+      await state.signIn('pet-restart@bodyx.app', 'pw', rememberMe: true);
 
       state.logWater(state.dailyStats.last.waterGoalMl);
-      expect(state.petXp, 10);
+      // 10 for the goal + 10 from this account's first-ever
+      // 'hydration_bronze' unlock.
+      expect(state.petXp, 20);
 
       final restarted = newTestAppState();
       await restarted.hydrate();
 
-      expect(restarted.petXp, 10);
+      expect(restarted.petXp, 20);
       expect(restarted.isPetGoalAwardedToday('water'), true);
+      expect(restarted.unlockedAchievementIds, contains('hydration_bronze'));
 
       // Re-logging water on the "same day" must not re-award the XP.
       restarted.logWater(50);
-      expect(restarted.petXp, 10);
+      expect(restarted.petXp, 20);
     });
 
     test('adminBoostPet grants a level with no goals for an admin account',
@@ -837,6 +852,44 @@ void main() {
       state.user!.role = 'superadmin';
 
       expect(state.isAdminAccount, true);
+    });
+
+    test('unlocking an achievement pays its rank points into pet XP too',
+        () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      await state.signIn('pet-achievements@bodyx.app', 'pw');
+
+      expect(state.petXp, 0);
+      expect(state.unlockedAchievementIds, isEmpty);
+
+      // Logging the first meal ever unlocks 'nutrition_bronze' (threshold
+      // 1, worth 10 rank points) — that same 10 should land in petXp.
+      state.logMeal(const MealEntry(
+        name: 'Chicken bowl',
+        time: '12:30',
+        kcal: 600,
+        proteinG: 45,
+        carbsG: 50,
+        fatG: 15,
+        icon: Icons.lunch_dining_rounded,
+      ));
+
+      expect(state.unlockedAchievementIds, contains('nutrition_bronze'));
+      expect(state.petXp, 10);
+
+      // A second meal doesn't unlock anything new (next tier needs 25) —
+      // no further pet XP from achievements this time.
+      state.logMeal(const MealEntry(
+        name: 'Oatmeal',
+        time: '08:00',
+        kcal: 300,
+        proteinG: 10,
+        carbsG: 50,
+        fatG: 5,
+        icon: Icons.breakfast_dining_rounded,
+      ));
+      expect(state.petXp, 10);
     });
   });
 
