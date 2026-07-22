@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:bodyx_app/l10n/gen/app_localizations.dart';
+import '../../logic/health_insights_labels.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
@@ -63,10 +64,9 @@ class SleepDetailSheet extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-                today.sleepStagesSynced
-                    ? AppLocalizations.of(context)!.progressSleepSubtitleSynced
-                    : AppLocalizations.of(context)!
-                        .progressSleepSubtitleEstimated,
+                sleepBreakdownSubtitle(context,
+                    healthSyncEnabled: state.healthSyncEnabled,
+                    sleepStagesSynced: today.sleepStagesSynced),
                 style: const TextStyle(
                     color: AppColors.textMuted, fontSize: 12.5)),
             const SizedBox(height: 20),

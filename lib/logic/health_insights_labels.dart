@@ -48,3 +48,35 @@ String statusLabel(BuildContext context, StatusResult result) {
       return l10n.healthStatusProteinTooLow;
   }
 }
+
+/// Resolves the "why does this look like this" subtitle under a sleep
+/// breakdown — three distinct states, not two: real per-stage data was
+/// synced; Health sync is on but returned nothing (no Watch/Sleep app
+/// actually tracking sleep, so telling the user to "enable Health sync"
+/// would be wrong since they already did); or sync itself is off/never
+/// granted. Shared by the Progress screen, Daily Plan's sleep detail sheet,
+/// and the daily summary screen so the three states stay worded
+/// consistently everywhere they appear.
+String sleepBreakdownSubtitle(
+  BuildContext context, {
+  required bool healthSyncEnabled,
+  required bool sleepStagesSynced,
+}) {
+  final l10n = AppLocalizations.of(context)!;
+  if (sleepStagesSynced) return l10n.progressSleepSubtitleSynced;
+  if (healthSyncEnabled) return l10n.progressSleepSubtitleNoSource;
+  return l10n.progressSleepSubtitleEstimated;
+}
+
+/// Same three-state logic as [sleepBreakdownSubtitle], worded for a specific
+/// past day (Daily Summary) rather than "today".
+String dailySummarySleepSubtitle(
+  BuildContext context, {
+  required bool healthSyncEnabled,
+  required bool sleepStagesSynced,
+}) {
+  final l10n = AppLocalizations.of(context)!;
+  if (sleepStagesSynced) return l10n.dailySummarySleepSynced;
+  if (healthSyncEnabled) return l10n.dailySummarySleepNoSource;
+  return l10n.dailySummarySleepEstimated;
+}

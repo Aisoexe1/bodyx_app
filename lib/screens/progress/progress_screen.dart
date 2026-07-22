@@ -242,9 +242,9 @@ class _ProgressScreenState extends State<ProgressScreen> {
                 const SizedBox(height: 24),
                 SectionHeader(
                   title: AppLocalizations.of(context)!.progressSleepTitle,
-                  subtitle: todayStats.sleepStagesSynced
-                      ? AppLocalizations.of(context)!.progressSleepSubtitleSynced
-                      : AppLocalizations.of(context)!.progressSleepSubtitleEstimated,
+                  subtitle: sleepBreakdownSubtitle(context,
+                      healthSyncEnabled: state.healthSyncEnabled,
+                      sleepStagesSynced: todayStats.sleepStagesSynced),
                 ),
                 const SizedBox(height: 12),
                 GlowCard(

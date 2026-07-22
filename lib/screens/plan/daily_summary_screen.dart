@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:bodyx_app/l10n/gen/app_localizations.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import '../../logic/health_insights_labels.dart';
 import '../../models/models.dart';
+import '../../state/app_state.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/charts/sleep_donut_chart.dart';
@@ -15,6 +18,7 @@ class DailySummaryScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final healthSyncEnabled = context.watch<AppState>().healthSyncEnabled;
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -77,10 +81,9 @@ class DailySummaryScreen extends StatelessWidget {
                     letterSpacing: 1)),
             const SizedBox(height: 4),
             Text(
-                stats.sleepStagesSynced
-                    ? AppLocalizations.of(context)!.dailySummarySleepSynced
-                    : AppLocalizations.of(context)!
-                        .dailySummarySleepEstimated,
+                dailySummarySleepSubtitle(context,
+                    healthSyncEnabled: healthSyncEnabled,
+                    sleepStagesSynced: stats.sleepStagesSynced),
                 style: const TextStyle(
                     color: AppColors.textMuted, fontSize: 12.5)),
             const SizedBox(height: 16),
