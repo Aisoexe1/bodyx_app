@@ -1,13 +1,21 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:bodyx_app/l10n/gen/app_localizations.dart';
+import '../../logic/goal_labels.dart';
+import '../../logic/units.dart';
 import '../../models/models.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/common/confirm_dialog.dart';
+import '../../widgets/common/editable_number_label.dart';
 import '../../widgets/common/glow_card.dart';
 import '../../widgets/common/inputs_buttons.dart';
+import '../../widgets/common/language_picker.dart';
 import '../../widgets/common/scale_tap.dart';
+import 'contact_support_screen.dart';
 
 /// Shared chrome for every settings sub-screen: back button + title,
 /// scrollable body.
@@ -58,30 +66,27 @@ class EditProfileScreen extends StatefulWidget {
 }
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
-  late final _name =
-      TextEditingController(text: context.read<AppState>().user?.name ?? '');
   late final _username = TextEditingController(
       text: context.read<AppState>().user?.username ?? '');
 
   @override
   Widget build(BuildContext context) {
     return _SettingsScaffold(
-      title: 'Edit profile',
+      title: AppLocalizations.of(context)!.settingsEditProfileTitle,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          PrimaryTextField(label: 'Full name', controller: _name),
-          const SizedBox(height: 14),
           PrimaryTextField(
-              label: 'Username',
+              label: AppLocalizations.of(context)!.settingsUsernameLabel,
               controller: _username,
               prefixIcon: Icons.alternate_email_rounded),
           const SizedBox(height: 24),
           PrimaryButton(
-            label: 'Save changes',
+            label: AppLocalizations.of(context)!.settingsSaveChangesButton,
             onPressed: () {
-              context.read<AppState>().updateProfile(
-                  name: _name.text, username: _username.text);
+              context
+                  .read<AppState>()
+                  .updateProfile(username: _username.text);
               Navigator.pop(context);
             },
           ),
@@ -99,27 +104,43 @@ class PersonalDataScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = context.watch<AppState>().user;
+    final unitsMetric = user?.unitsMetric ?? true;
     final rows = <(IconData, String, String, WidgetBuilder)>[
-      (Icons.straighten_rounded, 'Height',
-          '${user?.heightCm.toStringAsFixed(0) ?? '--'} cm',
-          (ctx) => const EditHeightScreen()),
-      (Icons.monitor_weight_outlined, 'Weight',
-          '${user?.weightKg.toStringAsFixed(0) ?? '--'} kg',
-          (ctx) => const EditWeightScreen()),
-      (Icons.cake_outlined, 'Age', '${user?.age ?? '--'}',
-          (ctx) => const EditAgeScreen()),
-      (Icons.wc_rounded, 'Gender', user?.gender.name ?? 'male',
-          (ctx) => const EditGenderScreen()),
+      (
+        Icons.straighten_rounded,
+        AppLocalizations.of(context)!.settingsHeightLabel,
+        user == null ? '--' : formatHeight(context, user.heightCm, unitsMetric),
+        (ctx) => const EditHeightScreen()
+      ),
+      (
+        Icons.monitor_weight_outlined,
+        AppLocalizations.of(context)!.settingsWeightLabel,
+        user == null ? '--' : formatWeight(context, user.weightKg, unitsMetric),
+        (ctx) => const EditWeightScreen()
+      ),
+      (
+        Icons.cake_outlined,
+        AppLocalizations.of(context)!.settingsAgeLabel,
+        '${user?.age ?? '--'}',
+        (ctx) => const EditAgeScreen()
+      ),
+      (
+        Icons.wc_rounded,
+        AppLocalizations.of(context)!.settingsGenderLabel,
+        user?.gender.name ?? 'male',
+        (ctx) => const EditGenderScreen()
+      ),
     ];
 
     return _SettingsScaffold(
-      title: 'Personal data',
+      title: AppLocalizations.of(context)!.settingsPersonalDataTitle,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'This data helps us personalize your plan and recommendations.',
-            style: TextStyle(color: AppColors.textMuted, fontSize: 12.5, height: 1.4),
+          Text(
+            AppLocalizations.of(context)!.settingsPersonalDataDescription,
+            style: const TextStyle(
+                color: AppColors.textMuted, fontSize: 12.5, height: 1.4),
           ),
           const SizedBox(height: 16),
           GlowCard(
@@ -208,11 +229,19 @@ class _NumberEditScreenState extends State<_NumberEditScreen> {
       child: Column(
         children: [
           const SizedBox(height: 20),
-          Text('${_value.toStringAsFixed(widget.step < 1 ? 1 : 0)} ${widget.unit}',
-              style: const TextStyle(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 44)),
+          EditableNumberLabel(
+            value: _value,
+            min: widget.min,
+            max: widget.max,
+            decimals: widget.step < 1 ? 1 : 0,
+            suffix: widget.unit,
+            width: 180,
+            onChanged: (v) => setState(() => _value = v),
+            style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w800,
+                fontSize: 44),
+          ),
           const SizedBox(height: 24),
           SliderTheme(
             data: SliderTheme.of(context).copyWith(
@@ -232,7 +261,7 @@ class _NumberEditScreenState extends State<_NumberEditScreen> {
           ),
           const SizedBox(height: 24),
           PrimaryButton(
-            label: 'Save',
+            label: AppLocalizations.of(context)!.settingsSaveButton,
             onPressed: () {
               widget.onSave(_value);
               Navigator.pop(context);
@@ -249,14 +278,19 @@ class EditHeightScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = context.read<AppState>();
+    final unitsMetric = state.user?.unitsMetric ?? true;
+    final heightCm = state.user?.heightCm ?? 175;
     return _NumberEditScreen(
-      title: 'Edit height',
-      unit: 'cm',
-      min: 130,
-      max: 220,
+      title: AppLocalizations.of(context)!.settingsEditHeightTitle,
+      unit: unitsMetric
+          ? AppLocalizations.of(context)!.settingsCmUnit
+          : AppLocalizations.of(context)!.bodyDataUnitIn,
+      min: unitsMetric ? 130 : cmToInches(130),
+      max: unitsMetric ? 220 : cmToInches(220),
       step: 1,
-      initial: state.user?.heightCm ?? 175,
-      onSave: (v) => state.updateHeightWeightAge(heightCm: v),
+      initial: unitsMetric ? heightCm : cmToInches(heightCm),
+      onSave: (v) => state.updateHeightWeightAge(
+          heightCm: unitsMetric ? v : inchesToCm(v)),
     );
   }
 }
@@ -266,14 +300,19 @@ class EditWeightScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = context.read<AppState>();
+    final unitsMetric = state.user?.unitsMetric ?? true;
+    final weightKg = state.user?.weightKg ?? 70;
     return _NumberEditScreen(
-      title: 'Edit weight',
-      unit: 'kg',
-      min: 35,
-      max: 180,
-      step: 0.5,
-      initial: state.user?.weightKg ?? 70,
-      onSave: (v) => state.updateHeightWeightAge(weightKg: v),
+      title: AppLocalizations.of(context)!.settingsEditWeightTitle,
+      unit: unitsMetric
+          ? AppLocalizations.of(context)!.settingsKgUnit
+          : AppLocalizations.of(context)!.bodyDataUnitLb,
+      min: unitsMetric ? 35 : kgToLb(35),
+      max: unitsMetric ? 180 : kgToLb(180),
+      step: unitsMetric ? 0.5 : 1,
+      initial: unitsMetric ? weightKg : kgToLb(weightKg),
+      onSave: (v) =>
+          state.updateHeightWeightAge(weightKg: unitsMetric ? v : lbToKg(v)),
     );
   }
 }
@@ -284,8 +323,8 @@ class EditAgeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final state = context.read<AppState>();
     return _NumberEditScreen(
-      title: 'Edit age',
-      unit: 'yrs',
+      title: AppLocalizations.of(context)!.settingsEditAgeTitle,
+      unit: AppLocalizations.of(context)!.settingsYrsUnit,
       min: 13,
       max: 90,
       step: 1,
@@ -307,25 +346,31 @@ class _EditGenderScreenState extends State<EditGenderScreen> {
   @override
   Widget build(BuildContext context) {
     return _SettingsScaffold(
-      title: 'Edit gender',
+      title: AppLocalizations.of(context)!.settingsEditGenderTitle,
       child: Column(
         children: [
           Row(
             children: [
               Expanded(
-                child: _choiceCard('Male', Icons.male_rounded, Gender.male,
+                child: _choiceCard(
+                    AppLocalizations.of(context)!.settingsMaleLabel,
+                    Icons.male_rounded,
+                    Gender.male,
                     AppColors.primary),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _choiceCard('Female', Icons.female_rounded,
-                    Gender.female, AppColors.pink),
+                child: _choiceCard(
+                    AppLocalizations.of(context)!.settingsFemaleLabel,
+                    Icons.female_rounded,
+                    Gender.female,
+                    AppColors.pink),
               ),
             ],
           ),
           const SizedBox(height: 24),
           PrimaryButton(
-            label: 'Save',
+            label: AppLocalizations.of(context)!.settingsSaveButton,
             onPressed: () {
               context.read<AppState>().updateGender(_gender);
               Navigator.pop(context);
@@ -385,7 +430,7 @@ class _GoalScreenState extends State<GoalScreen> {
   @override
   Widget build(BuildContext context) {
     return _SettingsScaffold(
-      title: 'Your goal',
+      title: AppLocalizations.of(context)!.settingsYourGoalTitle,
       child: Column(
         children: [
           ..._goals.map((g) {
@@ -405,7 +450,7 @@ class _GoalScreenState extends State<GoalScreen> {
                               : AppColors.textMuted),
                       const SizedBox(width: 12),
                       Expanded(
-                          child: Text(g.$1,
+                          child: Text(goalLabel(context, g.$1),
                               style: const TextStyle(
                                   color: AppColors.textPrimary,
                                   fontWeight: FontWeight.w600))),
@@ -420,7 +465,7 @@ class _GoalScreenState extends State<GoalScreen> {
           }),
           const SizedBox(height: 14),
           PrimaryButton(
-            label: 'Save goal',
+            label: AppLocalizations.of(context)!.settingsSaveGoalButton,
             onPressed: () {
               context.read<AppState>().updateProfile(goal: _selected);
               Navigator.pop(context);
@@ -432,29 +477,133 @@ class _GoalScreenState extends State<GoalScreen> {
   }
 }
 
-class NotificationsScreen extends StatelessWidget {
+class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
+  @override
+  State<NotificationsScreen> createState() => _NotificationsScreenState();
+}
+
+class _NotificationsScreenState extends State<NotificationsScreen> {
+  Future<void> _handleNotifications(bool value) async {
+    final granted = await context.read<AppState>().toggleNotifications(value);
+    if (!mounted) return;
+    if (value && !granted) _showDeniedSnackBar();
+  }
+
+  Future<void> _handleWorkoutReminders(bool value) async {
+    final granted =
+        await context.read<AppState>().toggleWorkoutReminders(value);
+    if (!mounted) return;
+    if (value && !granted) _showDeniedSnackBar();
+  }
+
+  void _showDeniedSnackBar() {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(
+            AppLocalizations.of(context)!.settingsNotificationsAccessDenied)));
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
     return _SettingsScaffold(
-      title: 'Notifications',
+      title: AppLocalizations.of(context)!.settingsNotificationsTitle,
       child: Column(
         children: [
           _ToggleRow(
             icon: Icons.notifications_active_outlined,
-            label: 'Push notifications',
+            label: AppLocalizations.of(context)!.settingsPushNotificationsLabel,
             value: state.notificationsEnabled,
-            onChanged: (v) => context.read<AppState>().toggleNotifications(v),
+            onChanged: _handleNotifications,
           ),
           const SizedBox(height: 10),
           _ToggleRow(
             icon: Icons.fitness_center_rounded,
-            label: 'Workout reminders',
+            label: AppLocalizations.of(context)!.settingsWorkoutRemindersLabel,
             value: state.workoutRemindersEnabled,
-            onChanged: (v) =>
-                context.read<AppState>().toggleWorkoutReminders(v),
+            onChanged: _handleWorkoutReminders,
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class HealthSyncScreen extends StatefulWidget {
+  const HealthSyncScreen({super.key});
+  @override
+  State<HealthSyncScreen> createState() => _HealthSyncScreenState();
+}
+
+class _HealthSyncScreenState extends State<HealthSyncScreen> {
+  bool _syncing = false;
+
+  String get _platformLabel {
+    switch (defaultTargetPlatform) {
+      case TargetPlatform.iOS:
+        return AppLocalizations.of(context)!.settingsAppleHealthLabel;
+      case TargetPlatform.android:
+        return AppLocalizations.of(context)!.settingsHealthConnectLabel;
+      default:
+        return AppLocalizations.of(context)!.settingsHealthAppLabel;
+    }
+  }
+
+  Future<void> _handleToggle(bool value) async {
+    final granted = await context.read<AppState>().toggleHealthSync(value);
+    if (!mounted) return;
+    if (value && !granted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text(AppLocalizations.of(context)!
+                .settingsHealthAccessDenied(_platformLabel))),
+      );
+    }
+  }
+
+  Future<void> _syncNow() async {
+    setState(() => _syncing = true);
+    HapticFeedback.mediumImpact();
+    await context.read<AppState>().syncHealthData();
+    if (!mounted) return;
+    setState(() => _syncing = false);
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(AppLocalizations.of(context)!
+            .settingsSyncedWithPlatform(_platformLabel))));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = context.watch<AppState>();
+    return _SettingsScaffold(
+      title: AppLocalizations.of(context)!.settingsHealthSyncTitle,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _ToggleRow(
+            icon: Icons.favorite_border_rounded,
+            label: AppLocalizations.of(context)!
+                .settingsSyncWithPlatformLabel(_platformLabel),
+            value: state.healthSyncEnabled,
+            onChanged: (v) => _handleToggle(v),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            AppLocalizations.of(context)!.settingsHealthSyncDescription,
+            style: const TextStyle(
+              color: AppColors.textMuted,
+              fontSize: 12.5,
+              height: 1.4,
+            ),
+          ),
+          if (state.healthSyncEnabled) ...[
+            const SizedBox(height: 20),
+            PrimaryButton(
+              label: AppLocalizations.of(context)!.settingsSyncNowButton,
+              loading: _syncing,
+              onPressed: _syncing ? null : _syncNow,
+            ),
+          ],
         ],
       ),
     );
@@ -467,33 +616,50 @@ class UnitsLanguageScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
     return _SettingsScaffold(
-      title: 'Units & language',
+      title: AppLocalizations.of(context)!.settingsUnitsLanguageTitle,
       child: Column(
         children: [
           _ToggleRow(
             icon: Icons.straighten_rounded,
-            label: 'Use metric units (cm / kg)',
+            label: AppLocalizations.of(context)!.settingsUseMetricUnitsLabel,
             value: state.user?.unitsMetric ?? true,
             onChanged: (_) => context.read<AppState>().toggleUnits(),
           ),
           const SizedBox(height: 10),
-          const GlowCard(
-            child: Row(
-              children: [
-                Icon(Icons.language_rounded, color: AppColors.primaryBright),
-                SizedBox(width: 12),
-                Expanded(
-                  child: Text('Language',
-                      style: TextStyle(
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w600)),
-                ),
-                Text('English (US)',
-                    style: TextStyle(color: AppColors.textMuted)),
-              ],
-            ),
-          ),
+          _LanguageRow(locale: state.locale),
         ],
+      ),
+    );
+  }
+}
+
+class _LanguageRow extends StatelessWidget {
+  const _LanguageRow({required this.locale});
+  final Locale? locale;
+
+  @override
+  Widget build(BuildContext context) {
+    final label = kSupportedLocaleLabels[locale?.languageCode] ??
+        kSupportedLocaleLabels['en']!;
+    return ScaleTap(
+      onTap: () => showLanguagePicker(context),
+      child: GlowCard(
+        child: Row(
+          children: [
+            const Icon(Icons.language_rounded, color: AppColors.primaryBright),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(AppLocalizations.of(context)!.settingsLanguageLabel,
+                  style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w600)),
+            ),
+            Text(label, style: const TextStyle(color: AppColors.textMuted)),
+            const SizedBox(width: 4),
+            const Icon(Icons.chevron_right_rounded,
+                color: AppColors.textMuted, size: 18),
+          ],
+        ),
       ),
     );
   }
@@ -506,50 +672,48 @@ class PrivacyScreen extends StatefulWidget {
 }
 
 class _PrivacyScreenState extends State<PrivacyScreen> {
-  bool _publicProfile = false;
-  bool _shareAnonData = true;
+  bool _deleting = false;
+
+  Future<void> _confirmDelete() async {
+    final confirmed = await showConfirmDialog(
+      context,
+      icon: Icons.delete_forever_rounded,
+      title: AppLocalizations.of(context)!.settingsDeleteAccountDialogTitle,
+      message: AppLocalizations.of(context)!.settingsDeleteAccountDialogContent,
+      confirmLabel:
+          AppLocalizations.of(context)!.settingsDeleteAccountConfirmButton,
+      cancelLabel: AppLocalizations.of(context)!.settingsCancelButton,
+    );
+    if (!confirmed || !mounted) return;
+
+    setState(() => _deleting = true);
+    HapticFeedback.mediumImpact();
+    await context.read<AppState>().deleteAccount();
+    if (!mounted) return;
+    Navigator.of(context).popUntil((r) => r.isFirst);
+  }
 
   @override
   Widget build(BuildContext context) {
+    final state = context.watch<AppState>();
     return _SettingsScaffold(
-      title: 'Privacy',
+      title: AppLocalizations.of(context)!.settingsPrivacyTitle,
       child: Column(
         children: [
           _ToggleRow(
-            icon: Icons.public_rounded,
-            label: 'Public profile',
-            value: _publicProfile,
-            onChanged: (v) => setState(() => _publicProfile = v),
-          ),
-          const SizedBox(height: 10),
-          _ToggleRow(
             icon: Icons.analytics_outlined,
-            label: 'Share anonymous usage data',
-            value: _shareAnonData,
-            onChanged: (v) => setState(() => _shareAnonData = v),
+            label: AppLocalizations.of(context)!.settingsShareAnonDataLabel,
+            value: state.shareAnonData,
+            onChanged: (v) => context.read<AppState>().toggleShareAnonData(v),
           ),
           const SizedBox(height: 24),
           SizedBox(
             width: double.infinity,
             child: PrimaryButton(
-              label: 'Delete account',
+              label: AppLocalizations.of(context)!.settingsDeleteAccountLabel,
               outlined: true,
-              onPressed: () => showDialog(
-                context: context,
-                builder: (_) => AlertDialog(
-                  backgroundColor: AppColors.surface,
-                  title: const Text('Delete account?',
-                      style: TextStyle(color: AppColors.textPrimary)),
-                  content: const Text(
-                      'This is a prototype — no data will actually be deleted.',
-                      style: TextStyle(color: AppColors.textMuted)),
-                  actions: [
-                    TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text('Cancel')),
-                  ],
-                ),
-              ),
+              loading: _deleting,
+              onPressed: _deleting ? null : _confirmDelete,
             ),
           ),
         ],
@@ -561,62 +725,150 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
 class HelpSupportScreen extends StatelessWidget {
   const HelpSupportScreen({super.key});
 
-  static const _faqs = [
-    'How is my body scan calculated?',
-    'How do I sync a wearable device?',
-    'Can I export my progress data?',
-    'How do I change my daily goals?',
-  ];
+  static List<({String q, String a})> _faqs(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return [
+      (q: l10n.settingsFaqBodyScanQuestion, a: l10n.settingsFaqBodyScanAnswer),
+      (
+        q: l10n.settingsFaqSyncWearableQuestion,
+        a: l10n.settingsFaqSyncWearableAnswer
+      ),
+      (q: l10n.settingsFaqTargetsQuestion, a: l10n.settingsFaqTargetsAnswer),
+      (
+        q: l10n.settingsFaqTrackWorkoutQuestion,
+        a: l10n.settingsFaqTrackWorkoutAnswer
+      ),
+      (
+        q: l10n.settingsFaqExportDataQuestion,
+        a: l10n.settingsFaqExportDataAnswer
+      ),
+      (
+        q: l10n.settingsFaqDailyGoalsQuestion,
+        a: l10n.settingsFaqDailyGoalsAnswer
+      ),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
     return _SettingsScaffold(
-      title: 'Help & support',
+      title: AppLocalizations.of(context)!.settingsHelpSupportTitle,
       child: Column(
         children: [
-          const GlowCard(
-            child: Row(
-              children: [
-                Icon(Icons.chat_bubble_outline_rounded,
-                    color: AppColors.primaryBright),
-                SizedBox(width: 12),
-                Expanded(
-                  child: Text('Contact support',
-                      style: TextStyle(
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w700)),
-                ),
-                Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
-              ],
+          ScaleTap(
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ContactSupportScreen()),
+            ),
+            child: GlowCard(
+              child: Row(
+                children: [
+                  const Icon(Icons.chat_bubble_outline_rounded,
+                      color: AppColors.primaryBright),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                            AppLocalizations.of(context)!
+                                .settingsContactSupportLabel,
+                            style: const TextStyle(
+                                color: AppColors.textPrimary,
+                                fontWeight: FontWeight.w700)),
+                        const SizedBox(height: 2),
+                        Text(
+                            AppLocalizations.of(context)!
+                                .settingsContactSupportSubtitle,
+                            style: const TextStyle(
+                                color: AppColors.textMuted, fontSize: 12)),
+                      ],
+                    ),
+                  ),
+                  const Icon(Icons.chevron_right_rounded,
+                      color: AppColors.textMuted),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 20),
-          const Align(
+          Align(
             alignment: Alignment.centerLeft,
-            child: Text('FREQUENTLY ASKED',
-                style: TextStyle(
+            child: Text(
+                AppLocalizations.of(context)!.settingsFrequentlyAskedHeader,
+                style: const TextStyle(
                     color: AppColors.textMuted,
                     fontSize: 11.5,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 1)),
           ),
           const SizedBox(height: 10),
-          ..._faqs.map((q) => Padding(
+          ..._faqs(context).map((faq) => Padding(
                 padding: const EdgeInsets.only(bottom: 10),
-                child: GlowCard(
-                  child: Row(
-                    children: [
-                      Expanded(
-                          child: Text(q,
-                              style: const TextStyle(
-                                  color: AppColors.textPrimary, fontSize: 13.5))),
-                      const Icon(Icons.expand_more_rounded,
-                          color: AppColors.textMuted),
-                    ],
-                  ),
-                ),
+                child: _FaqTile(question: faq.q, answer: faq.a),
               )),
         ],
+      ),
+    );
+  }
+}
+
+class _FaqTile extends StatefulWidget {
+  const _FaqTile({required this.question, required this.answer});
+  final String question;
+  final String answer;
+
+  @override
+  State<_FaqTile> createState() => _FaqTileState();
+}
+
+class _FaqTileState extends State<_FaqTile> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return ScaleTap(
+      onTap: () {
+        HapticFeedback.selectionClick();
+        setState(() => _expanded = !_expanded);
+      },
+      child: GlowCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                    child: Text(widget.question,
+                        style: const TextStyle(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13.5))),
+                AnimatedRotation(
+                  turns: _expanded ? 0.5 : 0,
+                  duration: const Duration(milliseconds: 200),
+                  child: const Icon(Icons.expand_more_rounded,
+                      color: AppColors.textMuted),
+                ),
+              ],
+            ),
+            AnimatedSize(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOutCubic,
+              alignment: Alignment.topCenter,
+              child: !_expanded
+                  ? const SizedBox(width: double.infinity)
+                  : Padding(
+                      padding: const EdgeInsets.only(top: 10),
+                      child: Text(widget.answer,
+                          style: const TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 12.5,
+                              height: 1.5)),
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -627,7 +879,7 @@ class AboutScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _SettingsScaffold(
-      title: 'About BodyX',
+      title: AppLocalizations.of(context)!.settingsAboutTitle,
       child: Column(
         children: [
           Container(
@@ -640,21 +892,21 @@ class AboutScreen extends StatelessWidget {
             child: const Icon(Icons.bolt_rounded, color: Colors.white, size: 34),
           ),
           const SizedBox(height: 12),
-          const Text('BodyX',
-              style: TextStyle(
+          Text(AppLocalizations.of(context)!.settingsAppName,
+              style: const TextStyle(
                   color: AppColors.textPrimary,
                   fontWeight: FontWeight.w800,
                   fontSize: 18)),
-          const Text('Version 1.0.0 (prototype)',
-              style: TextStyle(color: AppColors.textMuted, fontSize: 12.5)),
+          Text(AppLocalizations.of(context)!.settingsAppVersion('1.0.0'),
+              style: const TextStyle(color: AppColors.textMuted, fontSize: 12.5)),
           const SizedBox(height: 20),
-          const GlowCard(
+          GlowCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('BodyX helps you track training, sleep, nutrition and '
-                    'body composition in one premium, dark-neon experience.',
-                    style: TextStyle(color: AppColors.textSecondary, height: 1.5)),
+                Text(AppLocalizations.of(context)!.settingsAboutDescription,
+                    style: const TextStyle(
+                        color: AppColors.textSecondary, height: 1.5)),
               ],
             ),
           ),
@@ -687,20 +939,20 @@ class LogoutScreen extends StatelessWidget {
                     color: AppColors.warningDeep, size: 38),
               ),
               const SizedBox(height: 20),
-              const Text('Log out?',
-                  style: TextStyle(
+              Text(AppLocalizations.of(context)!.settingsLogOutQuestion,
+                  style: const TextStyle(
                       color: AppColors.textPrimary,
                       fontWeight: FontWeight.w800,
                       fontSize: 22)),
               const SizedBox(height: 8),
-              const Text(
-                'You can always sign back in with your email and password.',
+              Text(
+                AppLocalizations.of(context)!.settingsLogOutDescription,
                 textAlign: TextAlign.center,
-                style: TextStyle(color: AppColors.textMuted, fontSize: 13.5),
+                style: const TextStyle(color: AppColors.textMuted, fontSize: 13.5),
               ),
               const SizedBox(height: 28),
               PrimaryButton(
-                label: 'Log out',
+                label: AppLocalizations.of(context)!.settingsLogOutButton,
                 onPressed: () {
                   Navigator.of(context).popUntil((r) => r.isFirst);
                   context.read<AppState>().signOut();
@@ -708,7 +960,7 @@ class LogoutScreen extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               PrimaryButton(
-                label: 'Cancel',
+                label: AppLocalizations.of(context)!.settingsCancelButton,
                 outlined: true,
                 onPressed: () => Navigator.pop(context),
               ),

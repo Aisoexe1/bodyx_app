@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:bodyx_app/l10n/gen/app_localizations.dart';
 import '../state/app_state.dart';
 import '../theme/app_colors.dart';
 import '../widgets/common/brand_mark.dart';
@@ -48,24 +49,24 @@ class _SplashScreenState extends State<SplashScreen>
           opacity: _fade,
           child: ScaleTransition(
             scale: _scale,
-            child: const Column(
+            child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                BrandMark(size: 110),
-                SizedBox(height: 20),
+                const BrandMark(size: 110),
+                const SizedBox(height: 20),
                 Text(
-                  'BodyX',
-                  style: TextStyle(
+                  AppLocalizations.of(context)!.splashAppName,
+                  style: const TextStyle(
                     fontSize: 30,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 1.2,
                     color: AppColors.textPrimary,
                   ),
                 ),
-                SizedBox(height: 6),
+                const SizedBox(height: 6),
                 Text(
-                  'TRAIN. TRACK. TRANSFORM.',
-                  style: TextStyle(
+                  AppLocalizations.of(context)!.splashTagline,
+                  style: const TextStyle(
                     fontSize: 11,
                     letterSpacing: 3,
                     color: AppColors.textMuted,

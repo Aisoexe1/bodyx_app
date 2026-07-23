@@ -1,0 +1,978 @@
+{
+  "@@locale": "en",
+  "alertsTitle": "Alerts",
+  "alertsMarkAllRead": "Mark all read",
+  "alertsUnreadCount": "{count} unread notifications",
+  "@alertsUnreadCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "alertsEmptyTitle": "Nothing to flag",
+  "alertsEmptySubtitle": "We'll let you know if something needs your attention",
+  "alertLowWaterTitle": "Low water intake",
+  "alertLowWaterSubtitle": "You're {liters} L behind today's hydration goal",
+  "@alertLowWaterSubtitle": {
+    "placeholders": {
+      "liters": {}
+    }
+  },
+  "alertSleepDebtTitle": "Sleep debt building up",
+  "alertSleepDebtSubtitle": "Average sleep this week is {hours}h, below your goal",
+  "@alertSleepDebtSubtitle": {
+    "placeholders": {
+      "hours": {}
+    }
+  },
+  "alertBodyScanTitle": "Body scan reminder",
+  "alertBodyScanSubtitle": "It's been a week since your last progress photo",
+  "alertStepsBestTitle": "New personal best",
+  "alertStepsBestSubtitle": "You hit {steps} steps yesterday — your best in two weeks",
+  "@alertStepsBestSubtitle": {
+    "placeholders": {
+      "steps": {}
+    }
+  },
+  "navHome": "Home",
+  "navProgress": "Progress",
+  "navPlan": "Plan",
+  "navAlerts": "Alerts",
+  "navProfile": "Profile",
+  "foodCategoryMeat": "Meat & fish",
+  "foodCategoryCheese": "Cheese",
+  "foodCategoryFruits": "Fruits",
+  "foodCategoryVegetables": "Vegetables",
+  "foodCategoryDairy": "Dairy",
+  "foodCategoryNuts": "Nuts & seeds",
+  "foodCategoryGrains": "Grains",
+  "foodCategorySweets": "Sweets & pastries",
+  "foodCategoryDrinks": "Drinks",
+  "foodCategoryPrepared": "Prepared dishes",
+  "foodCategoryOther": "Other",
+  "bodyDataTitle": "Your body data",
+  "bodyDataSubtitle": "We use this to calculate your plan\nand personalize your experience",
+  "bodyDataMale": "Male",
+  "bodyDataFemale": "Female",
+  "bodyDataHeightLabel": "Height",
+  "bodyDataWeightLabel": "Weight",
+  "bodyDataAgeLabel": "Age",
+  "bodyDataUnitCm": "cm",
+  "bodyDataUnitIn": "in",
+  "bodyDataUnitKg": "kg",
+  "bodyDataUnitLb": "lb",
+  "bodyDataUnitYrs": "yrs",
+  "bodyDataConfirm": "Confirm",
+  "bodyDataToggleMetric": "cm / kg",
+  "bodyDataToggleImperial": "in / lb",
+  "forgotPasswordTitle": "Reset your password",
+  "forgotPasswordSubtitle": "Enter your email and we'll send you a 6-digit code",
+  "forgotPasswordEmailLabel": "Email",
+  "forgotPasswordSendCode": "Send code",
+  "forgotPasswordBackToSignIn": "Back to sign in",
+  "resetPasswordEnterCode": "Enter your code",
+  "resetPasswordCheckEmail": "Check your email for a 6-digit code",
+  "resetPasswordSentCode": "We sent a 6-digit code to {email}",
+  "@resetPasswordSentCode": {
+    "placeholders": {
+      "email": {}
+    }
+  },
+  "resetPasswordDevMode": "Dev mode (no email configured) — your code is {code}",
+  "@resetPasswordDevMode": {
+    "placeholders": {
+      "code": {}
+    }
+  },
+  "resetPasswordCodeLabel": "6-digit code",
+  "resetPasswordCodeError": "Enter the 6-digit code",
+  "resetPasswordNewPasswordLabel": "New password",
+  "resetPasswordRepeatPasswordLabel": "Repeat the new password",
+  "resetPasswordMismatchError": "Passwords do not match",
+  "resetPasswordButton": "Reset password",
+  "resetPasswordBackToSignIn": "Back to sign in",
+  "apiErrorCantReachServer": "Can't reach the server. Check your connection and try again.",
+  "apiErrorGeneric": "Something went wrong. Please try again.",
+  "signInWelcomeBack": "Welcome back",
+  "signInStayConsistent": "Stay consistent",
+  "signInEmailLabel": "Email",
+  "signInPasswordLabel": "Password",
+  "signInFieldsRequired": "Enter your email and password to continue.",
+  "signInSignInButton": "Sign in",
+  "signInRememberMe": "Remember me",
+  "signInForgotPassword": "Forgot password?",
+  "signInOrContinueWith": "or continue with",
+  "signInGoogleLabel": "Google",
+  "signInAppleLabel": "Apple",
+  "signInNoAccount": "Don't have an account? ",
+  "signInSignUp": "Sign up",
+  "signUpTitle": "Create your account",
+  "signUpSubtitle": "Join us and start your journey",
+  "signUpEmailLabel": "Email",
+  "signUpPasswordLabel": "Password",
+  "signUpRepeatPasswordLabel": "Repeat the password",
+  "signUpPasswordMismatch": "Passwords do not match",
+  "signUpNextButton": "Next",
+  "signUpOrDivider": "or",
+  "signUpContinueWithGoogle": "Continue with Google",
+  "signUpContinueWithApple": "Continue with Apple",
+  "signUpAlreadyHaveAccount": "Already have an account? ",
+  "signUpSignInLink": "Sign in",
+  "usernameAppName": "BodyX app",
+  "usernameChooseUsername": "Choose a username",
+  "usernameNotVisible": "This won't be visible to others",
+  "usernameLabel": "Username",
+  "usernameConfirm": "Confirm",
+  "addProgressPhotoTitle": "Add Progress Photo",
+  "addProgressPhotoSubtitle": "Take a new photo or pick one from your library.",
+  "addProgressPhotoTakePhoto": "Take Photo",
+  "addProgressPhotoChooseFromGallery": "Choose from Gallery",
+  "addProgressPhotoCameraAccessOff": "Camera access is off — enable it in Settings to take a photo.",
+  "addProgressPhotoLibraryAccessOff": "Photo library access is off — enable it in Settings to choose a photo.",
+  "addProgressPhotoAddFailed": "Couldn't add that photo — try again.",
+  "bodyMetricsTitle": "Body metrics",
+  "bodyMetricsMaleOption": "Male",
+  "bodyMetricsFemaleOption": "Female",
+  "bodyMetricsFrontOption": "Front",
+  "bodyMetricsBackOption": "Back",
+  "bodyMetricsTapZoneHint": "Tap a highlighted zone to inspect it",
+  "bodyMetricsCmUnit": "cm",
+  "bodyMetricsTargetValue": "Target {value} cm",
+  "@bodyMetricsTargetValue": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "bodyMetricsLastSessions": "Last 6 sessions",
+  "bodyMetricsAllMeasurements": "All measurements",
+  "bodyMetricsValueCm": "{value} cm",
+  "@bodyMetricsValueCm": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "bodyMetricsLogNewMeasurement": "Log new measurement",
+  "logMetricsTitle": "Log new entry",
+  "logMetricsBodyMeasurementTab": "Body measurement",
+  "logMetricsWeightBodyFatTab": "Weight & body fat",
+  "logMetricsMuscleZoneLabel": "Muscle zone",
+  "logMetricsZoneCmLabel": "{zone} (cm)",
+  "@logMetricsZoneCmLabel": {
+    "placeholders": {
+      "zone": {}
+    }
+  },
+  "logMetricsSaveMeasurement": "Save measurement",
+  "logMetricsWeightKgLabel": "Weight (kg)",
+  "logMetricsWeightLbLabel": "Weight (lb)",
+  "logMetricsBodyFatPctLabel": "Body fat (%)",
+  "logMetricsSaveCheckIn": "Save check-in",
+  "progressPhotoCompareTitle": "Compare",
+  "progressCompareSameDay": "Same day",
+  "progressCompareElapsedLabel": "{parts} apart",
+  "@progressCompareElapsedLabel": {
+    "placeholders": {
+      "parts": {}
+    }
+  },
+  "progressCompareUnitDays": "{days, plural, one{1 day} other{{days} days}}",
+  "@progressCompareUnitDays": {
+    "placeholders": {
+      "days": {}
+    }
+  },
+  "progressCompareUnitMonths": "{months, plural, one{1 month} other{{months} months}}",
+  "@progressCompareUnitMonths": {
+    "placeholders": {
+      "months": {}
+    }
+  },
+  "progressCompareUnitYears": "{years, plural, one{1 year} other{{years} years}}",
+  "@progressCompareUnitYears": {
+    "placeholders": {
+      "years": {}
+    }
+  },
+  "progressPhotoCompareLoadError": "Couldn't load these photos",
+  "progressPhotoCompareGoBack": "Go back",
+  "progressPhotoCompareBefore": "Before",
+  "progressPhotoCompareAfter": "After",
+  "progressPhotosTitle": "Progress Photos",
+  "progressPhotosCompareButton": "Compare",
+  "progressPhotosSubtitle": "See how your body has changed over any stretch of time",
+  "progressPhotosCompareSelectedButton": "Compare selected",
+  "progressPhotosSelectTwoPhotos": "Select 2 photos to compare",
+  "progressPhotosSelectOneMorePhoto": "Select 1 more photo to compare",
+  "progressPhotosAddPhotoButton": "Add Photo",
+  "progressPhotosDeleteDialogTitle": "Delete this photo?",
+  "progressPhotosDeleteDialogContent": "This can't be undone.",
+  "progressPhotosCancelButton": "Cancel",
+  "progressPhotosDeleteButton": "Delete",
+  "progressPhotosLoadErrorTitle": "Couldn't load your photos",
+  "progressPhotosLoadErrorMessage": "Something went wrong reading local storage.",
+  "progressPhotosTryAgainButton": "Try again",
+  "progressPhotosEmptyTitle": "No progress photos yet",
+  "progressPhotosEmptyMessage": "Take one now, then another in a few weeks to see how far you've come.",
+  "progressPhotosTakeFirstPhotoButton": "Take your first photo",
+  "dashboardAthlete": "Athlete",
+  "dashboardWaterLabel": "Water",
+  "dashboardLastBodyScan": "Last body scan",
+  "dashboardLogBodyWeight": "Log body weight",
+  "dashboardLoggedToday": "Logged today",
+  "dashboardMorningCheckIn": "Morning check-in",
+  "dashboardGoodMorning": "Good morning",
+  "dashboardGoodAfternoon": "Good afternoon",
+  "dashboardGoodEvening": "Good evening",
+  "dashboardGoodNight": "Good night",
+  "dashboardDailyOverview": "Daily overview",
+  "dashboardStepsLabel": "Steps",
+  "dashboardStepGoalSuffix": " / {stepGoal}",
+  "@dashboardStepGoalSuffix": {
+    "placeholders": {
+      "stepGoal": {}
+    }
+  },
+  "dashboardSleepLabel": "Sleep",
+  "dashboardTapToViewFullReport": "Tap to view full report",
+  "dashboardBodyScanSummary": "{kg} kg  •  {bodyFatPercent}% BF",
+  "@dashboardBodyScanSummary": {
+    "placeholders": {
+      "kg": {},
+      "bodyFatPercent": {}
+    }
+  },
+  "dashboardBodyScanEmptyTitle": "No check-in yet",
+  "dashboardBodyScanEmptySubtitle": "Tap to log your first weigh-in",
+  "logMealTitle": "Meal",
+  "logMealCaloriesToday": "{eaten} / {target} kcal today",
+  "@logMealCaloriesToday": {
+    "placeholders": {
+      "eaten": {},
+      "target": {}
+    }
+  },
+  "logMealSearchTab": "Find food",
+  "logMealCustomTab": "Custom entry",
+  "logMealSearchHint": "Search for food…",
+  "logMealNoResults": "Nothing found — try a custom entry",
+  "logMealNameHint": "Meal name",
+  "logMealCaloriesLabel": "Calories",
+  "logMealProteinLabel": "Protein (g)",
+  "logMealCarbsLabel": "Carbs (g)",
+  "logMealFatLabel": "Fat (g)",
+  "logMealGramsLabel": "Grams",
+  "logMealAddButton": "Add",
+  "logMealTodayLabel": "Today",
+  "logMealTimeKcal": "{time} · {kcal} kcal",
+  "@logMealTimeKcal": {
+    "placeholders": {
+      "time": {},
+      "kcal": {}
+    }
+  },
+  "logMealItemSummary": "{grams} g · {kcal} kcal · {protein}P/{carbs}C/{fat}F",
+  "@logMealItemSummary": {
+    "placeholders": {
+      "grams": {},
+      "kcal": {},
+      "protein": {},
+      "carbs": {},
+      "fat": {}
+    }
+  },
+  "waterLogTitle": "Water",
+  "waterLogPresetGlass": "Glass",
+  "waterLogPresetCup": "Cup",
+  "waterLogPresetBottle": "Bottle",
+  "waterLogPresetLarge": "Large",
+  "waterLogConsumedOfGoal": "{consumed} L of {goal} L",
+  "@waterLogConsumedOfGoal": {
+    "placeholders": {
+      "consumed": {},
+      "goal": {}
+    }
+  },
+  "waterLogToday": "Today",
+  "waterLogAmountAdded": "+{amount} ml",
+  "@waterLogAmountAdded": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "dailyPlanTitle": "Daily plan",
+  "stepsDetailTitle": "Steps",
+  "stepsDetailGoal": "of {goal} goal",
+  "@stepsDetailGoal": {
+    "placeholders": {
+      "goal": {}
+    }
+  },
+  "stepsDetail7DayTrend": "7-DAY TREND",
+  "caloriesDetailTitle": "Calories",
+  "sleepDetailTitle": "Sleep",
+  "dailyPlanSubtitle": "Track your progress every day",
+  "dailyPlanStepsLabel": "Steps",
+  "dailyPlanCaloriesLabel": "Calories",
+  "dailyPlanSleepLabel": "Sleep",
+  "dailyPlanSelectDate": "SELECT DATE",
+  "dailyPlanChooseDateSubtitle": "Choose a date to view daily plan",
+  "dailySummaryTitle": "Daily summary",
+  "dailySummaryStepsLabel": "Steps",
+  "dailySummaryCaloriesLabel": "Calories",
+  "dailySummarySleepLabel": "Sleep",
+  "dailySummarySleepBreakdownHeading": "SLEEP BREAKDOWN",
+  "dailySummaryChooseDateHint": "Choose a date to view your sleep data",
+  "planYourPlan": "Your Plan",
+  "planDoneLabel": "Done",
+  "planTodayLabel": "Today",
+  "planWorkoutCompletion": "Workout completion",
+  "planWorkoutSetsProgress": "{completed} / {total} sets",
+  "@planWorkoutSetsProgress": {
+    "placeholders": {
+      "completed": {},
+      "total": {}
+    }
+  },
+  "planThisWeek": "This week",
+  "planDaySummary": "{steps} steps · {calories} kcal",
+  "@planDaySummary": {
+    "placeholders": {
+      "steps": {},
+      "calories": {}
+    }
+  },
+  "planDaySleep": "Sleep {sleepLabel}",
+  "@planDaySleep": {
+    "placeholders": {
+      "sleepLabel": {}
+    }
+  },
+  "workoutChecklistSetsProgress": "{completed} / {total}",
+  "@workoutChecklistSetsProgress": {
+    "placeholders": {
+      "completed": {},
+      "total": {}
+    }
+  },
+  "workoutChecklistExerciseReps": "{exercise} · {targetReps} reps",
+  "@workoutChecklistExerciseReps": {
+    "placeholders": {
+      "exercise": {},
+      "targetReps": {}
+    }
+  },
+  "workoutChecklistSetLabel": "Set {setNumber}",
+  "@workoutChecklistSetLabel": {
+    "placeholders": {
+      "setNumber": {}
+    }
+  },
+  "workoutChecklistComplete": "Workout complete 💪",
+  "rpePickerTitle": "Rate this set",
+  "rpePickerSubtitle": "How hard did that feel?",
+  "rpePickerLowLabel": "1 · Very easy",
+  "rpePickerHighLabel": "10 · Maximal effort",
+  "profileTitle": "Profile",
+  "profileDefaultAvatarInitial": "A",
+  "profileDefaultName": "Athlete",
+  "profileHeightLabel": "Height",
+  "profileWeightLabel": "Weight",
+  "profileAgeLabel": "Age",
+  "profileEditProfile": "Edit profile",
+  "profileAccountGroupLabel": "ACCOUNT",
+  "profilePersonalData": "Personal data",
+  "profileBodyMetrics": "Body metrics",
+  "profileGoal": "Goal",
+  "profilePreferencesGroupLabel": "PREFERENCES",
+  "profileNotifications": "Notifications",
+  "profileHealthSync": "Health sync",
+  "profileUnitsLanguage": "Units & language",
+  "profileSupportGroupLabel": "SUPPORT",
+  "profilePrivacy": "Privacy",
+  "profileHelpSupport": "Help & support",
+  "profileAbout": "About",
+  "profileLogOut": "Log out",
+  "progressTitle": "Progress",
+  "progressSubtitle": "Track how your metrics evolve over time",
+  "progressWeightLabel": "Weight",
+  "progressWeightDelta": "{delta} {unit}",
+  "@progressWeightDelta": {
+    "placeholders": {
+      "delta": {},
+      "unit": {}
+    }
+  },
+  "progressWeightValue": "{weight} {unit}",
+  "@progressWeightValue": {
+    "placeholders": {
+      "weight": {},
+      "unit": {}
+    }
+  },
+  "progressWeightEmptyTitle": "No weigh-ins yet",
+  "progressWeightEmptySubtitle": "Log your weight to start tracking your trend",
+  "progressWeightChangeLabel": "7-day change",
+  "progressBmiLabel": "BMI",
+  "healthStatusWaterTooEarly": "Still early — plenty of day left",
+  "healthStatusWaterDehydrated": "Dehydrated — drink water now",
+  "healthStatusWaterBehindPace": "A little behind pace",
+  "healthStatusWaterPerfect": "Perfect",
+  "healthStatusWeightNotEnoughData": "Not enough data yet",
+  "healthStatusWeightOffTrack": "Off track for your bulk goal",
+  "healthStatusWeightMostlyFat": "Gain is mostly fat",
+  "healthStatusWeightGainingMuscle": "Great — you're gaining muscle",
+  "healthStatusWeightNeedsAdjustment": "Calorie adjustment needed",
+  "healthStatusCalorieOnTarget": "Right on target for your goal",
+  "healthStatusCalorieSlightlyOver": "A bit over target",
+  "healthStatusCalorieWellOver": "Well over target",
+  "healthStatusCalorieSlightlyUnder": "A bit under target",
+  "healthStatusCalorieWellUnder": "Well under target",
+  "healthStatusProteinNoTarget": "—",
+  "healthStatusProteinMet": "Protein target met",
+  "healthStatusProteinSlightlyLow": "Slightly short on protein",
+  "healthStatusProteinTooLow": "Protein intake is too low",
+  "progressActivityTitle": "Activity",
+  "progressActivitySubtitle": "{days}-day step history",
+  "@progressActivitySubtitle": {
+    "placeholders": {
+      "days": {}
+    }
+  },
+  "progressCaloriesTitle": "Calories",
+  "progressCaloriesSubtitle": "Surplus for muscle gain",
+  "progressSleepTitle": "Sleep",
+  "progressSleepSubtitleSynced": "Today's breakdown · synced from Health",
+  "progressSleepSubtitleEstimated": "Today's breakdown · estimated (enable Health sync in Settings for real stages)",
+  "progressSleepSubtitleNoSource": "Today's breakdown · no sleep data found in Health (make sure a device or app is actually tracking your sleep)",
+  "progressRangeWeek": "Week",
+  "progressRangeMonth": "Month",
+  "progressRangeYear": "Year",
+  "progressSleepSubtitle": "Today's breakdown",
+  "progressHeartRateTitle": "Heart rate",
+  "progressHeartRateSubtitle": "Zone and recovery trend",
+  "progressCaloriesEaten": "{calories} kcal",
+  "@progressCaloriesEaten": {
+    "placeholders": {
+      "calories": {}
+    }
+  },
+  "progressCaloriesSummary": "Target ~{target} kcal · {delta}",
+  "@progressCaloriesSummary": {
+    "placeholders": {
+      "target": {},
+      "delta": {}
+    }
+  },
+  "progressHeartRateBpm": "{bpm} bpm",
+  "@progressHeartRateBpm": {
+    "placeholders": {
+      "bpm": {}
+    }
+  },
+  "progressRestingHeartRateLabel": "Resting heart rate, 7 days",
+  "contactSupportTitle": "BodyX Assistant",
+  "contactSupportPoweredBy": "Powered by {modelName}",
+  "@contactSupportPoweredBy": {
+    "placeholders": {
+      "modelName": {}
+    }
+  },
+  "contactSupportAskHint": "Ask a question…",
+  "contactSupportSuggestionLogMeal": "How do I log a meal?",
+  "contactSupportSuggestionTdee": "How is my TDEE calculated?",
+  "contactSupportSuggestionSyncWearable": "Sync a wearable",
+  "supportAssistantModelName": "On-device FAQ",
+  "supportAssistantReplyGreeting": "Hey! I'm the BodyX assistant. Ask me about water, calories, workouts, weight tracking, sleep, or syncing a wearable.",
+  "supportAssistantReplyWater": "Your water goal scales with your body weight and rises on workout days. Tap the Water card on the dashboard any time you drink to log it — the ring fills up and the status dot tells you if you're on pace for the day.",
+  "supportAssistantReplyCalories": "Calories eaten come from meals you log yourself — tap the Calories card to search the food database or add a custom entry. Your target (TDEE) is calculated from your age, weight, height, gender and activity level with the Mifflin-St Jeor formula.",
+  "supportAssistantReplyProtein": "Your protein target is 1.8g per kg of body weight — a solid range for building or maintaining muscle. It's tracked against the meals you log, and updates automatically if your weight changes.",
+  "supportAssistantReplyWorkout": "Today's workout lives on the Plan tab — tap the workout card to open the set-by-set checklist and tick off each set as you finish it. Your progress saves automatically, even if you close the app mid-workout.",
+  "supportAssistantReplyWeight": "Log your weight and body-fat % from \"Log body weight\" on the dashboard checklist. We combine the weight trend with the body-fat trend so we can tell muscle gain from fat gain, instead of just watching the scale number.",
+  "supportAssistantReplySleep": "Sleep is pulled from Apple Health or Health Connect once you've enabled sync in Settings. Without a synced wearable, there's no way to log sleep by hand yet, so it stays at zero.",
+  "supportAssistantReplySync": "Go to Settings → toggle \"Sync with Health\". Once enabled, BodyX pulls steps, active calories burned, and sleep from Apple Health or Health Connect automatically. No wearable? Everything still works with data you log by hand.",
+  "supportAssistantReplyExport": "There's no export yet — it's on the roadmap. Your profile, weight and body measurements sync to your account when you're signed in and a server is reachable; progress photos, meals, and workouts stay on this device only.",
+  "supportAssistantReplyGoal": "Step and calorie goals are derived from your profile in Profile → Edit profile. Update your weight, height, age or activity level and your targets recalculate automatically — there's no manual override yet.",
+  "supportAssistantReplyNotifications": "Workout and hydration reminders can be switched on in Settings → Notifications. You control exactly which ones fire and when.",
+  "supportAssistantReplyAccount": "Account and sign-out controls live in Profile → Settings. Forgot your password? Use \"Forgot password\" on the sign-in screen. You can also permanently delete your account and all its data from Settings → Privacy → Delete account.",
+  "supportAssistantReplyThanks": "You're welcome! Anything else I can help with?",
+  "supportAssistantReplyFallback": "I don't have a canned answer for that yet — try asking about water, calories, workouts, weight tracking, sleep, or syncing a wearable, or check the FAQs above.",
+  "settingsEditProfileTitle": "Edit profile",
+  "settingsUsernameLabel": "Username",
+  "settingsSaveChangesButton": "Save changes",
+  "settingsPersonalDataTitle": "Personal data",
+  "settingsHeightLabel": "Height",
+  "settingsWeightLabel": "Weight",
+  "settingsAgeLabel": "Age",
+  "settingsGenderLabel": "Gender",
+  "settingsPersonalDataDescription": "This data helps us personalize your plan and recommendations.",
+  "settingsHeightValueCm": "{value} cm",
+  "@settingsHeightValueCm": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "settingsWeightValueKg": "{value} kg",
+  "@settingsWeightValueKg": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "settingsWeightValueLb": "{value} lb",
+  "@settingsWeightValueLb": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "settingsSaveButton": "Save",
+  "settingsEditHeightTitle": "Edit height",
+  "settingsCmUnit": "cm",
+  "settingsEditWeightTitle": "Edit weight",
+  "settingsKgUnit": "kg",
+  "settingsEditAgeTitle": "Edit age",
+  "settingsYrsUnit": "yrs",
+  "settingsEditGenderTitle": "Edit gender",
+  "settingsMaleLabel": "Male",
+  "settingsFemaleLabel": "Female",
+  "settingsYourGoalTitle": "Your goal",
+  "settingsSaveGoalButton": "Save goal",
+  "settingsNotificationsTitle": "Notifications",
+  "settingsPushNotificationsLabel": "Push notifications",
+  "settingsWorkoutRemindersLabel": "Workout reminders",
+  "settingsAppleHealthLabel": "Apple Health",
+  "settingsHealthConnectLabel": "Health Connect",
+  "settingsHealthAppLabel": "Health app",
+  "settingsHealthAccessDenied": "{platform} access was not granted.",
+  "@settingsHealthAccessDenied": {
+    "placeholders": {
+      "platform": {}
+    }
+  },
+  "settingsNotificationsAccessDenied": "Notifications weren't allowed, so reminders won't fire. Enable them in iOS Settings.",
+  "settingsSyncedWithPlatform": "Synced with {platform}.",
+  "@settingsSyncedWithPlatform": {
+    "placeholders": {
+      "platform": {}
+    }
+  },
+  "settingsHealthSyncTitle": "Health sync",
+  "settingsSyncWithPlatformLabel": "Sync with {platform}",
+  "@settingsSyncWithPlatformLabel": {
+    "placeholders": {
+      "platform": {}
+    }
+  },
+  "settingsHealthSyncDescription": "Reads steps, calories, sleep, water, weight and body fat percentage to keep your dashboard accurate. BodyX never writes data back.",
+  "settingsSyncNowButton": "Sync now",
+  "settingsUnitsLanguageTitle": "Units & language",
+  "settingsUseMetricUnitsLabel": "Use metric units (cm / kg)",
+  "settingsLanguageLabel": "Language",
+  "settingsPrivacyTitle": "Privacy",
+  "settingsShareAnonDataLabel": "Share anonymous usage data",
+  "settingsDeleteAccountLabel": "Delete account",
+  "settingsDeleteAccountDialogTitle": "Delete account?",
+  "settingsDeleteAccountDialogContent": "This permanently deletes your account and all data from this device. This can't be undone.",
+  "settingsDeleteAccountConfirmButton": "Delete",
+  "settingsCancelButton": "Cancel",
+  "settingsHelpSupportTitle": "Help & support",
+  "settingsContactSupportLabel": "Contact support",
+  "settingsContactSupportSubtitle": "Chat with the BodyX assistant",
+  "settingsFrequentlyAskedHeader": "FREQUENTLY ASKED",
+  "settingsFaqBodyScanQuestion": "How is my body scan calculated?",
+  "settingsFaqBodyScanAnswer": "Log your weight and body-fat % from \"Log body weight\" on the dashboard checklist. We combine the weight trend with the body-fat trend so we can tell muscle gain from fat gain, instead of just watching the scale number move.",
+  "settingsFaqSyncWearableQuestion": "How do I sync a wearable device?",
+  "settingsFaqSyncWearableAnswer": "Go to Settings → toggle \"Sync with Health\". Once enabled, BodyX pulls steps, active calories burned and sleep from Apple Health or Health Connect automatically. No wearable? Everything still works with data you log by hand.",
+  "settingsFaqTargetsQuestion": "Where do my calorie and protein targets come from?",
+  "settingsFaqTargetsAnswer": "Your calorie target (TDEE) is calculated from your age, weight, height, gender and activity level using the Mifflin-St Jeor formula. Protein target is 1.8g per kg of body weight. Both update automatically if you edit your profile.",
+  "settingsFaqTrackWorkoutQuestion": "How do I track a workout?",
+  "settingsFaqTrackWorkoutAnswer": "Open the Plan tab and tap the workout card — it opens a set-by-set checklist. Tap each set as you finish it; progress saves automatically, even if you close the app mid-workout.",
+  "settingsFaqExportDataQuestion": "Can I export my progress data?",
+  "settingsFaqExportDataAnswer": "Not yet — that's on the roadmap. Your profile, weight and body measurements sync to your account when you're signed in and a server is reachable; progress photos, meals, and workouts stay on this device only.",
+  "settingsFaqDailyGoalsQuestion": "How do I change my daily goals?",
+  "settingsFaqDailyGoalsAnswer": "Step and calorie goals are derived from your profile in Profile → Edit profile. Update your weight, height, age or activity level and your targets recalculate automatically — there's no manual override yet.",
+  "settingsAppVersion": "Version {version}",
+  "@settingsAppVersion": {
+    "placeholders": {
+      "version": {}
+    }
+  },
+  "settingsAboutTitle": "About BodyX",
+  "settingsAppName": "BodyX",
+  "settingsAboutDescription": "BodyX helps you track training, sleep, nutrition and body composition in one premium, dark-neon experience.",
+  "settingsLogOutQuestion": "Log out?",
+  "settingsLogOutDescription": "You can always sign back in with your email and password.",
+  "settingsLogOutButton": "Log out",
+  "splashAppName": "BodyX",
+  "splashTagline": "TRAIN. TRACK. TRANSFORM.",
+  "hrZoneBarRest": "Rest",
+  "hrZoneBarWarmup": "Warm-up",
+  "hrZoneBarFatBurn": "Fat burn",
+  "hrZoneBarMuscleGrowth": "Muscle growth",
+  "hrZoneBarMax": "Maximum",
+  "macroBarsProteinLabel": "Protein",
+  "macroBarsCarbsLabel": "Carbs",
+  "macroBarsFatLabel": "Fat",
+  "macroBarsGramsValue": "{value}g",
+  "@macroBarsGramsValue": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "sleepDonutChartLightSleep": "Light sleep",
+  "sleepDonutChartDeepSleep": "Deep sleep",
+  "sleepDonutChartRemSleep": "REM sleep",
+  "sleepDonutChartAwake": "Awake",
+  "sleepDonutChartTotalSleep": "Total sleep",
+  "sleepDonutChartEfficient": "{efficiency}% efficient",
+  "@sleepDonutChartEfficient": {
+    "placeholders": {
+      "efficiency": {}
+    }
+  },
+  "sleepDonutChartDuration": "{hours}h {minutes}m",
+  "@sleepDonutChartDuration": {
+    "placeholders": {
+      "hours": {},
+      "minutes": {}
+    }
+  },
+  "sleepDonutChartPercentOfNight": "{percent}% of night",
+  "@sleepDonutChartPercentOfNight": {
+    "placeholders": {
+      "percent": {}
+    }
+  },
+  "stepsBarChartNoHistory": "No step history yet",
+  "stepsBarChartStepsTooltip": "{count} steps",
+  "@stepsBarChartStepsTooltip": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "stepsBarChartMonday": "Mo",
+  "stepsBarChartTuesday": "Tu",
+  "stepsBarChartWednesday": "We",
+  "stepsBarChartThursday": "Th",
+  "stepsBarChartFriday": "Fr",
+  "stepsBarChartSaturday": "Sa",
+  "stepsBarChartSunday": "Su",
+  "weightLineChartEmptyCaption": "Log a check-in to see your trend",
+  "weightLineChartTooltipKg": "{value} {unit}",
+  "@weightLineChartTooltipKg": {
+    "placeholders": {
+      "value": {},
+      "unit": {}
+    }
+  },
+  "compareSliderBeforeLabel": "Before",
+  "compareSliderAfterLabel": "After",
+  "contactSupportMyTicketsTooltip": "My tickets",
+  "contactSupportOpenTicketLink": "Need a human? Open a support ticket",
+  "ticketsListTitle": "Support tickets",
+  "ticketsEmptyTitle": "No tickets yet",
+  "ticketsEmptyMessage": "Open a ticket if the assistant above couldn't help — a real person will get back to you.",
+  "ticketsNewButton": "New ticket",
+  "ticketsStatusOpen": "Open",
+  "ticketsStatusClosed": "Closed",
+  "newTicketTitle": "New ticket",
+  "newTicketSubjectLabel": "Subject",
+  "newTicketMessageHint": "Describe your issue...",
+  "newTicketSubmitButton": "Submit ticket",
+  "ticketDetailReplyHint": "Type a reply...",
+  "ticketDetailClosedBanner": "This ticket is closed. Sending a message will reopen it.",
+  "planTodaysWorkoutTitle": "Today's Workout",
+  "planMobilityStretchTitle": "Mobility & Stretch",
+  "planInProgressLabel": "In progress",
+  "planNoExercisesAddedYet": "No exercises added yet — tap to build today's workout.",
+  "planNoActivitiesAddedYet": "No activities added yet — tap to plan today's mobility work.",
+  "planMobilityCompletion": "Mobility completion",
+  "planMobilityProgress": "{completed} / {total} done",
+  "@planMobilityProgress": {
+    "placeholders": {
+      "completed": {},
+      "total": {}
+    }
+  },
+  "workoutChecklistRemoveExerciseTitle": "Remove {exercise}?",
+  "@workoutChecklistRemoveExerciseTitle": {
+    "placeholders": {
+      "exercise": {}
+    }
+  },
+  "workoutChecklistRemoveExerciseContent": "This removes all of its sets from today.",
+  "workoutChecklistRemoveButton": "Remove",
+  "workoutChecklistAddAnotherExercise": "+ Add another exercise",
+  "workoutChecklistStartButton": "Start",
+  "workoutChecklistStopButton": "Stop",
+  "workoutChecklistEmptyTitle": "No exercises yet",
+  "workoutChecklistEmptyDescription": "Add what you're training today — name, sets, reps.",
+  "workoutChecklistAddExerciseButton": "Add exercise",
+  "settingsGoalLoseWeight": "Lose weight",
+  "settingsGoalBuildMuscle": "Build muscle",
+  "settingsGoalMaintainWeight": "Maintain weight",
+  "settingsGoalImproveEndurance": "Improve endurance",
+  "notificationChannelRemindersName": "BodyX reminders",
+  "notificationChannelRemindersDescription": "Daily workout and hydration nudges",
+  "notificationChannelActivityDoneName": "BodyX activity completion",
+  "notificationChannelActivityDoneDescription": "Plays when a timed activity finishes",
+  "notificationWorkoutReminderTitle": "Today's workout is waiting",
+  "notificationWorkoutReminderBody": "Check your plan and get moving — you've got this.",
+  "notificationHydrationReminderTitle": "Hydration check",
+  "notificationHydrationReminderBody": "Have you hit your water goal today?",
+  "notificationAchievementUnlockedTitle": "Achievement unlocked 🏆",
+  "notificationAchievementUnlockedBody": "{title} — {description}",
+  "@notificationAchievementUnlockedBody": {
+    "placeholders": {
+      "title": {},
+      "description": {}
+    }
+  },
+  "notificationPetLevelUpTitle": "Your dragon leveled up! 🐲",
+  "notificationPetLevelUpBody": "Now a {stage} — {description}",
+  "@notificationPetLevelUpBody": {
+    "placeholders": {
+      "stage": {},
+      "description": {}
+    }
+  },
+  "mobilityChecklistAddAnotherActivity": "+ Add another activity",
+  "mobilityChecklistCompleteBanner": "Mobility complete 🧘",
+  "mobilityChecklistEmptyTitle": "No mobility activities yet",
+  "mobilityChecklistEmptyDescription": "Add a stretch, foam roll, or yoga flow — name + minutes.",
+  "mobilityChecklistAddActivityButton": "Add activity",
+  "mobilityActivityCompletedTitle": "Activity complete 🧘",
+  "mobilityActivityCompletedBody": "{name} — done. Nice work!",
+  "@mobilityActivityCompletedBody": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "dailySummarySleepSynced": "Synced from Health for this day",
+  "dailySummarySleepEstimated": "Estimated — enable Health sync in Settings for real stages",
+  "dailySummarySleepNoSource": "No sleep data found in Health for this day — make sure a device or app is tracking your sleep",
+  "addExerciseTitle": "Add Exercise",
+  "addExerciseNameHint": "Exercise name (e.g. Bench Press)",
+  "addExerciseSetsLabel": "Sets",
+  "addExerciseRepsLabel": "Reps",
+  "addExerciseSubmitButton": "Add {sets} × {reps} to today's workout",
+  "@addExerciseSubmitButton": {
+    "placeholders": {
+      "sets": {},
+      "reps": {}
+    }
+  },
+  "addMobilityActivityTitle": "Add Mobility Activity",
+  "addMobilityActivityHint": "E.g. hip flexor stretch, foam rolling, yoga flow.",
+  "addMobilityActivityNameHint": "Activity name (e.g. Hip flexor stretch)",
+  "addMobilityActivityMinutesLabel": "Minutes",
+  "addMobilityActivitySubmitButton": "Add {minutes} min to today's plan",
+  "@addMobilityActivitySubmitButton": {
+    "placeholders": {
+      "minutes": {}
+    }
+  },
+  "petCardTitle": "Your pet",
+  "petLevelShort": "Lv. {level}",
+  "@petLevelShort": {
+    "placeholders": {
+      "level": {}
+    }
+  },
+  "petXpProgress": "{xp} / 100 XP",
+  "@petXpProgress": {
+    "placeholders": {
+      "xp": {}
+    }
+  },
+  "petScreenTitle": "Your pet",
+  "petTodayGoalsTitle": "Today's goals",
+  "petStageAncientEggName": "Ancient Egg",
+  "petStageAncientEggDesc": "You're just beginning the journey.",
+  "petStageCrackedEggName": "Cracked Egg",
+  "petStageCrackedEggDesc": "The first cracks are showing.",
+  "petStageBabyDragonName": "Baby Dragon",
+  "petStageBabyDragonDesc": "Small, and can't fly yet.",
+  "petStageCuriousDragonName": "Curious Dragon",
+  "petStageCuriousDragonDesc": "Starting to explore the world.",
+  "petStageFireBreathingHatchlingName": "Fire-Breathing Hatchling",
+  "petStageFireBreathingHatchlingDesc": "Learning to breathe tiny flames.",
+  "petStageYoungDragonName": "Young Dragon",
+  "petStageYoungDragonDesc": "Its first big wings are growing in.",
+  "petStageWarriorDragonName": "Warrior Dragon",
+  "petStageWarriorDragonDesc": "Small horns and armor appear.",
+  "petStageTemperedDragonName": "Tempered Dragon",
+  "petStageTemperedDragonDesc": "Its scales are toughening up.",
+  "petStageMagmaDragonName": "Magma Dragon",
+  "petStageMagmaDragonDesc": "Heat radiates from its body.",
+  "petStageStormDragonName": "Storm Dragon",
+  "petStageStormDragonDesc": "Lightning crackles around it.",
+  "petStageCrystalDragonName": "Crystal Dragon",
+  "petStageCrystalDragonDesc": "Its scales start to glow.",
+  "petStageStarDragonName": "Star Dragon",
+  "petStageStarDragonDesc": "Its wings look like the night sky.",
+  "petStageRoyalDragonName": "Royal Dragon",
+  "petStageRoyalDragonDesc": "Golden horns, a crown, a majestic look.",
+  "petStageAncientDragonName": "Ancient Dragon",
+  "petStageAncientDragonDesc": "Huge, wise, a thousand years old.",
+  "petStageLegendaryDragonName": "Legendary Dragon",
+  "petStageLegendaryDragonDesc": "Maximum form.",
+  "petGoalWater": "Hit your water goal",
+  "petGoalSteps": "Hit your step goal",
+  "petGoalSleep": "Hit your sleep goal",
+  "petGoalWorkout": "Finish today's workout",
+  "petGoalMobility": "Finish today's mobility",
+  "petNoGoalsYet": "Log something today to start earning XP",
+  "petAdminSectionTitle": "Admin tools",
+  "petAdminBoostButton": "Boost pet (+1 level, no goals required)",
+  "rankBronze": "Bronze",
+  "rankSilver": "Silver",
+  "rankGold": "Gold",
+  "rankPlatinum": "Platinum",
+  "rankDiamond": "Diamond",
+  "achievementStreakBronzeTitle": "Getting Started",
+  "achievementStreakBronzeDesc": "Log everything 3 days in a row",
+  "achievementStreakSilverTitle": "One Week Strong",
+  "achievementStreakSilverDesc": "Log everything 7 days in a row",
+  "achievementStreakGoldTitle": "Unstoppable",
+  "achievementStreakGoldDesc": "Log everything 30 days in a row",
+  "achievementStreakPlatinumTitle": "Iron Will",
+  "achievementStreakPlatinumDesc": "Log everything 100 days in a row",
+  "achievementWorkoutBronzeTitle": "First Rep",
+  "achievementWorkoutBronzeDesc": "Complete your first full workout",
+  "achievementWorkoutSilverTitle": "Getting Stronger",
+  "achievementWorkoutSilverDesc": "Complete 10 full workouts",
+  "achievementWorkoutGoldTitle": "Iron Regular",
+  "achievementWorkoutGoldDesc": "Complete 50 full workouts",
+  "achievementWorkoutPlatinumTitle": "Gym Legend",
+  "achievementWorkoutPlatinumDesc": "Complete 200 full workouts",
+  "achievementMobilityBronzeTitle": "First Stretch",
+  "achievementMobilityBronzeDesc": "Complete your first mobility activity",
+  "achievementMobilitySilverTitle": "Staying Loose",
+  "achievementMobilitySilverDesc": "Complete 10 mobility activities",
+  "achievementMobilityGoldTitle": "Flexibility Pro",
+  "achievementMobilityGoldDesc": "Complete 50 mobility activities",
+  "achievementMobilityPlatinumTitle": "Rubber Band Man",
+  "achievementMobilityPlatinumDesc": "Complete 200 mobility activities",
+  "achievementHydrationBronzeTitle": "First Sip",
+  "achievementHydrationBronzeDesc": "Hit your water goal for the first time",
+  "achievementHydrationSilverTitle": "Well Hydrated",
+  "achievementHydrationSilverDesc": "Hit your water goal 7 days",
+  "achievementHydrationGoldTitle": "Water Champion",
+  "achievementHydrationGoldDesc": "Hit your water goal 30 days",
+  "achievementHydrationPlatinumTitle": "Ocean Deep",
+  "achievementHydrationPlatinumDesc": "Hit your water goal 100 days",
+  "achievementNutritionBronzeTitle": "First Bite",
+  "achievementNutritionBronzeDesc": "Log your first meal",
+  "achievementNutritionSilverTitle": "Meal Tracker",
+  "achievementNutritionSilverDesc": "Log 25 meals",
+  "achievementNutritionGoldTitle": "Nutrition Nerd",
+  "achievementNutritionGoldDesc": "Log 100 meals",
+  "achievementNutritionPlatinumTitle": "Master Chef",
+  "achievementNutritionPlatinumDesc": "Log 500 meals",
+  "achievementsScreenTitle": "Achievements",
+  "achievementsRankLabel": "Rank",
+  "achievementsPointsLabel": "{points} pts",
+  "@achievementsPointsLabel": {
+    "placeholders": {
+      "points": {}
+    }
+  },
+  "achievementsNextRankProgress": "{remaining} pts to {rank}",
+  "@achievementsNextRankProgress": {
+    "placeholders": {
+      "remaining": {},
+      "rank": {}
+    }
+  },
+  "achievementsMaxRank": "Max rank reached",
+  "achievementsUnlockedOn": "Unlocked {date}",
+  "@achievementsUnlockedOn": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "achievementsLockedProgress": "{current} / {threshold}",
+  "@achievementsLockedProgress": {
+    "placeholders": {
+      "current": {},
+      "threshold": {}
+    }
+  },
+  "profileAchievementsLabel": "Achievements",
+  "achievementsFamilyStreak": "Consistency",
+  "achievementsFamilyWorkout": "Workouts",
+  "achievementsFamilyMobility": "Mobility",
+  "achievementsFamilyHydration": "Hydration",
+  "achievementsFamilyNutrition": "Nutrition",
+  "achievementsPetHint": "Unlocking achievements levels up your pet too — one shared XP pool.",
+  "injuryPartHead": "Head",
+  "injuryPartNeck": "Neck",
+  "injuryPartChest": "Chest",
+  "injuryPartUpperBack": "Upper Back",
+  "injuryPartAbdomen": "Abdomen",
+  "injuryPartLowerBack": "Lower Back",
+  "injuryPartPelvis": "Pelvis",
+  "injuryPartLeftShoulder": "Left Shoulder",
+  "injuryPartLeftUpperArm": "Left Upper Arm",
+  "injuryPartLeftElbow": "Left Elbow",
+  "injuryPartLeftForearm": "Left Forearm",
+  "injuryPartLeftWrist": "Left Wrist",
+  "injuryPartRightShoulder": "Right Shoulder",
+  "injuryPartRightUpperArm": "Right Upper Arm",
+  "injuryPartRightElbow": "Right Elbow",
+  "injuryPartRightForearm": "Right Forearm",
+  "injuryPartRightWrist": "Right Wrist",
+  "injuryPartLeftHip": "Left Hip",
+  "injuryPartLeftThigh": "Left Thigh",
+  "injuryPartLeftKnee": "Left Knee",
+  "injuryPartLeftCalf": "Left Calf",
+  "injuryPartLeftAnkle": "Left Ankle",
+  "injuryPartRightHip": "Right Hip",
+  "injuryPartRightThigh": "Right Thigh",
+  "injuryPartRightKnee": "Right Knee",
+  "injuryPartRightCalf": "Right Calf",
+  "injuryPartRightAnkle": "Right Ankle",
+  "injuryTypeSprain": "Sprain",
+  "injuryTypeStrain": "Strain / pulled muscle",
+  "injuryTypeBruise": "Bruise",
+  "injuryTypeFracture": "Fracture",
+  "injuryTypeDislocation": "Dislocation",
+  "injuryTypeTendinitis": "Tendinitis / inflammation",
+  "injuryTypeCramp": "Cramp",
+  "injuryTypeSoreness": "Soreness / ache",
+  "injuryTypeOther": "Other",
+  "injuryBodyScreenTitle": "Injury Tracker",
+  "injuryBodySubtitle": "Tap a body part to log how it feels.",
+  "injurySheetSubtitle": "What's going on here?",
+  "injurySheetTypeLabel": "Type",
+  "injurySheetDescriptionLabel": "Description",
+  "injurySheetDescriptionHint": "Describe the pain or sensation…",
+  "injurySheetSaveButton": "Save entry",
+  "injuryHistoryTitle": "Injury log",
+  "injuryHistoryEmpty": "Nothing logged yet — tap a body part above to add your first entry.",
+  "injuryHistoryDeleteConfirmTitle": "Delete this entry?",
+  "bodyMetricsInjuriesButton": "Injury tracker",
+  "injuryHistoryItemDate": "Logged {date}",
+  "@injuryHistoryItemDate": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "dashboardCaloriesBurnedLabel": "Burned",
+  "dashboardCaloriesEatenLabel": "Eaten",
+  "dashboardTodaysPlanLabel": "Today's Plan",
+  "dashboardTodaysPlanEmptyHint": "Nothing planned yet",
+  "scanBarcodeTitle": "Scan Barcode",
+  "scanBarcodeHint": "Point your camera at a product's barcode",
+  "scanBarcodeNotFoundTitle": "Product not found",
+  "scanBarcodeNotFoundBody": "This barcode isn't in the database, or doesn't have enough nutrition info yet. Try again or add it manually.",
+  "scanBarcodeTryAgainButton": "Scan again",
+  "scanBarcodeNovaLabel": "Processing level",
+  "scanBarcodeNovaGroup1": "Unprocessed / minimally processed",
+  "scanBarcodeNovaGroup2": "Processed culinary ingredients",
+  "scanBarcodeNovaGroup3": "Processed foods",
+  "scanBarcodeNovaGroup4": "Ultra-processed",
+  "scanBarcodePer100g": "per 100g",
+  "scanBarcodeAddButton": "Add to today",
+  "scanBarcodeCameraPermissionTitle": "Camera access needed",
+  "scanBarcodeCameraPermissionBody": "Enable camera access in Settings to scan barcodes.",
+  "logMealScanTooltip": "Scan barcode"
+}

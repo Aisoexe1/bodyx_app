@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>com.apple.developer.healthkit</key>
+	<true/>
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>group.com.bodyx.bodyxApp</string>
+	</array>
+	<!-- com.apple.developer.applesignin is temporarily removed: personal/free
+	     Apple Developer teams cannot get this capability at all, which blocks
+	     every local build and deploy. Re-add it once the app is signed with a
+	     paid Apple Developer Program account (required for Sign In with Apple
+	     and for App Store submission in general):
+	     <key>com.apple.developer.applesignin</key>
+	     <array>
+	       <string>Default</string>
+	     </array> -->
+</dict>
+</plist>

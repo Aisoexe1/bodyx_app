@@ -1,64 +1,57 @@
 # BodyX
 
-A premium, dark-neon Health & Fitness tracker prototype built with Flutter. Features an
-interactive pseudo-3D body-metrics visualizer, sleep/calorie/step tracking with charts,
-and a full auth → onboarding → main-app flow — all backed by deterministic mock data.
+A premium, dark-neon Health & Fitness tracker built with Flutter (iOS-first). Tracks
+workouts, mobility/stretching, meals, water, weight, body measurements, and progress
+photos, with an interactive pseudo-3D body-metrics visualizer, real HealthKit /
+Health Connect sync, Lock Screen / Dynamic Island live timers, and a Home Screen widget.
+Localized in English, Russian, and Ukrainian.
 
 ## Stack
 
 - **State management:** `provider` (a single `AppState` `ChangeNotifier`)
-- **Charts:** `fl_chart` (bar / line / donut) + custom `CustomPainter` sparklines
-- **Body visualization:** hand-rolled `CustomPainter` (`lib/widgets/body/`) — a fractional,
-  gender-aware humanoid silhouette with tappable muscle-zone hotspots, pulse animation on
-  the selected zone, and a front/back view toggle. No 3D model assets required.
-- **Fonts:** `google_fonts` (Inter)
+- **Persistence:** `shared_preferences` (local source of truth; day-scoped for "today"
+  data) + `flutter_secure_storage` (JWT in Keychain) + on-disk photo storage
+- **Backend:** REST client in `lib/network/` (repository pattern, JWT auth) — the app
+  works fully offline; server sync is best-effort. No production backend is deployed
+  yet; the base URL is a build-time `--dart-define=API_BASE_URL`.
+- **Health:** `health` package — read-only HealthKit / Health Connect (steps, calories,
+  sleep stages, water, weight, body fat)
+- **iOS native:** WidgetKit Home Screen widget + ActivityKit Live Activities
+  (`ios/BodyXWidgets/`), shared via App Group `group.com.bodyx.bodyxApp`
+- **Charts:** `fl_chart` + custom `CustomPainter` sparklines
+- **Body visualization:** hand-rolled `CustomPainter` (`lib/widgets/body/`) — tappable
+  muscle-zone hotspots, front/back toggle, no 3D assets
+- **Privacy:** no analytics, advertising, or crash-reporting SDKs (see `PRIVACY_POLICY.md`)
 
 ## Project layout
 
 ```
 lib/
-  app.dart              # MaterialApp + auth-stage router (splash/auth/onboarding/main)
+  app.dart               # MaterialApp + auth-stage router (splash/auth/onboarding/main)
   main.dart
   theme/                 # colors, spacing, ThemeData
-  models/                # plain data classes (UserProfile, DailyStats, BodyMeasurement, ...)
-  data/mock_data.dart     # deterministic mock-data generators
-  state/app_state.dart    # single ChangeNotifier holding all app state
-  widgets/
-    common/               # GlowCard, buttons, inputs, ProgressRing, ScaleTap
-    charts/               # sleep donut, steps bar chart, weight line chart, sparkline, macros
-    body/                 # body_geometry.dart, body_painter.dart, interactive_body.dart
-    nav/bottom_nav.dart
-  screens/
-    splash_screen.dart
-    auth/                 # sign in, sign up, choose username, body data onboarding
-    dashboard/            # Home tab
-    progress/             # Progress tab
-    plan/                 # Plan tab + Daily Plan + Daily Summary (sleep breakdown)
-    body_metrics/         # Body Metrics screen, camera-scan mock, log-metrics sheet
-    alerts/                # Alerts tab
-    profile/, settings/    # Profile tab + all settings sub-screens
+  models/                # plain data classes (UserProfile, DailyStats, ...)
+  data/                  # food database (117 items, en/ru/uk), empty-state seeds
+  l10n/                  # ARB files (en/ru/uk) + generated AppLocalizations
+  logic/                 # pure logic: health insights, label localization helpers
+  network/               # ApiClient, repositories, TokenStorage, OAuth config
+  state/                 # AppState, PersistenceService, Health/Notification/
+                         #   LiveActivity/WidgetOverview services, photo storage
+  widgets/               # common/, charts/, body/, nav/
+  screens/               # splash, auth/, dashboard/, progress/, plan/,
+                         #   body_metrics/, alerts/, profile/, settings/
+ios/
+  Runner/                # AppDelegate (classic lifecycle), LiveActivityBridge
+  BodyXWidgets/          # Home Screen widget + Live Activities extension
 ```
 
 ## Running it
 
 ```bash
 flutter pub get
-flutter run            # pick a connected device/simulator, or:
-flutter run -d chrome  # web
-flutter run -d macos   # macOS desktop (requires flutter config --enable-macos-desktop)
+flutter analyze && flutter test
+flutter build ios --release                       # signed device build
+flutter install --release -d <device-id>          # install to iPhone (needs prior build)
 ```
 
-To produce an optimized web build (recommended over `flutter run -d web-server` for actually
-using/demoing the app — the debug DDC bundle is much heavier):
-
-```bash
-flutter build web --release
-cd build/web && python3 -m http.server 8765
-```
-
-## Notes
-
-- All data is mocked (`lib/data/mock_data.dart`) with a fixed random seed, so numbers are
-  stable across rebuilds within a session but reset on a fresh app launch — there's no
-  backend or persistence layer.
-- `flutter analyze` and `flutter test` both pass clean.
+Knowledge base (architecture, decisions, bugs, TODO) lives in the team's Obsidian vault.

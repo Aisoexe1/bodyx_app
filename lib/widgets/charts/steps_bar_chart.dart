@@ -1,8 +1,10 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:bodyx_app/l10n/gen/app_localizations.dart';
 import '../../models/models.dart';
 import '../../theme/app_colors.dart';
+import '../common/skeleton.dart';
 
 /// Weekly step-count bar chart. The most recent (today) bar is highlighted
 /// with the full brand gradient while the rest use a muted violet.
@@ -20,14 +22,43 @@ class StepsBarChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // DateTime.weekday is 1 (Monday) .. 7 (Sunday). Two letters avoid the
+    // Tue/Thu and Sat/Sun collisions a single initial would have.
+    final weekdayLetters = [
+      AppLocalizations.of(context)!.stepsBarChartMonday,
+      AppLocalizations.of(context)!.stepsBarChartTuesday,
+      AppLocalizations.of(context)!.stepsBarChartWednesday,
+      AppLocalizations.of(context)!.stepsBarChartThursday,
+      AppLocalizations.of(context)!.stepsBarChartFriday,
+      AppLocalizations.of(context)!.stepsBarChartSaturday,
+      AppLocalizations.of(context)!.stepsBarChartSunday,
+    ];
+
     if (stats.isEmpty) {
       return SizedBox(
         height: height,
-        child: const Center(
-          child: Text(
-            'No step history yet',
-            style: TextStyle(color: AppColors.textMuted, fontSize: 12.5),
-          ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Expanded(
+              child: ShimmerLoop(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [0.5, 0.8, 0.35, 0.65, 0.9, 0.45, 0.7]
+                      .map((f) => SkeletonBlock(
+                            width: 16,
+                            height: (height - 30) * f,
+                            radius: 6,
+                          ))
+                      .toList(),
+                ),
+              ),
+            ),
+            SkeletonCaption(
+              text: AppLocalizations.of(context)!.stepsBarChartNoHistory,
+            ),
+          ],
         ),
       );
     }
@@ -35,6 +66,9 @@ class StepsBarChart extends StatelessWidget {
     final maxSteps =
         stats.map((s) => s.steps).reduce((a, b) => a > b ? a : b).toDouble();
     final maxY = (maxSteps / 2000).ceil() * 2000.0 + 2000;
+    final now = DateTime.now();
+    bool isToday(DateTime d) =>
+        d.year == now.year && d.month == now.month && d.day == now.day;
 
     return SizedBox(
       height: height,
@@ -67,15 +101,16 @@ class StepsBarChart extends StatelessWidget {
                 getTitlesWidget: (value, meta) {
                   final i = value.toInt();
                   if (i < 0 || i >= stats.length) return const SizedBox();
-                  final isLast = i == stats.length - 1;
+                  final highlight = isToday(stats[i].date);
                   return Padding(
                     padding: const EdgeInsets.only(top: 8),
                     child: Text(
-                      DateFormat('E').format(stats[i].date).substring(0, 1),
+                      weekdayLetters[stats[i].date.weekday - 1],
                       style: TextStyle(
                         fontSize: 11,
-                        fontWeight: isLast ? FontWeight.w800 : FontWeight.w500,
-                        color: isLast
+                        fontWeight:
+                            highlight ? FontWeight.w800 : FontWeight.w500,
+                        color: highlight
                             ? AppColors.primaryBright
                             : AppColors.textMuted,
                       ),
@@ -92,7 +127,9 @@ class StepsBarChart extends StatelessWidget {
               tooltipRoundedRadius: 10,
               getTooltipItem: (group, groupIndex, rod, rodIndex) {
                 return BarTooltipItem(
-                  '${NumberFormat.decimalPattern().format(rod.toY.toInt())} steps',
+                  AppLocalizations.of(context)!.stepsBarChartStepsTooltip(
+                    NumberFormat.decimalPattern().format(rod.toY.toInt()),
+                  ),
                   const TextStyle(
                     color: AppColors.textPrimary,
                     fontWeight: FontWeight.w700,
@@ -110,7 +147,7 @@ class StepsBarChart extends StatelessWidget {
             },
           ),
           barGroups: List.generate(stats.length, (i) {
-            final isLast = i == stats.length - 1;
+            final highlight = isToday(stats[i].date);
             return BarChartGroupData(
               x: i,
               barRods: [
@@ -121,7 +158,7 @@ class StepsBarChart extends StatelessWidget {
                   gradient: LinearGradient(
                     begin: Alignment.bottomCenter,
                     end: Alignment.topCenter,
-                    colors: isLast
+                    colors: highlight
                         ? AppColors.primaryGradient
                         : [
                             AppColors.primarySoft,

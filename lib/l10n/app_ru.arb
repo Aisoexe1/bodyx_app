@@ -1,0 +1,978 @@
+{
+  "@@locale": "ru",
+  "alertsTitle": "Уведомления",
+  "alertsMarkAllRead": "Отметить всё как прочитанное",
+  "alertsUnreadCount": "Непрочитанных уведомлений: {count}",
+  "@alertsUnreadCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "alertsEmptyTitle": "Нечего отметить",
+  "alertsEmptySubtitle": "Мы сообщим, если появится что-то важное",
+  "alertLowWaterTitle": "Мало воды",
+  "alertLowWaterSubtitle": "Вы отстаёте от цели по воде на {liters} л",
+  "@alertLowWaterSubtitle": {
+    "placeholders": {
+      "liters": {}
+    }
+  },
+  "alertSleepDebtTitle": "Накопился недосып",
+  "alertSleepDebtSubtitle": "Средний сон за неделю — {hours} ч, ниже вашей цели",
+  "@alertSleepDebtSubtitle": {
+    "placeholders": {
+      "hours": {}
+    }
+  },
+  "alertBodyScanTitle": "Пора сделать скан тела",
+  "alertBodyScanSubtitle": "Прошла неделя с последнего фото прогресса",
+  "alertStepsBestTitle": "Новый личный рекорд",
+  "alertStepsBestSubtitle": "Вчера вы прошли {steps} шагов — лучший результат за две недели",
+  "@alertStepsBestSubtitle": {
+    "placeholders": {
+      "steps": {}
+    }
+  },
+  "navHome": "Главная",
+  "navProgress": "Прогресс",
+  "navPlan": "План",
+  "navAlerts": "Уведомления",
+  "navProfile": "Профиль",
+  "foodCategoryMeat": "Мясо и рыба",
+  "foodCategoryCheese": "Сыр",
+  "foodCategoryFruits": "Фрукты",
+  "foodCategoryVegetables": "Овощи",
+  "foodCategoryDairy": "Молочные продукты",
+  "foodCategoryNuts": "Орехи",
+  "foodCategoryGrains": "Крупы и злаки",
+  "foodCategorySweets": "Сладости и выпечка",
+  "foodCategoryDrinks": "Напитки",
+  "foodCategoryPrepared": "Готовые блюда",
+  "foodCategoryOther": "Другое",
+  "bodyDataTitle": "Ваши данные о теле",
+  "bodyDataSubtitle": "Мы используем это, чтобы рассчитать ваш план\nи персонализировать ваш опыт",
+  "bodyDataMale": "Мужской",
+  "bodyDataFemale": "Женский",
+  "bodyDataHeightLabel": "Рост",
+  "bodyDataWeightLabel": "Вес",
+  "bodyDataAgeLabel": "Возраст",
+  "bodyDataUnitCm": "см",
+  "bodyDataUnitIn": "дюйм",
+  "bodyDataUnitKg": "кг",
+  "bodyDataUnitLb": "фунт",
+  "bodyDataUnitYrs": "лет",
+  "bodyDataConfirm": "Подтвердить",
+  "bodyDataToggleMetric": "см / кг",
+  "bodyDataToggleImperial": "дюйм / фунт",
+  "forgotPasswordTitle": "Сброс пароля",
+  "forgotPasswordSubtitle": "Введите свою почту, и мы отправим вам 6-значный код",
+  "forgotPasswordEmailLabel": "Email",
+  "forgotPasswordSendCode": "Отправить код",
+  "forgotPasswordBackToSignIn": "Назад ко входу",
+  "resetPasswordEnterCode": "Введите код",
+  "resetPasswordCheckEmail": "Проверьте почту — там 6-значный код",
+  "resetPasswordSentCode": "Мы отправили 6-значный код на {email}",
+  "@resetPasswordSentCode": {
+    "placeholders": {
+      "email": {}
+    }
+  },
+  "resetPasswordDevMode": "Режим разработки (почта не настроена) — ваш код: {code}",
+  "@resetPasswordDevMode": {
+    "placeholders": {
+      "code": {}
+    }
+  },
+  "resetPasswordCodeLabel": "6-значный код",
+  "resetPasswordCodeError": "Введите 6-значный код",
+  "resetPasswordNewPasswordLabel": "Новый пароль",
+  "resetPasswordRepeatPasswordLabel": "Повторите новый пароль",
+  "resetPasswordMismatchError": "Пароли не совпадают",
+  "resetPasswordButton": "Сбросить пароль",
+  "resetPasswordBackToSignIn": "Назад ко входу",
+  "apiErrorCantReachServer": "Не удаётся связаться с сервером. Проверьте соединение и попробуйте снова.",
+  "apiErrorGeneric": "Что-то пошло не так. Попробуйте ещё раз.",
+  "signInWelcomeBack": "С возвращением",
+  "signInStayConsistent": "Сохраняйте регулярность",
+  "signInEmailLabel": "Email",
+  "signInPasswordLabel": "Пароль",
+  "signInFieldsRequired": "Введите email и пароль, чтобы продолжить.",
+  "signInSignInButton": "Войти",
+  "signInRememberMe": "Запомнить меня",
+  "signInForgotPassword": "Забыли пароль?",
+  "signInOrContinueWith": "или продолжить через",
+  "signInGoogleLabel": "Google",
+  "signInAppleLabel": "Apple",
+  "signInNoAccount": "Нет аккаунта? ",
+  "signInSignUp": "Зарегистрироваться",
+  "signUpTitle": "Создайте аккаунт",
+  "signUpSubtitle": "Присоединяйтесь и начните свой путь",
+  "signUpEmailLabel": "Email",
+  "signUpPasswordLabel": "Пароль",
+  "signUpRepeatPasswordLabel": "Повторите пароль",
+  "signUpPasswordMismatch": "Пароли не совпадают",
+  "signUpNextButton": "Далее",
+  "signUpOrDivider": "или",
+  "signUpContinueWithGoogle": "Продолжить через Google",
+  "signUpContinueWithApple": "Продолжить через Apple",
+  "signUpAlreadyHaveAccount": "Уже есть аккаунт? ",
+  "signUpSignInLink": "Войти",
+  "usernameAppName": "Приложение BodyX",
+  "usernameChooseUsername": "Придумайте имя пользователя",
+  "usernameNotVisible": "Другие пользователи его не увидят",
+  "usernameLabel": "Имя пользователя",
+  "usernameConfirm": "Подтвердить",
+  "addProgressPhotoTitle": "Добавить фото прогресса",
+  "addProgressPhotoSubtitle": "Сделайте новое фото или выберите его из галереи.",
+  "addProgressPhotoTakePhoto": "Сделать фото",
+  "addProgressPhotoChooseFromGallery": "Выбрать из галереи",
+  "addProgressPhotoCameraAccessOff": "Доступ к камере отключён — включите его в настройках, чтобы сделать фото.",
+  "addProgressPhotoLibraryAccessOff": "Доступ к галерее отключён — включите его в настройках, чтобы выбрать фото.",
+  "addProgressPhotoAddFailed": "Не удалось добавить это фото — попробуйте ещё раз.",
+  "bodyMetricsTitle": "Параметры тела",
+  "bodyMetricsMaleOption": "Мужской",
+  "bodyMetricsFemaleOption": "Женский",
+  "bodyMetricsFrontOption": "Спереди",
+  "bodyMetricsBackOption": "Сзади",
+  "bodyMetricsTapZoneHint": "Нажмите на выделенную зону, чтобы посмотреть подробности",
+  "bodyMetricsCmUnit": "см",
+  "bodyMetricsTargetValue": "Цель: {value} см",
+  "@bodyMetricsTargetValue": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "bodyMetricsLastSessions": "Последние 6 замеров",
+  "bodyMetricsAllMeasurements": "Все измерения",
+  "bodyMetricsValueCm": "{value} см",
+  "@bodyMetricsValueCm": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "bodyMetricsLogNewMeasurement": "Добавить новое измерение",
+  "logMetricsTitle": "Новая запись",
+  "logMetricsBodyMeasurementTab": "Замер тела",
+  "logMetricsWeightBodyFatTab": "Вес и % жира",
+  "logMetricsMuscleZoneLabel": "Мышечная зона",
+  "logMetricsZoneCmLabel": "{zone} (см)",
+  "@logMetricsZoneCmLabel": {
+    "placeholders": {
+      "zone": {}
+    }
+  },
+  "logMetricsSaveMeasurement": "Сохранить измерение",
+  "logMetricsWeightKgLabel": "Вес (кг)",
+  "logMetricsWeightLbLabel": "Вес (lb)",
+  "logMetricsBodyFatPctLabel": "Процент жира (%)",
+  "logMetricsSaveCheckIn": "Сохранить отметку",
+  "progressPhotoCompareTitle": "Сравнение",
+  "progressCompareSameDay": "Тот же день",
+  "progressCompareElapsedLabel": "Разница — {parts}",
+  "@progressCompareElapsedLabel": {
+    "placeholders": {
+      "parts": {}
+    }
+  },
+  "progressCompareUnitDays": "{days, plural, one{{days} день} few{{days} дня} many{{days} дней} other{{days} дня}}",
+  "@progressCompareUnitDays": {
+    "placeholders": {
+      "days": {}
+    }
+  },
+  "progressCompareUnitMonths": "{months, plural, one{{months} месяц} few{{months} месяца} many{{months} месяцев} other{{months} месяца}}",
+  "@progressCompareUnitMonths": {
+    "placeholders": {
+      "months": {}
+    }
+  },
+  "progressCompareUnitYears": "{years, plural, one{{years} год} few{{years} года} many{{years} лет} other{{years} года}}",
+  "@progressCompareUnitYears": {
+    "placeholders": {
+      "years": {}
+    }
+  },
+  "progressPhotoCompareLoadError": "Не удалось загрузить эти фото",
+  "progressPhotoCompareGoBack": "Назад",
+  "progressPhotoCompareBefore": "До",
+  "progressPhotoCompareAfter": "После",
+  "progressPhotosTitle": "Фото прогресса",
+  "progressPhotosCompareButton": "Сравнить",
+  "progressPhotosSubtitle": "Смотрите, как изменилось ваше тело за любой период",
+  "progressPhotosCompareSelectedButton": "Сравнить выбранные",
+  "progressPhotosSelectTwoPhotos": "Выберите 2 фото для сравнения",
+  "progressPhotosSelectOneMorePhoto": "Выберите ещё 1 фото для сравнения",
+  "progressPhotosAddPhotoButton": "Добавить фото",
+  "progressPhotosDeleteDialogTitle": "Удалить это фото?",
+  "progressPhotosDeleteDialogContent": "Это действие нельзя отменить.",
+  "progressPhotosCancelButton": "Отмена",
+  "progressPhotosDeleteButton": "Удалить",
+  "progressPhotosLoadErrorTitle": "Не удалось загрузить ваши фото",
+  "progressPhotosLoadErrorMessage": "Произошла ошибка при чтении локального хранилища.",
+  "progressPhotosTryAgainButton": "Повторить",
+  "progressPhotosEmptyTitle": "Пока нет фото прогресса",
+  "progressPhotosEmptyMessage": "Сделайте фото сейчас, а затем ещё одно через несколько недель, чтобы увидеть свой прогресс.",
+  "progressPhotosTakeFirstPhotoButton": "Сделать первое фото",
+  "dashboardAthlete": "Атлет",
+  "dashboardWaterLabel": "Вода",
+  "dashboardLastBodyScan": "Последнее сканирование тела",
+  "dashboardLogBodyWeight": "Записать вес тела",
+  "dashboardLoggedToday": "Записано сегодня",
+  "dashboardMorningCheckIn": "Утренняя отметка",
+  "dashboardGoodMorning": "Доброе утро",
+  "dashboardGoodAfternoon": "Добрый день",
+  "dashboardGoodEvening": "Добрый вечер",
+  "dashboardGoodNight": "Доброй ночи",
+  "dashboardDailyOverview": "Обзор за день",
+  "dashboardStepsLabel": "Шаги",
+  "dashboardStepGoalSuffix": " / {stepGoal}",
+  "@dashboardStepGoalSuffix": {
+    "placeholders": {
+      "stepGoal": {}
+    }
+  },
+  "dashboardSleepLabel": "Сон",
+  "dashboardTapToViewFullReport": "Нажмите, чтобы увидеть полный отчёт",
+  "dashboardBodyScanSummary": "{kg} кг  •  {bodyFatPercent}% жира",
+  "@dashboardBodyScanSummary": {
+    "placeholders": {
+      "kg": {},
+      "bodyFatPercent": {}
+    }
+  },
+  "dashboardBodyScanEmptyTitle": "Пока нет отметок",
+  "dashboardBodyScanEmptySubtitle": "Нажмите, чтобы записать первый вес",
+  "logMealTitle": "Приём пищи",
+  "logMealCaloriesToday": "{eaten} / {target} ккал сегодня",
+  "@logMealCaloriesToday": {
+    "placeholders": {
+      "eaten": {},
+      "target": {}
+    }
+  },
+  "logMealSearchTab": "Найти продукт",
+  "logMealCustomTab": "Своя запись",
+  "logMealSearchHint": "Поиск продукта…",
+  "logMealNoResults": "Ничего не найдено — попробуйте свою запись",
+  "logMealNameHint": "Название блюда",
+  "logMealCaloriesLabel": "Калории",
+  "logMealProteinLabel": "Белки (г)",
+  "logMealCarbsLabel": "Углеводы (г)",
+  "logMealFatLabel": "Жиры (г)",
+  "logMealGramsLabel": "Граммы",
+  "logMealAddButton": "Добавить",
+  "logMealTodayLabel": "Сегодня",
+  "logMealTimeKcal": "{time} · {kcal} ккал",
+  "@logMealTimeKcal": {
+    "placeholders": {
+      "time": {},
+      "kcal": {}
+    }
+  },
+  "logMealItemSummary": "{grams} г · {kcal} ккал · {protein}Б/{carbs}У/{fat}Ж",
+  "@logMealItemSummary": {
+    "placeholders": {
+      "grams": {},
+      "kcal": {},
+      "protein": {},
+      "carbs": {},
+      "fat": {}
+    }
+  },
+  "waterLogTitle": "Вода",
+  "waterLogPresetGlass": "Стакан",
+  "waterLogPresetCup": "Чашка",
+  "waterLogPresetBottle": "Бутылка",
+  "waterLogPresetLarge": "Большая",
+  "waterLogConsumedOfGoal": "{consumed} л из {goal} л",
+  "@waterLogConsumedOfGoal": {
+    "placeholders": {
+      "consumed": {},
+      "goal": {}
+    }
+  },
+  "waterLogToday": "Сегодня",
+  "waterLogAmountAdded": "+{amount} мл",
+  "@waterLogAmountAdded": {
+    "placeholders": {
+      "amount": {}
+    }
+  },
+  "dailyPlanTitle": "План на день",
+  "stepsDetailTitle": "Шаги",
+  "stepsDetailGoal": "из {goal} цели",
+  "@stepsDetailGoal": {
+    "placeholders": {
+      "goal": {}
+    }
+  },
+  "stepsDetail7DayTrend": "ТРЕНД ЗА 7 ДНЕЙ",
+  "caloriesDetailTitle": "Калории",
+  "sleepDetailTitle": "Сон",
+  "dailyPlanSubtitle": "Отслеживайте свой прогресс каждый день",
+  "dailyPlanStepsLabel": "Шаги",
+  "dailyPlanCaloriesLabel": "Калории",
+  "dailyPlanSleepLabel": "Сон",
+  "dailyPlanSelectDate": "ВЫБРАТЬ ДАТУ",
+  "dailyPlanChooseDateSubtitle": "Выберите дату, чтобы посмотреть план на день",
+  "dailySummaryTitle": "Итоги дня",
+  "dailySummaryStepsLabel": "Шаги",
+  "dailySummaryCaloriesLabel": "Калории",
+  "dailySummarySleepLabel": "Сон",
+  "dailySummarySleepBreakdownHeading": "СТРУКТУРА СНА",
+  "dailySummaryChooseDateHint": "Выберите дату, чтобы посмотреть данные о сне",
+  "planYourPlan": "Ваш план",
+  "planDoneLabel": "Выполнено",
+  "planTodayLabel": "Сегодня",
+  "planWorkoutCompletion": "Выполнение тренировки",
+  "planWorkoutSetsProgress": "{completed} / {total} подходов",
+  "@planWorkoutSetsProgress": {
+    "placeholders": {
+      "completed": {},
+      "total": {}
+    }
+  },
+  "planThisWeek": "На этой неделе",
+  "planDaySummary": "{steps} шагов · {calories} ккал",
+  "@planDaySummary": {
+    "placeholders": {
+      "steps": {},
+      "calories": {}
+    }
+  },
+  "planDaySleep": "Сон {sleepLabel}",
+  "@planDaySleep": {
+    "placeholders": {
+      "sleepLabel": {}
+    }
+  },
+  "workoutChecklistSetsProgress": "{completed} / {total}",
+  "@workoutChecklistSetsProgress": {
+    "placeholders": {
+      "completed": {},
+      "total": {}
+    }
+  },
+  "workoutChecklistExerciseReps": "{exercise} · {targetReps} повт.",
+  "@workoutChecklistExerciseReps": {
+    "placeholders": {
+      "exercise": {},
+      "targetReps": {}
+    }
+  },
+  "workoutChecklistSetLabel": "Подход {setNumber}",
+  "@workoutChecklistSetLabel": {
+    "placeholders": {
+      "setNumber": {}
+    }
+  },
+  "workoutChecklistComplete": "Тренировка завершена 💪",
+  "rpePickerTitle": "Оцени подход",
+  "rpePickerSubtitle": "Насколько тяжело это было?",
+  "rpePickerLowLabel": "1 · Очень легко",
+  "rpePickerHighLabel": "10 · Максимальное усилие",
+  "profileTitle": "Профиль",
+  "profileDefaultAvatarInitial": "А",
+  "profileDefaultName": "Атлет",
+  "profileHeightLabel": "Рост",
+  "profileWeightLabel": "Вес",
+  "profileAgeLabel": "Возраст",
+  "profileEditProfile": "Редактировать профиль",
+  "profileAccountGroupLabel": "АККАУНТ",
+  "profilePersonalData": "Личные данные",
+  "profileBodyMetrics": "Параметры тела",
+  "profileGoal": "Цель",
+  "profilePreferencesGroupLabel": "НАСТРОЙКИ",
+  "profileNotifications": "Уведомления",
+  "profileHealthSync": "Синхронизация со здоровьем",
+  "profileUnitsLanguage": "Единицы измерения и язык",
+  "profileSupportGroupLabel": "ПОДДЕРЖКА",
+  "profilePrivacy": "Конфиденциальность",
+  "profileHelpSupport": "Помощь и поддержка",
+  "profileAbout": "О приложении",
+  "profileLogOut": "Выйти",
+  "progressTitle": "Прогресс",
+  "progressSubtitle": "Отслеживайте, как меняются ваши показатели",
+  "progressWeightLabel": "Вес",
+  "progressWeightDelta": "{delta} {unit}",
+  "@progressWeightDelta": {
+    "placeholders": {
+      "delta": {},
+      "unit": {}
+    }
+  },
+  "progressWeightValue": "{weight} {unit}",
+  "@progressWeightValue": {
+    "placeholders": {
+      "weight": {},
+      "unit": {}
+    }
+  },
+  "progressWeightEmptyTitle": "Пока нет отметок веса",
+  "progressWeightEmptySubtitle": "Запишите вес, чтобы начать отслеживать динамику",
+  "progressWeightChangeLabel": "Изменение за 7 дней",
+  "progressBmiLabel": "ИМТ",
+  "healthStatusWaterTooEarly": "Ещё рано — впереди весь день",
+  "healthStatusWaterDehydrated": "Обезвоживание — выпей воды сейчас",
+  "healthStatusWaterBehindPace": "Немного отстаёшь от нормы",
+  "healthStatusWaterPerfect": "Идеально",
+  "healthStatusWeightNotEnoughData": "Недостаточно данных",
+  "healthStatusWeightOffTrack": "Не соответствует цели набора",
+  "healthStatusWeightMostlyFat": "Набор идёт почти весь в жир",
+  "healthStatusWeightGainingMuscle": "Отлично — набираешь мышцы",
+  "healthStatusWeightNeedsAdjustment": "Требуется корректировка калорий",
+  "healthStatusCalorieOnTarget": "В точку — соответствует вашей цели",
+  "healthStatusCalorieSlightlyOver": "Небольшой перебор",
+  "healthStatusCalorieWellOver": "Существенный перебор",
+  "healthStatusCalorieSlightlyUnder": "Немного недобор",
+  "healthStatusCalorieWellUnder": "Существенный недобор",
+  "healthStatusProteinNoTarget": "—",
+  "healthStatusProteinMet": "Норма по белку выполнена",
+  "healthStatusProteinSlightlyLow": "Немного не хватает белка",
+  "healthStatusProteinTooLow": "Белка сильно недостаточно",
+  "progressActivityTitle": "Активность",
+  "progressActivitySubtitle": "История шагов за {days} дней",
+  "@progressActivitySubtitle": {
+    "placeholders": {
+      "days": {}
+    }
+  },
+  "progressCaloriesTitle": "Калории",
+  "progressCaloriesSubtitle": "Профицит для набора мышечной массы",
+  "progressSleepTitle": "Сон",
+  "progressSleepSubtitleSynced": "Сегодняшняя разбивка · синхронизировано с Health",
+  "progressSleepSubtitleEstimated": "Сегодняшняя разбивка · оценочно (включите синхронизацию с Health в настройках для точных фаз)",
+  "progressSleepSubtitleNoSource": "Сегодняшняя разбивка · в Health нет данных о сне (проверьте, что устройство или приложение действительно отслеживает ваш сон)",
+  "progressRangeWeek": "Неделя",
+  "progressRangeMonth": "Месяц",
+  "progressRangeYear": "Год",
+  "progressSleepSubtitle": "Структура сна за сегодня",
+  "progressHeartRateTitle": "Пульс",
+  "progressHeartRateSubtitle": "Зона пульса и динамика восстановления",
+  "progressCaloriesEaten": "{calories} ккал",
+  "@progressCaloriesEaten": {
+    "placeholders": {
+      "calories": {}
+    }
+  },
+  "progressCaloriesSummary": "Цель ~{target} ккал · {delta}",
+  "@progressCaloriesSummary": {
+    "placeholders": {
+      "target": {},
+      "delta": {}
+    }
+  },
+  "progressHeartRateBpm": "{bpm} уд/мин",
+  "@progressHeartRateBpm": {
+    "placeholders": {
+      "bpm": {}
+    }
+  },
+  "progressRestingHeartRateLabel": "Пульс покоя за 7 дней",
+  "contactSupportTitle": "Ассистент BodyX",
+  "contactSupportPoweredBy": "Работает на {modelName}",
+  "@contactSupportPoweredBy": {
+    "placeholders": {
+      "modelName": {}
+    }
+  },
+  "contactSupportAskHint": "Задайте вопрос…",
+  "contactSupportSuggestionLogMeal": "Как записать приём пищи?",
+  "contactSupportSuggestionTdee": "Как рассчитывается мой TDEE?",
+  "contactSupportSuggestionSyncWearable": "Синхронизировать устройство",
+  "supportAssistantModelName": "Локальный FAQ на устройстве",
+  "supportAssistantReplyGreeting": "Привет! Я ассистент BodyX. Спроси меня про воду, калории, тренировки, отслеживание веса, сон или синхронизацию с носимым устройством.",
+  "supportAssistantReplyWater": "Твоя норма воды зависит от веса тела и увеличивается в дни тренировок. Нажимай на карточку «Вода» на главном экране каждый раз, когда пьёшь, чтобы записать это — кольцо заполняется, а цветной индикатор показывает, успеваешь ли ты за день.",
+  "supportAssistantReplyCalories": "Съеденные калории берутся из приёмов пищи, которые ты записываешь сам — нажми на карточку «Калории», чтобы найти продукт в базе или добавить свой. Твоя цель (TDEE) рассчитывается по возрасту, весу, росту, полу и уровню активности по формуле Миффлина-Сан Жеора.",
+  "supportAssistantReplyProtein": "Твоя норма белка — 1.8 г на кг веса тела, это надёжный диапазон для набора или поддержания мышц. Она отслеживается по записанным приёмам пищи и обновляется автоматически при изменении веса.",
+  "supportAssistantReplyWorkout": "Сегодняшняя тренировка находится во вкладке «План» — нажми на карточку тренировки, чтобы открыть чек-лист по подходам, и отмечай каждый подход по мере выполнения. Прогресс сохраняется автоматически, даже если закрыть приложение посреди тренировки.",
+  "supportAssistantReplyWeight": "Записывай вес и процент жира через «Записать вес» в чек-листе на главном экране. Мы объединяем динамику веса с динамикой процента жира, чтобы отличить набор мышц от набора жира, а не просто смотреть на цифру на весах.",
+  "supportAssistantReplySleep": "Сон подтягивается из Apple Health или Health Connect после включения синхронизации в настройках. Без синхронизированного устройства записать сон вручную пока нельзя, поэтому он остаётся на нуле.",
+  "supportAssistantReplySync": "Зайди в Настройки → включи «Синхронизация с Health». После включения BodyX автоматически подтягивает шаги, активные калории и сон из Apple Health или Health Connect. Нет устройства? Всё продолжает работать с данными, которые ты вводишь вручную.",
+  "supportAssistantReplyExport": "Экспорта пока нет — это в планах. Профиль, вес и замеры тела синхронизируются с твоим аккаунтом, когда ты вошёл в систему и сервер доступен; фото прогресса, приёмы пищи и тренировки остаются только на этом устройстве.",
+  "supportAssistantReplyGoal": "Цели по шагам и калориям рассчитываются на основе профиля в Профиль → Редактировать профиль. Обнови вес, рост, возраст или уровень активности — и цели пересчитаются автоматически, ручной настройки пока нет.",
+  "supportAssistantReplyNotifications": "Напоминания о тренировках и воде можно включить в Настройки → Уведомления. Ты сам контролируешь, какие из них срабатывают и когда.",
+  "supportAssistantReplyAccount": "Управление аккаунтом и выход находятся в Профиль → Настройки. Забыл пароль? Используй «Забыли пароль» на экране входа. Также можно навсегда удалить аккаунт и все данные через Настройки → Приватность → Удалить аккаунт.",
+  "supportAssistantReplyThanks": "Пожалуйста! Могу ещё чем-то помочь?",
+  "supportAssistantReplyFallback": "У меня пока нет готового ответа на это — попробуй спросить про воду, калории, тренировки, отслеживание веса, сон или синхронизацию с устройством, либо посмотри вопросы выше.",
+  "settingsEditProfileTitle": "Редактировать профиль",
+  "settingsUsernameLabel": "Имя пользователя",
+  "settingsSaveChangesButton": "Сохранить изменения",
+  "settingsPersonalDataTitle": "Личные данные",
+  "settingsHeightLabel": "Рост",
+  "settingsWeightLabel": "Вес",
+  "settingsAgeLabel": "Возраст",
+  "settingsGenderLabel": "Пол",
+  "settingsPersonalDataDescription": "Эти данные помогают нам персонализировать ваш план и рекомендации.",
+  "settingsHeightValueCm": "{value} см",
+  "@settingsHeightValueCm": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "settingsWeightValueKg": "{value} кг",
+  "@settingsWeightValueKg": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "settingsWeightValueLb": "{value} фунт",
+  "@settingsWeightValueLb": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "settingsSaveButton": "Сохранить",
+  "settingsEditHeightTitle": "Изменить рост",
+  "settingsCmUnit": "см",
+  "settingsEditWeightTitle": "Изменить вес",
+  "settingsKgUnit": "кг",
+  "settingsEditAgeTitle": "Изменить возраст",
+  "settingsYrsUnit": "лет",
+  "settingsEditGenderTitle": "Изменить пол",
+  "settingsMaleLabel": "Мужской",
+  "settingsFemaleLabel": "Женский",
+  "settingsYourGoalTitle": "Ваша цель",
+  "settingsSaveGoalButton": "Сохранить цель",
+  "settingsNotificationsTitle": "Уведомления",
+  "settingsPushNotificationsLabel": "Push-уведомления",
+  "settingsWorkoutRemindersLabel": "Напоминания о тренировках",
+  "settingsAppleHealthLabel": "Apple Health",
+  "settingsHealthConnectLabel": "Health Connect",
+  "settingsHealthAppLabel": "Приложение здоровья",
+  "settingsHealthAccessDenied": "Доступ к {platform} не предоставлен.",
+  "@settingsHealthAccessDenied": {
+    "placeholders": {
+      "platform": {}
+    }
+  },
+  "settingsNotificationsAccessDenied": "Уведомления не разрешены, напоминания не будут срабатывать. Включите их в настройках iOS.",
+  "settingsSyncedWithPlatform": "Синхронизировано с {platform}.",
+  "@settingsSyncedWithPlatform": {
+    "placeholders": {
+      "platform": {}
+    }
+  },
+  "settingsHealthSyncTitle": "Синхронизация со здоровьем",
+  "settingsSyncWithPlatformLabel": "Синхронизировать с {platform}",
+  "@settingsSyncWithPlatformLabel": {
+    "placeholders": {
+      "platform": {}
+    }
+  },
+  "settingsHealthSyncDescription": "Считывает шаги, калории, сон, воду, вес и процент жира, чтобы данные на панели были точными. BodyX никогда не записывает данные обратно.",
+  "settingsSyncNowButton": "Синхронизировать сейчас",
+  "settingsUnitsLanguageTitle": "Единицы измерения и язык",
+  "settingsUseMetricUnitsLabel": "Использовать метрическую систему (см / кг)",
+  "settingsLanguageLabel": "Язык",
+  "settingsPrivacyTitle": "Конфиденциальность",
+  "settingsShareAnonDataLabel": "Делиться анонимными данными об использовании",
+  "settingsDeleteAccountLabel": "Удалить аккаунт",
+  "settingsDeleteAccountDialogTitle": "Удалить аккаунт?",
+  "settingsDeleteAccountDialogContent": "Это навсегда удалит ваш аккаунт и все данные с устройства. Это действие нельзя отменить.",
+  "settingsDeleteAccountConfirmButton": "Удалить",
+  "settingsCancelButton": "Отмена",
+  "settingsHelpSupportTitle": "Помощь и поддержка",
+  "settingsContactSupportLabel": "Связаться с поддержкой",
+  "settingsContactSupportSubtitle": "Чат с ассистентом BodyX",
+  "settingsFrequentlyAskedHeader": "ЧАСТЫЕ ВОПРОСЫ",
+  "settingsFaqBodyScanQuestion": "Как рассчитывается мой скан тела?",
+  "settingsFaqBodyScanAnswer": "Записывай вес и процент жира через «Записать вес» в чек-листе на главном экране. Мы объединяем динамику веса с динамикой процента жира, чтобы отличить набор мышц от набора жира, а не просто смотреть, как меняется цифра на весах.",
+  "settingsFaqSyncWearableQuestion": "Как синхронизировать носимое устройство?",
+  "settingsFaqSyncWearableAnswer": "Зайди в Настройки → включи «Синхронизация с Health». После включения BodyX автоматически подтягивает шаги, активные калории и сон из Apple Health или Health Connect. Нет устройства? Всё продолжает работать с данными, которые ты вводишь вручную.",
+  "settingsFaqTargetsQuestion": "Откуда берутся мои цели по калориям и белку?",
+  "settingsFaqTargetsAnswer": "Твоя цель по калориям (TDEE) рассчитывается по возрасту, весу, росту, полу и уровню активности по формуле Миффлина-Сан Жеора. Норма белка — 1.8 г на кг веса тела. Обе цели обновляются автоматически при редактировании профиля.",
+  "settingsFaqTrackWorkoutQuestion": "Как отслеживать тренировку?",
+  "settingsFaqTrackWorkoutAnswer": "Открой вкладку «План» и нажми на карточку тренировки — откроется чек-лист по подходам. Отмечай каждый подход по мере выполнения; прогресс сохраняется автоматически, даже если закрыть приложение посреди тренировки.",
+  "settingsFaqExportDataQuestion": "Можно ли экспортировать данные о прогрессе?",
+  "settingsFaqExportDataAnswer": "Пока нет — это в планах. Профиль, вес и замеры тела синхронизируются с твоим аккаунтом, когда ты вошёл в систему и сервер доступен; фото прогресса, приёмы пищи и тренировки остаются только на этом устройстве.",
+  "settingsFaqDailyGoalsQuestion": "Как изменить мои ежедневные цели?",
+  "settingsFaqDailyGoalsAnswer": "Цели по шагам и калориям рассчитываются на основе профиля в Профиль → Редактировать профиль. Обнови вес, рост, возраст или уровень активности — и цели пересчитаются автоматически, ручной настройки пока нет.",
+  "settingsAppVersion": "Версия {version}",
+  "@settingsAppVersion": {
+    "placeholders": {
+      "version": {}
+    }
+  },
+  "settingsAboutTitle": "О BodyX",
+  "settingsAppName": "BodyX",
+  "settingsAboutDescription": "BodyX помогает отслеживать тренировки, сон, питание и состав тела в едином премиальном интерфейсе в стиле тёмного неона.",
+  "settingsLogOutQuestion": "Выйти из аккаунта?",
+  "settingsLogOutDescription": "Вы всегда сможете снова войти с помощью почты и пароля.",
+  "settingsLogOutButton": "Выйти",
+  "splashAppName": "BodyX",
+  "splashTagline": "ТРЕНИРУЙСЯ. ОТСЛЕЖИВАЙ. ПРЕОБРАЖАЙСЯ.",
+  "hrZoneBarRest": "Покой",
+  "hrZoneBarWarmup": "Разминка",
+  "hrZoneBarFatBurn": "Жиросжигание",
+  "hrZoneBarMuscleGrowth": "Рост мышц",
+  "hrZoneBarMax": "Максимум",
+  "macroBarsProteinLabel": "Белки",
+  "macroBarsCarbsLabel": "Углеводы",
+  "macroBarsFatLabel": "Жиры",
+  "macroBarsGramsValue": "{value} г",
+  "@macroBarsGramsValue": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "sleepDonutChartLightSleep": "Лёгкий сон",
+  "sleepDonutChartDeepSleep": "Глубокий сон",
+  "sleepDonutChartRemSleep": "Быстрый сон",
+  "sleepDonutChartAwake": "Бодрствование",
+  "sleepDonutChartTotalSleep": "Всего сна",
+  "sleepDonutChartEfficient": "Эффективность {efficiency}%",
+  "@sleepDonutChartEfficient": {
+    "placeholders": {
+      "efficiency": {}
+    }
+  },
+  "sleepDonutChartDuration": "{hours} ч {minutes} мин",
+  "@sleepDonutChartDuration": {
+    "placeholders": {
+      "hours": {},
+      "minutes": {}
+    }
+  },
+  "sleepDonutChartPercentOfNight": "{percent}% ночи",
+  "@sleepDonutChartPercentOfNight": {
+    "placeholders": {
+      "percent": {}
+    }
+  },
+  "stepsBarChartNoHistory": "Пока нет истории шагов",
+  "stepsBarChartStepsTooltip": "{count} шагов",
+  "@stepsBarChartStepsTooltip": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "stepsBarChartMonday": "Пн",
+  "stepsBarChartTuesday": "Вт",
+  "stepsBarChartWednesday": "Ср",
+  "stepsBarChartThursday": "Чт",
+  "stepsBarChartFriday": "Пт",
+  "stepsBarChartSaturday": "Сб",
+  "stepsBarChartSunday": "Вс",
+  "weightLineChartEmptyCaption": "Добавьте отметку, чтобы увидеть динамику",
+  "weightLineChartTooltipKg": "{value} {unit}",
+  "@weightLineChartTooltipKg": {
+    "placeholders": {
+      "value": {},
+      "unit": {}
+    }
+  },
+  "compareSliderBeforeLabel": "До",
+  "compareSliderAfterLabel": "После",
+  "contactSupportMyTicketsTooltip": "Мои тикеты",
+  "contactSupportOpenTicketLink": "Нужен человек? Открыть тикет в поддержку",
+  "ticketsListTitle": "Тикеты поддержки",
+  "ticketsEmptyTitle": "Пока нет тикетов",
+  "ticketsEmptyMessage": "Откройте тикет, если ассистент выше не смог помочь — вам ответит реальный человек.",
+  "ticketsNewButton": "Новый тикет",
+  "ticketsStatusOpen": "Открыт",
+  "ticketsStatusClosed": "Закрыт",
+  "newTicketTitle": "Новый тикет",
+  "newTicketSubjectLabel": "Тема",
+  "newTicketMessageHint": "Опишите вашу проблему...",
+  "newTicketSubmitButton": "Отправить тикет",
+  "ticketDetailReplyHint": "Написать ответ...",
+  "ticketDetailClosedBanner": "Этот тикет закрыт. Отправка сообщения снова его откроет.",
+  "planTodaysWorkoutTitle": "Сегодняшняя тренировка",
+  "planMobilityStretchTitle": "Мобильность и растяжка",
+  "planInProgressLabel": "В процессе",
+  "planNoExercisesAddedYet": "Упражнения ещё не добавлены — нажмите, чтобы составить тренировку на сегодня.",
+  "planNoActivitiesAddedYet": "Активности ещё не добавлены — нажмите, чтобы спланировать мобильность на сегодня.",
+  "planMobilityCompletion": "Прогресс мобильности",
+  "planMobilityProgress": "{completed} / {total} выполнено",
+  "@planMobilityProgress": {
+    "placeholders": {
+      "completed": {},
+      "total": {}
+    }
+  },
+  "workoutChecklistRemoveExerciseTitle": "Удалить {exercise}?",
+  "@workoutChecklistRemoveExerciseTitle": {
+    "placeholders": {
+      "exercise": {}
+    }
+  },
+  "workoutChecklistRemoveExerciseContent": "Это удалит все подходы этого упражнения за сегодня.",
+  "workoutChecklistRemoveButton": "Удалить",
+  "workoutChecklistAddAnotherExercise": "+ Добавить ещё упражнение",
+  "workoutChecklistStartButton": "Старт",
+  "workoutChecklistStopButton": "Стоп",
+  "workoutChecklistEmptyTitle": "Упражнений пока нет",
+  "workoutChecklistEmptyDescription": "Добавьте, что тренируете сегодня — название, подходы, повторения.",
+  "workoutChecklistAddExerciseButton": "Добавить упражнение",
+  "settingsGoalLoseWeight": "Похудеть",
+  "settingsGoalBuildMuscle": "Набрать мышечную массу",
+  "settingsGoalMaintainWeight": "Поддерживать вес",
+  "settingsGoalImproveEndurance": "Улучшить выносливость",
+  "notificationChannelRemindersName": "Напоминания BodyX",
+  "notificationChannelRemindersDescription": "Ежедневные напоминания о тренировках и воде",
+  "notificationChannelActivityDoneName": "Завершение активности BodyX",
+  "notificationChannelActivityDoneDescription": "Звучит, когда завершается активность по таймеру",
+  "notificationWorkoutReminderTitle": "Сегодняшняя тренировка ждёт",
+  "notificationWorkoutReminderBody": "Загляните в план и приступайте — у вас всё получится.",
+  "notificationHydrationReminderTitle": "Проверка гидратации",
+  "notificationHydrationReminderBody": "Вы уже выполнили норму воды на сегодня?",
+  "notificationAchievementUnlockedTitle": "Достижение разблокировано 🏆",
+  "notificationAchievementUnlockedBody": "{title} — {description}",
+  "@notificationAchievementUnlockedBody": {
+    "placeholders": {
+      "title": {},
+      "description": {}
+    }
+  },
+  "notificationPetLevelUpTitle": "Ваш дракон повысил уровень! 🐲",
+  "notificationPetLevelUpBody": "Теперь это {stage} — {description}",
+  "@notificationPetLevelUpBody": {
+    "placeholders": {
+      "stage": {},
+      "description": {}
+    }
+  },
+  "mobilityChecklistAddAnotherActivity": "+ Добавить ещё активность",
+  "mobilityChecklistCompleteBanner": "Мобильность выполнена 🧘",
+  "mobilityChecklistEmptyTitle": "Активностей по мобильности пока нет",
+  "mobilityChecklistEmptyDescription": "Добавьте растяжку, раскатку или йогу — название и минуты.",
+  "mobilityChecklistAddActivityButton": "Добавить активность",
+  "mobilityActivityCompletedTitle": "Активность выполнена 🧘",
+  "mobilityActivityCompletedBody": "{name} — готово. Отличная работа!",
+  "@mobilityActivityCompletedBody": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "dailySummarySleepSynced": "Синхронизировано с Health за этот день",
+  "dailySummarySleepEstimated": "Оценочно — включите синхронизацию Health в настройках для реальных данных",
+  "dailySummarySleepNoSource": "За этот день в Health нет данных о сне — проверьте, что устройство или приложение отслеживает ваш сон",
+  "addExerciseTitle": "Добавить упражнение",
+  "addExerciseNameHint": "Название упражнения (напр. жим лёжа)",
+  "addExerciseSetsLabel": "Подходы",
+  "addExerciseRepsLabel": "Повторения",
+  "addExerciseSubmitButton": "Добавить {sets} × {reps} в тренировку на сегодня",
+  "@addExerciseSubmitButton": {
+    "placeholders": {
+      "sets": {},
+      "reps": {}
+    }
+  },
+  "addMobilityActivityTitle": "Добавить активность мобильности",
+  "addMobilityActivityHint": "Напр. растяжка тазобедренных, раскатка, йога.",
+  "addMobilityActivityNameHint": "Название активности (напр. растяжка тазобедренных)",
+  "addMobilityActivityMinutesLabel": "Минуты",
+  "addMobilityActivitySubmitButton": "Добавить {minutes} мин в план на сегодня",
+  "@addMobilityActivitySubmitButton": {
+    "placeholders": {
+      "minutes": {}
+    }
+  },
+  "petCardTitle": "Питомец",
+  "petLevelShort": "Ур. {level}",
+  "@petLevelShort": {
+    "placeholders": {
+      "level": {}
+    }
+  },
+  "petXpProgress": "{xp} / 100 XP",
+  "@petXpProgress": {
+    "placeholders": {
+      "xp": {}
+    }
+  },
+  "petScreenTitle": "Ваш питомец",
+  "petTodayGoalsTitle": "Сегодняшние цели",
+  "petStageAncientEggName": "Древнее яйцо",
+  "petStageAncientEggDesc": "Пользователь только начинает путь.",
+  "petStageCrackedEggName": "Треснувшее яйцо",
+  "petStageCrackedEggDesc": "Видны первые трещины.",
+  "petStageBabyDragonName": "Дракончик",
+  "petStageBabyDragonDesc": "Маленький, не умеет летать.",
+  "petStageCuriousDragonName": "Любопытный дракон",
+  "petStageCuriousDragonDesc": "Начинает исследовать мир.",
+  "petStageFireBreathingHatchlingName": "Огнедышащий малыш",
+  "petStageFireBreathingHatchlingDesc": "Учится выпускать маленькие языки пламени.",
+  "petStageYoungDragonName": "Юный дракон",
+  "petStageYoungDragonDesc": "Вырастают первые большие крылья.",
+  "petStageWarriorDragonName": "Воин-дракон",
+  "petStageWarriorDragonDesc": "Появляются небольшие рога и броня.",
+  "petStageTemperedDragonName": "Закалённый дракон",
+  "petStageTemperedDragonDesc": "Чешуя становится прочнее.",
+  "petStageMagmaDragonName": "Магмовый дракон",
+  "petStageMagmaDragonDesc": "От тела исходит жар.",
+  "petStageStormDragonName": "Грозовой дракон",
+  "petStageStormDragonDesc": "Вокруг появляются молнии.",
+  "petStageCrystalDragonName": "Кристальный дракон",
+  "petStageCrystalDragonDesc": "Чешуя начинает светиться.",
+  "petStageStarDragonName": "Звёздный дракон",
+  "petStageStarDragonDesc": "Крылья словно ночное небо.",
+  "petStageRoyalDragonName": "Королевский дракон",
+  "petStageRoyalDragonDesc": "Золотые рога, корона, величественный вид.",
+  "petStageAncientDragonName": "Древний дракон",
+  "petStageAncientDragonDesc": "Огромный, мудрый, возраст тысячи лет.",
+  "petStageLegendaryDragonName": "Легендарный дракон",
+  "petStageLegendaryDragonDesc": "Максимальная форма.",
+  "petGoalWater": "Выполнить цель по воде",
+  "petGoalSteps": "Выполнить цель по шагам",
+  "petGoalSleep": "Выполнить цель по сну",
+  "petGoalWorkout": "Закончить сегодняшнюю тренировку",
+  "petGoalMobility": "Закончить сегодняшнюю растяжку",
+  "petNoGoalsYet": "Залогируйте что-нибудь сегодня, чтобы начать получать опыт",
+  "petAdminSectionTitle": "Инструменты администратора",
+  "petAdminBoostButton": "Прокачать питомца (+1 уровень, без целей)",
+  "rankBronze": "Бронза",
+  "rankSilver": "Серебро",
+  "rankGold": "Золото",
+  "rankPlatinum": "Платина",
+  "rankDiamond": "Алмаз",
+  "achievementStreakBronzeTitle": "Начало положено",
+  "achievementStreakBronzeDesc": "Веди всё подряд 3 дня",
+  "achievementStreakSilverTitle": "Неделя силы",
+  "achievementStreakSilverDesc": "Веди всё подряд 7 дней",
+  "achievementStreakGoldTitle": "Не остановить",
+  "achievementStreakGoldDesc": "Веди всё подряд 30 дней",
+  "achievementStreakPlatinumTitle": "Железная воля",
+  "achievementStreakPlatinumDesc": "Веди всё подряд 100 дней",
+  "achievementWorkoutBronzeTitle": "Первый подход",
+  "achievementWorkoutBronzeDesc": "Заверши первую тренировку целиком",
+  "achievementWorkoutSilverTitle": "Становишься сильнее",
+  "achievementWorkoutSilverDesc": "Заверши 10 тренировок целиком",
+  "achievementWorkoutGoldTitle": "Завсегдатай зала",
+  "achievementWorkoutGoldDesc": "Заверши 50 тренировок целиком",
+  "achievementWorkoutPlatinumTitle": "Легенда зала",
+  "achievementWorkoutPlatinumDesc": "Заверши 200 тренировок целиком",
+  "achievementMobilityBronzeTitle": "Первая растяжка",
+  "achievementMobilityBronzeDesc": "Заверши первую активность растяжки",
+  "achievementMobilitySilverTitle": "Держим форму",
+  "achievementMobilitySilverDesc": "Заверши 10 активностей растяжки",
+  "achievementMobilityGoldTitle": "Профи гибкости",
+  "achievementMobilityGoldDesc": "Заверши 50 активностей растяжки",
+  "achievementMobilityPlatinumTitle": "Человек-резинка",
+  "achievementMobilityPlatinumDesc": "Заверши 200 активностей растяжки",
+  "achievementHydrationBronzeTitle": "Первый глоток",
+  "achievementHydrationBronzeDesc": "Достигни цели по воде впервые",
+  "achievementHydrationSilverTitle": "Хорошо увлажнён",
+  "achievementHydrationSilverDesc": "Достигни цели по воде 7 дней",
+  "achievementHydrationGoldTitle": "Чемпион по воде",
+  "achievementHydrationGoldDesc": "Достигни цели по воде 30 дней",
+  "achievementHydrationPlatinumTitle": "Глубина океана",
+  "achievementHydrationPlatinumDesc": "Достигни цели по воде 100 дней",
+  "achievementNutritionBronzeTitle": "Первый укус",
+  "achievementNutritionBronzeDesc": "Запиши первый приём пищи",
+  "achievementNutritionSilverTitle": "Трекер питания",
+  "achievementNutritionSilverDesc": "Запиши 25 приёмов пищи",
+  "achievementNutritionGoldTitle": "Гуру питания",
+  "achievementNutritionGoldDesc": "Запиши 100 приёмов пищи",
+  "achievementNutritionPlatinumTitle": "Шеф-повар",
+  "achievementNutritionPlatinumDesc": "Запиши 500 приёмов пищи",
+  "achievementsScreenTitle": "Достижения",
+  "achievementsRankLabel": "Ранг",
+  "achievementsPointsLabel": "{points} очков",
+  "@achievementsPointsLabel": {
+    "placeholders": {
+      "points": {}
+    }
+  },
+  "achievementsNextRankProgress": "{remaining} очков до ранга «{rank}»",
+  "@achievementsNextRankProgress": {
+    "placeholders": {
+      "remaining": {},
+      "rank": {}
+    }
+  },
+  "achievementsMaxRank": "Максимальный ранг достигнут",
+  "achievementsUnlockedOn": "Открыто {date}",
+  "@achievementsUnlockedOn": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "achievementsLockedProgress": "{current} / {threshold}",
+  "@achievementsLockedProgress": {
+    "placeholders": {
+      "current": {},
+      "threshold": {}
+    }
+  },
+  "profileAchievementsLabel": "Достижения",
+  "achievementsFamilyStreak": "Постоянство",
+  "achievementsFamilyWorkout": "Тренировки",
+  "achievementsFamilyMobility": "Растяжка",
+  "achievementsFamilyHydration": "Гидратация",
+  "achievementsFamilyNutrition": "Питание",
+  "achievementsPetHint": "Разблокированные достижения тоже прокачивают питомца — общий пул опыта.",
+  "injuryPartHead": "Голова",
+  "injuryPartNeck": "Шея",
+  "injuryPartChest": "Грудь",
+  "injuryPartUpperBack": "Верх спины",
+  "injuryPartAbdomen": "Живот",
+  "injuryPartLowerBack": "Поясница",
+  "injuryPartPelvis": "Таз",
+  "injuryPartLeftShoulder": "Левое плечо",
+  "injuryPartLeftUpperArm": "Левый бицепс",
+  "injuryPartLeftElbow": "Левый локоть",
+  "injuryPartLeftForearm": "Левое предплечье",
+  "injuryPartLeftWrist": "Левое запястье",
+  "injuryPartRightShoulder": "Правое плечо",
+  "injuryPartRightUpperArm": "Правый бицепс",
+  "injuryPartRightElbow": "Правый локоть",
+  "injuryPartRightForearm": "Правое предплечье",
+  "injuryPartRightWrist": "Правое запястье",
+  "injuryPartLeftHip": "Левый тазобедренный сустав",
+  "injuryPartLeftThigh": "Левое бедро",
+  "injuryPartLeftKnee": "Левое колено",
+  "injuryPartLeftCalf": "Левая голень",
+  "injuryPartLeftAnkle": "Левый голеностоп",
+  "injuryPartRightHip": "Правый тазобедренный сустав",
+  "injuryPartRightThigh": "Правое бедро",
+  "injuryPartRightKnee": "Правое колено",
+  "injuryPartRightCalf": "Правая голень",
+  "injuryPartRightAnkle": "Правый голеностоп",
+  "injuryTypeSprain": "Растяжение связок",
+  "injuryTypeStrain": "Растяжение / надрыв мышцы",
+  "injuryTypeBruise": "Ушиб",
+  "injuryTypeFracture": "Перелом",
+  "injuryTypeDislocation": "Вывих",
+  "injuryTypeTendinitis": "Тендинит / воспаление",
+  "injuryTypeCramp": "Судорога",
+  "injuryTypeSoreness": "Боль / ломота",
+  "injuryTypeOther": "Другое",
+  "injuryBodyScreenTitle": "Трекер травм",
+  "injuryBodySubtitle": "Нажмите на часть тела, чтобы описать ощущения.",
+  "injurySheetSubtitle": "Что здесь происходит?",
+  "injurySheetTypeLabel": "Тип",
+  "injurySheetDescriptionLabel": "Описание",
+  "injurySheetDescriptionHint": "Опишите боль или ощущения…",
+  "injurySheetSaveButton": "Сохранить запись",
+  "injuryHistoryTitle": "Журнал травм",
+  "injuryHistoryEmpty": "Пока ничего не записано — нажмите на часть тела выше, чтобы добавить первую запись.",
+  "injuryHistoryDeleteConfirmTitle": "Удалить эту запись?",
+  "bodyMetricsInjuriesButton": "Трекер травм",
+  "injuryHistoryItemDate": "Записано {date}",
+  "@injuryHistoryItemDate": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "dashboardCaloriesBurnedLabel": "Сожжено",
+  "dashboardCaloriesEatenLabel": "Съедено",
+  "dashboardTodaysPlanLabel": "План на сегодня",
+  "dashboardTodaysPlanEmptyHint": "Пока ничего не запланировано",
+  "scanBarcodeTitle": "Сканировать штрихкод",
+  "scanBarcodeHint": "Наведите камеру на штрихкод продукта",
+  "scanBarcodeNotFoundTitle": "Продукт не найден",
+  "scanBarcodeNotFoundBody": "Этого штрихкода нет в базе, или для него пока нет данных о питании. Попробуйте ещё раз или добавьте вручную.",
+  "scanBarcodeTryAgainButton": "Сканировать снова",
+  "scanBarcodeNovaLabel": "Уровень обработки",
+  "scanBarcodeNovaGroup1": "Необработанные / минимально обработанные",
+  "scanBarcodeNovaGroup2": "Обработанные кулинарные ингредиенты",
+  "scanBarcodeNovaGroup3": "Обработанные продукты",
+  "scanBarcodeNovaGroup4": "Ультраобработанные",
+  "scanBarcodePer100g": "на 100 г",
+  "scanBarcodeAddButton": "Добавить в сегодня",
+  "scanBarcodeCameraPermissionTitle": "Нужен доступ к камере",
+  "scanBarcodeCameraPermissionBody": "Включите доступ к камере в настройках, чтобы сканировать штрихкоды.",
+  "logMealScanTooltip": "Сканировать штрихкод"
+}

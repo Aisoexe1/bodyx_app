@@ -1,0 +1,426 @@
+async def test_register_success(client):
+    resp = await client.post(
+        "/api/v1/auth/register",
+        json={"email": "new@bodyx.dev", "username": "newuser", "password": "secret123"},
+    )
+    assert resp.status_code == 201
+    body = resp.json()
+    assert body["user"]["email"] == "new@bodyx.dev"
+    assert body["user"]["username"] == "newuser"
+    assert "accessToken" in body
+    assert "passwordHash" not in body["user"] and "password" not in body["user"]
+
+
+async def test_register_password_too_short_422(client):
+    resp = await client.post(
+        "/api/v1/auth/register",
+        json={"email": "short@bodyx.dev", "username": "shortpw", "password": "ab1"},
+    )
+    assert resp.status_code == 422
+
+
+async def test_register_password_no_digit_422(client):
+    resp = await client.post(
+        "/api/v1/auth/register",
+        json={"email": "nodigit@bodyx.dev", "username": "nodigit", "password": "abcdefgh"},
+    )
+    assert resp.status_code == 422
+
+
+async def test_register_password_no_letter_422(client):
+    resp = await client.post(
+        "/api/v1/auth/register",
+        json={"email": "noletter@bodyx.dev", "username": "noletter", "password": "12345678"},
+    )
+    assert resp.status_code == 422
+
+
+async def test_register_password_minimum_valid(client):
+    resp = await client.post(
+        "/api/v1/auth/register",
+        json={"email": "minimum@bodyx.dev", "username": "minimumpw", "password": "ab1234"},
+    )
+    assert resp.status_code == 201
+
+
+async def test_register_duplicate_email_409(client, registered_user):
+    resp = await client.post(
+        "/api/v1/auth/register",
+        json={"email": "alex@bodyx.dev", "username": "someoneelse", "password": "secret123"},
+    )
+    assert resp.status_code == 409
+
+
+async def test_register_duplicate_username_409(client, registered_user):
+    resp = await client.post(
+        "/api/v1/auth/register",
+        json={"email": "other@bodyx.dev", "username": "alex", "password": "secret123"},
+    )
+    assert resp.status_code == 409
+
+
+async def test_login_success(client, registered_user):
+    resp = await client.post(
+        "/api/v1/auth/login", json={"email": "alex@bodyx.dev", "password": "secret123"}
+    )
+    assert resp.status_code == 200
+    assert "accessToken" in resp.json()
+
+
+async def test_login_wrong_password_401(client, registered_user):
+    resp = await client.post(
+        "/api/v1/auth/login", json={"email": "alex@bodyx.dev", "password": "wrongpass"}
+    )
+    assert resp.status_code == 401
+
+
+async def test_me_requires_token_401(client):
+    resp = await client.get("/api/v1/users/me")
+    assert resp.status_code == 401
+
+
+async def test_me_with_token(client, auth_headers):
+    resp = await client.get("/api/v1/users/me", headers=auth_headers)
+    assert resp.status_code == 200
+    assert resp.json()["email"] == "alex@bodyx.dev"
+
+
+async def test_banned_user_rejected(client, registered_user, auth_headers):
+    import app.database as database_module
+    from bson import ObjectId
+
+    db = database_module.get_database()
+    await db.users.update_one(
+        {"_id": ObjectId(registered_user["user"]["id"])}, {"$set": {"is_banned": True}}
+    )
+    resp = await client.get("/api/v1/users/me", headers=auth_headers)
+    assert resp.status_code == 403
+
+    resp = await client.post(
+        "/api/v1/auth/login", json={"email": "alex@bodyx.dev", "password": "secret123"}
+    )
+    assert resp.status_code == 403
+
+
+async def test_forgot_password_unknown_email_is_generic(client):
+    resp = await client.post(
+        "/api/v1/auth/forgot-password", json={"email": "nobody@bodyx.dev"}
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert "message" in body
+    assert body.get("devCode") is None
+
+
+async def test_forgot_password_dev_mode_returns_code(client, registered_user):
+    resp = await client.post(
+        "/api/v1/auth/forgot-password", json={"email": "alex@bodyx.dev"}
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["devCode"] is not None
+    assert len(body["devCode"]) == 6
+
+
+async def test_reset_password_full_round_trip(client, registered_user):
+    forgot_resp = await client.post(
+        "/api/v1/auth/forgot-password", json={"email": "alex@bodyx.dev"}
+    )
+    code = forgot_resp.json()["devCode"]
+
+    reset_resp = await client.post(
+        "/api/v1/auth/reset-password",
+        json={"email": "alex@bodyx.dev", "code": code, "newPassword": "newpass123"},
+    )
+    assert reset_resp.status_code == 200
+    assert "accessToken" in reset_resp.json()
+
+    old_login = await client.post(
+        "/api/v1/auth/login", json={"email": "alex@bodyx.dev", "password": "secret123"}
+    )
+    assert old_login.status_code == 401
+
+    new_login = await client.post(
+        "/api/v1/auth/login", json={"email": "alex@bodyx.dev", "password": "newpass123"}
+    )
+    assert new_login.status_code == 200
+
+
+async def test_reset_password_invalidates_the_old_token(client, registered_user):
+    # A JWT issued before a password reset must stop working after it —
+    # otherwise a stolen token survives the one thing a user can do about
+    # a compromise. See token_version in app/security.py.
+    old_headers = {"Authorization": f"Bearer {registered_user['token']}"}
+    still_good = await client.get("/api/v1/users/me", headers=old_headers)
+    assert still_good.status_code == 200
+
+    forgot_resp = await client.post(
+        "/api/v1/auth/forgot-password", json={"email": "alex@bodyx.dev"}
+    )
+    code = forgot_resp.json()["devCode"]
+    reset_resp = await client.post(
+        "/api/v1/auth/reset-password",
+        json={"email": "alex@bodyx.dev", "code": code, "newPassword": "newpass123"},
+    )
+    assert reset_resp.status_code == 200
+    new_token = reset_resp.json()["accessToken"]
+
+    now_rejected = await client.get("/api/v1/users/me", headers=old_headers)
+    assert now_rejected.status_code == 401
+
+    new_headers = {"Authorization": f"Bearer {new_token}"}
+    still_works = await client.get("/api/v1/users/me", headers=new_headers)
+    assert still_works.status_code == 200
+
+
+async def test_reset_password_wrong_code_400(client, registered_user):
+    await client.post("/api/v1/auth/forgot-password", json={"email": "alex@bodyx.dev"})
+    resp = await client.post(
+        "/api/v1/auth/reset-password",
+        json={"email": "alex@bodyx.dev", "code": "000000", "newPassword": "newpass123"},
+    )
+    assert resp.status_code == 400
+
+
+async def test_reset_password_code_reuse_rejected(client, registered_user):
+    forgot_resp = await client.post(
+        "/api/v1/auth/forgot-password", json={"email": "alex@bodyx.dev"}
+    )
+    code = forgot_resp.json()["devCode"]
+
+    first = await client.post(
+        "/api/v1/auth/reset-password",
+        json={"email": "alex@bodyx.dev", "code": code, "newPassword": "newpass123"},
+    )
+    assert first.status_code == 200
+
+    second = await client.post(
+        "/api/v1/auth/reset-password",
+        json={"email": "alex@bodyx.dev", "code": code, "newPassword": "anotherpass1"},
+    )
+    assert second.status_code == 400
+
+
+async def test_reset_password_weak_new_password_422(client, registered_user):
+    forgot_resp = await client.post(
+        "/api/v1/auth/forgot-password", json={"email": "alex@bodyx.dev"}
+    )
+    code = forgot_resp.json()["devCode"]
+
+    resp = await client.post(
+        "/api/v1/auth/reset-password",
+        json={"email": "alex@bodyx.dev", "code": code, "newPassword": "nodigits"},
+    )
+    assert resp.status_code == 422
+
+
+async def test_oauth_google_not_configured_501(client):
+    resp = await client.post("/api/v1/auth/oauth/google", json={"idToken": "whatever"})
+    assert resp.status_code == 501
+
+
+async def test_oauth_apple_not_configured_501(client):
+    resp = await client.post("/api/v1/auth/oauth/apple", json={"identityToken": "whatever"})
+    assert resp.status_code == 501
+
+
+async def test_oauth_google_new_email_needs_username(client, monkeypatch):
+    monkeypatch.setattr(
+        "app.routers.auth.verify_google_id_token",
+        lambda token: {"email": "newgoogle@bodyx.dev"},
+    )
+    resp = await client.post("/api/v1/auth/oauth/google", json={"idToken": "fake-token"})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["needsUsername"] is True
+    assert body["email"] == "newgoogle@bodyx.dev"
+    assert "accessToken" not in body
+
+
+async def test_oauth_google_complete_creates_account_with_chosen_username(client, monkeypatch):
+    monkeypatch.setattr(
+        "app.routers.auth.verify_google_id_token",
+        lambda token: {"email": "newgoogle@bodyx.dev"},
+    )
+    resp = await client.post(
+        "/api/v1/auth/oauth/google/complete",
+        json={"idToken": "fake-token", "username": "newgoogler"},
+    )
+    assert resp.status_code == 201
+    body = resp.json()
+    assert body["user"]["email"] == "newgoogle@bodyx.dev"
+    assert body["user"]["username"] == "newgoogler"
+    assert "accessToken" in body
+
+
+async def test_oauth_google_complete_rejects_taken_username(client, registered_user, monkeypatch):
+    # registered_user already owns username "alex" — completing sign-up
+    # with the same handle must be rejected, not silently disambiguated.
+    monkeypatch.setattr(
+        "app.routers.auth.verify_google_id_token",
+        lambda token: {"email": "newgoogle2@bodyx.dev"},
+    )
+    resp = await client.post(
+        "/api/v1/auth/oauth/google/complete",
+        json={"idToken": "fake-token", "username": "alex"},
+    )
+    assert resp.status_code == 409
+
+
+async def test_oauth_google_conflicts_with_existing_local_account(
+    client, registered_user, monkeypatch
+):
+    # registered_user was created via local email/password registration —
+    # a Google sign-in claiming the same email must not silently log into
+    # that account (it never proved the password), it must be rejected.
+    monkeypatch.setattr(
+        "app.routers.auth.verify_google_id_token",
+        lambda token: {"email": "alex@bodyx.dev"},
+    )
+    resp = await client.post("/api/v1/auth/oauth/google", json={"idToken": "fake-token"})
+    assert resp.status_code == 409
+
+
+async def test_oauth_google_returning_user_logs_in(client, monkeypatch):
+    monkeypatch.setattr(
+        "app.routers.auth.verify_google_id_token",
+        lambda token: {"email": "returning@bodyx.dev"},
+    )
+    created = await client.post(
+        "/api/v1/auth/oauth/google/complete",
+        json={"idToken": "fake-token", "username": "returninguser"},
+    )
+    assert created.status_code == 201
+    created_id = created.json()["user"]["id"]
+
+    resp = await client.post("/api/v1/auth/oauth/google", json={"idToken": "fake-token"})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert "needsUsername" not in body or not body.get("needsUsername")
+    assert body["user"]["id"] == created_id
+
+
+async def test_oauth_google_invalid_token_401(client, monkeypatch):
+    from app.oauth import OAuthVerificationError
+
+    def raise_err(token):
+        raise OAuthVerificationError("bad signature")
+
+    monkeypatch.setattr("app.routers.auth.verify_google_id_token", raise_err)
+    resp = await client.post("/api/v1/auth/oauth/google", json={"idToken": "fake-token"})
+    assert resp.status_code == 401
+
+
+async def test_oauth_apple_new_email_needs_username(client, monkeypatch):
+    monkeypatch.setattr(
+        "app.routers.auth.verify_apple_identity_token",
+        lambda token: {"email": "newapple@bodyx.dev"},
+    )
+    resp = await client.post("/api/v1/auth/oauth/apple", json={"identityToken": "fake-token"})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["needsUsername"] is True
+    assert body["email"] == "newapple@bodyx.dev"
+
+
+async def test_oauth_apple_complete_creates_account_with_chosen_username(client, monkeypatch):
+    monkeypatch.setattr(
+        "app.routers.auth.verify_apple_identity_token",
+        lambda token: {"email": "newapple@bodyx.dev"},
+    )
+    resp = await client.post(
+        "/api/v1/auth/oauth/apple/complete",
+        json={"identityToken": "fake-token", "username": "newappler"},
+    )
+    assert resp.status_code == 201
+    body = resp.json()
+    assert body["user"]["email"] == "newapple@bodyx.dev"
+    assert body["user"]["username"] == "newappler"
+
+
+async def test_oauth_banned_user_rejected(client, monkeypatch):
+    import app.database as database_module
+    from bson import ObjectId
+
+    monkeypatch.setattr(
+        "app.routers.auth.verify_google_id_token",
+        lambda token: {"email": "bannedgoogle@bodyx.dev"},
+    )
+    created = await client.post(
+        "/api/v1/auth/oauth/google/complete",
+        json={"idToken": "fake-token", "username": "bannedgoogler"},
+    )
+    assert created.status_code == 201
+
+    db = database_module.get_database()
+    await db.users.update_one(
+        {"_id": ObjectId(created.json()["user"]["id"])}, {"$set": {"is_banned": True}}
+    )
+
+    resp = await client.post("/api/v1/auth/oauth/google", json={"idToken": "fake-token"})
+    assert resp.status_code == 403
+
+
+async def test_delete_me_removes_account_and_data(client, registered_user, auth_headers):
+    import app.database as database_module
+    from bson import ObjectId
+
+    db = database_module.get_database()
+    user_id = ObjectId(registered_user["user"]["id"])
+
+    # Give the account a weight entry and a measurement so the cascade has
+    # something real to remove, not just the user document.
+    resp = await client.post("/api/v1/weight", json={"kg": 80, "bodyFatPct": 15}, headers=auth_headers)
+    assert resp.status_code == 201
+    resp = await client.put(
+        "/api/v1/measurements",
+        json={"chest": {"valueCm": 100, "targetCm": 105}},
+        headers=auth_headers,
+    )
+    assert resp.status_code == 200
+
+    resp = await client.delete("/api/v1/users/me", headers=auth_headers)
+    assert resp.status_code == 204
+
+    assert await db.users.find_one({"_id": user_id}) is None
+    assert await db.weight_entries.find_one({"user_id": user_id}) is None
+    assert await db.body_measurements.find_one({"user_id": user_id}) is None
+
+    # The token must no longer authenticate anything — the account is gone.
+    resp = await client.get("/api/v1/users/me", headers=auth_headers)
+    assert resp.status_code == 401
+
+
+async def test_password_over_72_bytes_is_rejected_not_truncated(client):
+    # bcrypt only looks at the first 72 bytes — without an explicit reject,
+    # passlib would silently hash just that prefix (see app/security.py).
+    long_password = "a1" * 60  # 120 bytes, all past bcrypt's limit ignored
+    resp = await client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": "longpw@bodyx.dev",
+            "username": "longpw",
+            "password": long_password,
+        },
+    )
+    assert resp.status_code == 422
+    assert "72 bytes" in resp.json()["detail"]
+
+
+async def test_interactive_docs_are_disabled(client):
+    for path in ("/docs", "/redoc", "/openapi.json"):
+        resp = await client.get(path)
+        assert resp.status_code == 404, path
+
+
+async def test_security_headers_present_on_every_response(client):
+    resp = await client.get("/api/v1/health")
+    assert resp.headers["x-frame-options"] == "DENY"
+    assert resp.headers["x-content-type-options"] == "nosniff"
+    assert resp.headers["content-security-policy"] == "frame-ancestors 'none'"
+    assert "max-age" in resp.headers["strict-transport-security"]
+
+
+async def test_delete_me_requires_token_401(client):
+    resp = await client.delete("/api/v1/users/me")
+    assert resp.status_code == 401

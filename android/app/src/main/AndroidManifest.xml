@@ -1,8 +1,30 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Required in the RELEASE manifest, not just debug/profile: the app's
+         auth/profile/weight/measurement sync all use HTTP (lib/network/) and
+         would silently fail in a release build without it. The debug/profile
+         variants declare it separately for Flutter's dev tooling. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+
     <!-- Lets the local-notifications plugin re-arm daily reminders after a
          device reboot; scheduling itself uses inexact alarms so no
          SCHEDULE_EXACT_ALARM/USE_EXACT_ALARM permission is needed. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+
+    <!-- Health Connect: read-only access to the metrics the dashboard shows.
+         Steps additionally require ACTIVITY_RECOGNITION per Health Connect's
+         data-type docs. -->
+    <uses-permission android:name="android.permission.health.READ_STEPS"/>
+    <uses-permission android:name="android.permission.health.READ_ACTIVE_CALORIES_BURNED"/>
+    <uses-permission android:name="android.permission.health.READ_SLEEP"/>
+    <uses-permission android:name="android.permission.health.READ_WEIGHT"/>
+    <uses-permission android:name="android.permission.health.READ_BODY_FAT"/>
+    <uses-permission android:name="android.permission.health.READ_HYDRATION"/>
+    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION"/>
+
+    <!-- Progress-photo capture. Gallery picks go through the system photo
+         picker on modern Android, which needs no storage permission. -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+
     <application
         android:label="bodyx_app"
         android:name="${applicationName}"
@@ -28,7 +50,24 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <!-- Lets Health Connect show its permissions-rationale screen for this app. -->
+            <intent-filter>
+                <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
+            </intent-filter>
         </activity>
+        <!-- Health Connect links back to the app's privacy policy from its
+             permissions screen; routed to MainActivity since this prototype
+             has no dedicated policy page. -->
+        <activity-alias
+             android:name="ViewPermissionUsageActivity"
+             android:exported="true"
+             android:targetActivity=".MainActivity"
+             android:permission="android.permission.START_VIEW_PERMISSION_USAGE">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW_PERMISSION_USAGE" />
+                <category android:name="android.intent.category.HEALTH_PERMISSIONS" />
+            </intent-filter>
+        </activity-alias>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data
@@ -53,6 +92,12 @@
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
+        </intent>
+        <!-- Health Connect: lets the app detect whether the Health Connect
+             app is installed and show its permissions rationale. -->
+        <package android:name="com.google.android.apps.healthdata" />
+        <intent>
+            <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
         </intent>
     </queries>
 </manifest>

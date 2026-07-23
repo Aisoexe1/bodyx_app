@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:bodyx_app/l10n/gen/app_localizations.dart';
+import '../../logic/units.dart';
 import '../../models/models.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/common/editable_number_label.dart';
 import '../../widgets/common/inputs_buttons.dart';
 import '../../widgets/common/scale_tap.dart';
 
@@ -33,10 +36,15 @@ class _LogMetricsSheetState extends State<LogMetricsSheet> {
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
+    final unitsMetric = state.user?.unitsMetric ?? true;
     _measurementValue ??= state.bodyMeasurements[_zone]!.valueCm;
     if (!_initializedWeight) {
-      _weight = state.weightHistory.last.kg;
-      _bodyFat = state.weightHistory.last.bodyFatPct;
+      // A brand new account has no prior weigh-in to prefill from — the
+      // defaults above (75kg / 20%) stand in until the user has logged one.
+      if (state.weightHistory.isNotEmpty) {
+        _weight = state.weightHistory.last.kg;
+        _bodyFat = state.weightHistory.last.bodyFatPct;
+      }
       _initializedWeight = true;
     }
 
@@ -64,8 +72,8 @@ class _LogMetricsSheetState extends State<LogMetricsSheet> {
                 ),
               ),
             ),
-            const Text('Log new entry',
-                style: TextStyle(
+            Text(AppLocalizations.of(context)!.logMetricsTitle,
+                style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w800,
                     color: AppColors.textPrimary)),
@@ -79,15 +87,17 @@ class _LogMetricsSheetState extends State<LogMetricsSheet> {
               ),
               child: Row(
                 children: [
-                  _modeTab('Body measurement', _LogMode.measurement),
-                  _modeTab('Weight & body fat', _LogMode.weight),
+                  _modeTab(AppLocalizations.of(context)!.logMetricsBodyMeasurementTab,
+                      _LogMode.measurement),
+                  _modeTab(AppLocalizations.of(context)!.logMetricsWeightBodyFatTab,
+                      _LogMode.weight),
                 ],
               ),
             ),
             const SizedBox(height: 20),
             if (_mode == _LogMode.measurement) ...[
-              const Text('Muscle zone',
-                  style: TextStyle(color: AppColors.textMuted, fontSize: 12.5)),
+              Text(AppLocalizations.of(context)!.logMetricsMuscleZoneLabel,
+                  style: const TextStyle(color: AppColors.textMuted, fontSize: 12.5)),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
@@ -124,7 +134,8 @@ class _LogMetricsSheetState extends State<LogMetricsSheet> {
               ),
               const SizedBox(height: 20),
               _ValueStepper(
-                label: '${_zone.label} (cm)',
+                label: AppLocalizations.of(context)!
+                    .logMetricsZoneCmLabel(_zone.label),
                 value: _measurementValue!,
                 min: 10,
                 max: 160,
@@ -133,7 +144,7 @@ class _LogMetricsSheetState extends State<LogMetricsSheet> {
               ),
               const SizedBox(height: 24),
               PrimaryButton(
-                label: 'Save measurement',
+                label: AppLocalizations.of(context)!.logMetricsSaveMeasurement,
                 onPressed: () {
                   HapticFeedback.mediumImpact();
                   context
@@ -144,25 +155,29 @@ class _LogMetricsSheetState extends State<LogMetricsSheet> {
               ),
             ] else ...[
               _ValueStepper(
-                label: 'Weight (kg)',
-                value: _weight,
-                min: 35,
-                max: 180,
-                step: 0.5,
-                onChanged: (v) => setState(() => _weight = v),
+                label: unitsMetric
+                    ? AppLocalizations.of(context)!.logMetricsWeightKgLabel
+                    : AppLocalizations.of(context)!.logMetricsWeightLbLabel,
+                value: unitsMetric ? _weight : kgToLb(_weight),
+                min: unitsMetric ? 35 : kgToLb(35),
+                max: unitsMetric ? 180 : kgToLb(180),
+                step: unitsMetric ? 0.5 : 1,
+                onChanged: (v) =>
+                    setState(() => _weight = unitsMetric ? v : lbToKg(v)),
               ),
               const SizedBox(height: 16),
               _ValueStepper(
-                label: 'Body fat (%)',
+                label: AppLocalizations.of(context)!.logMetricsBodyFatPctLabel,
                 value: _bodyFat,
                 min: 3,
                 max: 45,
                 step: 0.5,
+                showSlider: false,
                 onChanged: (v) => setState(() => _bodyFat = v),
               ),
               const SizedBox(height: 24),
               PrimaryButton(
-                label: 'Save check-in',
+                label: AppLocalizations.of(context)!.logMetricsSaveCheckIn,
                 onPressed: () {
                   HapticFeedback.mediumImpact();
                   context.read<AppState>().logWeight(_weight, _bodyFat);
@@ -209,6 +224,7 @@ class _ValueStepper extends StatelessWidget {
     required this.max,
     required this.step,
     required this.onChanged,
+    this.showSlider = true,
   });
 
   final String label;
@@ -217,6 +233,7 @@ class _ValueStepper extends StatelessWidget {
   final double max;
   final double step;
   final ValueChanged<double> onChanged;
+  final bool showSlider;
 
   @override
   Widget build(BuildContext context) {
@@ -244,11 +261,17 @@ class _ValueStepper extends StatelessWidget {
                 icon: const Icon(Icons.remove_circle_outline_rounded,
                     color: AppColors.textMuted),
               ),
-              Text(value.toStringAsFixed(1),
-                  style: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 17)),
+              EditableNumberLabel(
+                value: value,
+                min: min,
+                max: max,
+                decimals: 1,
+                onChanged: onChanged,
+                style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 17),
+              ),
               IconButton(
                 onPressed: () =>
                     onChanged((value + step).clamp(min, max)),
@@ -257,22 +280,23 @@ class _ValueStepper extends StatelessWidget {
               ),
             ],
           ),
-          SliderTheme(
-            data: SliderTheme.of(context).copyWith(
-              activeTrackColor: AppColors.primary,
-              inactiveTrackColor: AppColors.surfaceElevated,
-              thumbColor: AppColors.primaryBright,
-              overlayColor: AppColors.primary.withValues(alpha: 0.2),
-              trackHeight: 4,
-              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
+          if (showSlider)
+            SliderTheme(
+              data: SliderTheme.of(context).copyWith(
+                activeTrackColor: AppColors.primary,
+                inactiveTrackColor: AppColors.surfaceElevated,
+                thumbColor: AppColors.primaryBright,
+                overlayColor: AppColors.primary.withValues(alpha: 0.2),
+                trackHeight: 4,
+                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
+              ),
+              child: Slider(
+                value: value.clamp(min, max),
+                min: min,
+                max: max,
+                onChanged: onChanged,
+              ),
             ),
-            child: Slider(
-              value: value.clamp(min, max),
-              min: min,
-              max: max,
-              onChanged: onChanged,
-            ),
-          ),
         ],
       ),
     );

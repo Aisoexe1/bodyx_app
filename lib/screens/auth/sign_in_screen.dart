@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:bodyx_app/l10n/gen/app_localizations.dart';
+import '../../logic/social_auth.dart';
+import '../../network/api_client.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/inputs_buttons.dart';
+import '../../widgets/common/language_picker.dart';
+import '../../widgets/common/scale_tap.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -13,10 +18,11 @@ class SignInScreen extends StatefulWidget {
 }
 
 class _SignInScreenState extends State<SignInScreen> {
-  final _email = TextEditingController(text: 'alex@bodyx.app');
-  final _password = TextEditingController(text: '••••••••');
+  final _email = TextEditingController();
+  final _password = TextEditingController();
   bool _obscure = true;
   bool _loading = false;
+  bool _rememberMe = false;
 
   @override
   void dispose() {
@@ -26,14 +32,55 @@ class _SignInScreenState extends State<SignInScreen> {
   }
 
   Future<void> _submit() async {
+    if (_email.text.trim().isEmpty || _password.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(AppLocalizations.of(context)!.signInFieldsRequired)));
+      return;
+    }
     setState(() => _loading = true);
-    await Future.delayed(const Duration(milliseconds: 500));
-    if (!mounted) return;
-    context.read<AppState>().signIn(_email.text, _password.text);
+    try {
+      await context
+          .read<AppState>()
+          .signIn(_email.text, _password.text, rememberMe: _rememberMe);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(describeApiError(context, e))));
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _signInWithGoogle() async {
+    try {
+      final idToken = await SocialAuth.signInWithGoogle();
+      if (idToken == null || !mounted) return; // user cancelled
+      await context.read<AppState>().signInWithGoogle(idToken);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(describeApiError(context, e))));
+      }
+    }
+  }
+
+  Future<void> _signInWithApple() async {
+    try {
+      final identityToken = await SocialAuth.signInWithApple();
+      if (identityToken == null || !mounted) return; // user cancelled
+      await context.read<AppState>().signInWithApple(identityToken);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(describeApiError(context, e))));
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final languageCode = context.watch<AppState>().locale?.languageCode ?? 'en';
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -43,25 +90,54 @@ class _SignInScreenState extends State<SignInScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 24),
-              const Text('Welcome back',
-                  style: TextStyle(
+              Align(
+                alignment: Alignment.topRight,
+                child: ScaleTap(
+                  onTap: () => showLanguagePicker(context),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceElevated,
+                      borderRadius: BorderRadius.circular(AppRadius.pill),
+                      border: Border.all(color: AppColors.cardBorder),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.language_rounded,
+                            size: 16, color: AppColors.textMuted),
+                        const SizedBox(width: 6),
+                        Text(languageCode.toUpperCase(),
+                            style: const TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w700)),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(AppLocalizations.of(context)!.signInWelcomeBack,
+                  style: const TextStyle(
                       fontSize: 30,
                       fontWeight: FontWeight.w800,
                       color: AppColors.textPrimary)),
               const SizedBox(height: 8),
-              const Text('Stay consistent',
-                  style: TextStyle(color: AppColors.textMuted, fontSize: 15)),
+              Text(AppLocalizations.of(context)!.signInStayConsistent,
+                  style: const TextStyle(
+                      color: AppColors.textMuted, fontSize: 15)),
               const SizedBox(height: 36),
               PrimaryTextField(
-                label: 'Email',
+                label: AppLocalizations.of(context)!.signInEmailLabel,
                 controller: _email,
                 keyboardType: TextInputType.emailAddress,
                 prefixIcon: Icons.mail_outline_rounded,
               ),
               const SizedBox(height: 14),
               PrimaryTextField(
-                label: 'Password',
+                label: AppLocalizations.of(context)!.signInPasswordLabel,
                 controller: _password,
                 obscureText: _obscure,
                 prefixIcon: Icons.lock_outline_rounded,
@@ -70,66 +146,97 @@ class _SignInScreenState extends State<SignInScreen> {
                     : Icons.visibility_outlined,
                 onSuffixTap: () => setState(() => _obscure = !_obscure),
               ),
+              const SizedBox(height: 10),
+              GestureDetector(
+                onTap: () => setState(() => _rememberMe = !_rememberMe),
+                behavior: HitTestBehavior.opaque,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: Checkbox(
+                        value: _rememberMe,
+                        onChanged: (v) =>
+                            setState(() => _rememberMe = v ?? true),
+                        activeColor: AppColors.primary,
+                        side: const BorderSide(color: AppColors.cardBorder),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(6)),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Text(AppLocalizations.of(context)!.signInRememberMe,
+                        style: const TextStyle(
+                            color: AppColors.textSecondary, fontSize: 13.5)),
+                  ],
+                ),
+              ),
               const SizedBox(height: 16),
               PrimaryButton(
-                  label: 'Sign in',
+                  label: AppLocalizations.of(context)!.signInSignInButton,
                   light: true,
                   onPressed: _submit,
                   loading: _loading),
               const SizedBox(height: 16),
               Center(
                 child: TextButton(
-                  onPressed: () {},
-                  child: const Text('Forgot password?'),
+                  onPressed: () => context.read<AppState>().goToForgotPassword(),
+                  child: Text(AppLocalizations.of(context)!.signInForgotPassword),
                 ),
               ),
-              const SizedBox(height: 20),
-              const Row(
-                children: [
-                  Expanded(child: Divider(color: AppColors.divider)),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 12),
-                    child: Text('or continue with',
-                        style: TextStyle(
-                            color: AppColors.textMuted, fontSize: 12)),
-                  ),
-                  Expanded(child: Divider(color: AppColors.divider)),
-                ],
-              ),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  Expanded(
-                    child: SocialAuthButton(
-                      label: 'Google',
-                      icon: Icons.g_mobiledata_rounded,
-                      light: true,
-                      onTap: () => context.read<AppState>().signIn(
-                          'alex@gmail.com', 'google-oauth'),
+              // google_sign_in targets mobile/web and sign_in_with_apple has
+              // no Windows support — hidden outside Android/iOS rather than
+              // shown and silently failing every tap.
+              if (SocialAuth.isSupported) ...[
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    const Expanded(child: Divider(color: AppColors.divider)),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Text(
+                          AppLocalizations.of(context)!.signInOrContinueWith,
+                          style: const TextStyle(
+                              color: AppColors.textMuted, fontSize: 12)),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: SocialAuthButton(
-                      label: 'Apple',
-                      icon: Icons.apple_rounded,
-                      light: true,
-                      onTap: () => context.read<AppState>().signIn(
-                          'alex@icloud.com', 'apple-oauth'),
+                    const Expanded(child: Divider(color: AppColors.divider)),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(
+                      child: SocialAuthButton(
+                        label: AppLocalizations.of(context)!.signInGoogleLabel,
+                        icon: Icons.g_mobiledata_rounded,
+                        light: true,
+                        onTap: _signInWithGoogle,
+                      ),
                     ),
-                  ),
-                ],
-              ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: SocialAuthButton(
+                        label: AppLocalizations.of(context)!.signInAppleLabel,
+                        icon: Icons.apple_rounded,
+                        light: true,
+                        onTap: _signInWithApple,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
               const SizedBox(height: 32),
               Center(
                 child: Wrap(
                   children: [
-                    const Text("Don't have an account? ",
-                        style: TextStyle(color: AppColors.textMuted)),
+                    Text(AppLocalizations.of(context)!.signInNoAccount,
+                        style: const TextStyle(color: AppColors.textMuted)),
                     GestureDetector(
                       onTap: () => context.read<AppState>().goToSignUp(),
-                      child: const Text('Sign up',
-                          style: TextStyle(
+                      child: Text(AppLocalizations.of(context)!.signInSignUp,
+                          style: const TextStyle(
                               color: AppColors.primaryBright,
                               fontWeight: FontWeight.w700)),
                     ),

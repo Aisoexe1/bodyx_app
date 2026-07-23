@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:bodyx_app/l10n/gen/app_localizations.dart';
 import '../../models/models.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_colors.dart';
@@ -36,9 +37,9 @@ class AlertsScreen extends StatelessWidget {
               delegate: SliverChildListDelegate([
                 Row(
                   children: [
-                    const Expanded(
-                      child: Text('Alerts',
-                          style: TextStyle(
+                    Expanded(
+                      child: Text(AppLocalizations.of(context)!.alertsTitle,
+                          style: const TextStyle(
                               fontSize: 26,
                               fontWeight: FontWeight.w800,
                               color: AppColors.textPrimary)),
@@ -47,76 +48,90 @@ class AlertsScreen extends StatelessWidget {
                       TextButton(
                         onPressed: () =>
                             context.read<AppState>().markAllAlertsRead(),
-                        child: const Text('Mark all read'),
+                        child:
+                            Text(AppLocalizations.of(context)!.alertsMarkAllRead),
                       ),
                   ],
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${state.unreadAlertCount} unread notifications',
+                  AppLocalizations.of(context)!.alertsUnreadCount(
+                      state.unreadAlertCount.toString()),
                   style: const TextStyle(color: AppColors.textMuted),
                 ),
                 const SizedBox(height: 20),
-                ...List.generate(state.alerts.length, (i) {
-                  final alert = state.alerts[i];
-                  final color = _severityColor(alert.severity);
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: ScaleTap(
-                      onTap: () => context.read<AppState>().markAlertRead(i),
-                      child: GlowCard(
-                        borderColor: alert.read ? null : color,
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            GlowIconBadge(icon: alert.icon, color: color),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: Text(alert.title,
-                                            style: const TextStyle(
-                                                color: AppColors.textPrimary,
-                                                fontWeight: FontWeight.w700,
-                                                fontSize: 14.5)),
-                                      ),
-                                      Text(alert.time,
-                                          style: const TextStyle(
-                                              color: AppColors.textMuted,
-                                              fontSize: 11)),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(alert.subtitle,
-                                      style: const TextStyle(
-                                          color: AppColors.textSecondary,
-                                          fontSize: 12.5,
-                                          height: 1.35)),
-                                ],
-                              ),
-                            ),
-                            if (!alert.read) ...[
-                              const SizedBox(width: 8),
-                              Container(
-                                width: 8,
-                                height: 8,
-                                margin: const EdgeInsets.only(top: 4),
-                                decoration: BoxDecoration(
-                                  color: color,
-                                  shape: BoxShape.circle,
+                if (state.alerts.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 40),
+                    child: Column(
+                      children: [
+                        const Icon(Icons.notifications_off_rounded,
+                            size: 40, color: AppColors.textMuted),
+                        const SizedBox(height: 12),
+                        Text(AppLocalizations.of(context)!.alertsEmptyTitle,
+                            style: const TextStyle(
+                                color: AppColors.textPrimary,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 15)),
+                        const SizedBox(height: 4),
+                        Text(AppLocalizations.of(context)!.alertsEmptySubtitle,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                                color: AppColors.textMuted, fontSize: 12.5)),
+                      ],
+                    ),
+                  )
+                else
+                  ...state.alerts.map((alert) {
+                    final color = _severityColor(alert.severity);
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: ScaleTap(
+                        onTap: () =>
+                            context.read<AppState>().markAlertRead(alert.id),
+                        child: GlowCard(
+                          borderColor: alert.read ? null : color,
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              GlowIconBadge(icon: alert.icon, color: color),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(alert.title,
+                                        style: const TextStyle(
+                                            color: AppColors.textPrimary,
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: 14.5)),
+                                    const SizedBox(height: 4),
+                                    Text(alert.subtitle,
+                                        style: const TextStyle(
+                                            color: AppColors.textSecondary,
+                                            fontSize: 12.5,
+                                            height: 1.35)),
+                                  ],
                                 ),
                               ),
+                              if (!alert.read) ...[
+                                const SizedBox(width: 8),
+                                Container(
+                                  width: 8,
+                                  height: 8,
+                                  margin: const EdgeInsets.only(top: 4),
+                                  decoration: BoxDecoration(
+                                    color: color,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                              ],
                             ],
-                          ],
+                          ),
                         ),
                       ),
-                    ),
-                  );
-                }),
+                    );
+                  }),
               ]),
             ),
           ),
