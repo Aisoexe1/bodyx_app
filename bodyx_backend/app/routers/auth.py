@@ -50,7 +50,7 @@ async def register(
 
     await measurement_repo.seed_measurements(db, user["_id"], payload.gender.value)
 
-    token = create_access_token(str(user["_id"]))
+    token = create_access_token(str(user["_id"]), user.get("token_version", 0))
     return Token(access_token=token, user=user_doc_to_public(user))
 
 
@@ -65,7 +65,7 @@ async def login(
     if user.get("is_banned"):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="This account has been banned")
 
-    token = create_access_token(str(user["_id"]))
+    token = create_access_token(str(user["_id"]), user.get("token_version", 0))
     return Token(access_token=token, user=user_doc_to_public(user))
 
 
@@ -125,7 +125,12 @@ async def reset_password(
     await password_reset_repo.mark_used(db, record["_id"])
 
     updated_user = await user_repo.find_by_id(db, str(user["_id"]))
-    token = create_access_token(str(updated_user["_id"]))
+    # set_password_hash just $inc'd token_version — re-fetching before
+    # signing is what makes the new token carry the new version instead of
+    # the stale one every other token issued before this reset still has.
+    token = create_access_token(
+        str(updated_user["_id"]), updated_user.get("token_version", 0)
+    )
     return Token(access_token=token, user=user_doc_to_public(updated_user))
 
 
@@ -149,7 +154,7 @@ async def _oauth_login_or_needs_username(
     if existing.get("is_banned"):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="This account has been banned")
 
-    token = create_access_token(str(existing["_id"]))
+    token = create_access_token(str(existing["_id"]), existing.get("token_version", 0))
     return Token(access_token=token, user=user_doc_to_public(existing))
 
 
@@ -167,7 +172,7 @@ async def _complete_oauth_signup(
     user = await user_repo.create_oauth_user(db, email, username, auth_provider)
     await measurement_repo.seed_measurements(db, user["_id"], user.get("gender", "male"))
 
-    token = create_access_token(str(user["_id"]))
+    token = create_access_token(str(user["_id"]), user.get("token_version", 0))
     return Token(access_token=token, user=user_doc_to_public(user))
 
 

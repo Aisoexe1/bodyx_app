@@ -31,6 +31,9 @@ async def create_user(db: AsyncIOMotorDatabase, doc: dict) -> dict:
         "email": doc["email"].lower(),
         "role": "user",
         "is_banned": False,
+        # Bumped by set_password_hash on every password reset, and checked
+        # against the "ver" claim in get_current_user — see app/security.py.
+        "token_version": 0,
         "created_at": now,
         "updated_at": now,
     }
@@ -65,9 +68,16 @@ async def set_weight_kg(db: AsyncIOMotorDatabase, user_id: ObjectId, kg: float) 
 
 
 async def set_password_hash(db: AsyncIOMotorDatabase, user_id: ObjectId, password_hash: str) -> None:
+    # $inc token_version in the same update, atomically, so a password
+    # reset always invalidates every token issued before it — see
+    # get_current_user's version check in app/security.py. There's no
+    # separate "bump_token_version" call anywhere else to forget.
     await db.users.update_one(
         {"_id": user_id},
-        {"$set": {"password_hash": password_hash, "updated_at": datetime.now(timezone.utc)}},
+        {
+            "$set": {"password_hash": password_hash, "updated_at": datetime.now(timezone.utc)},
+            "$inc": {"token_version": 1},
+        },
     )
 
 

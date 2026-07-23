@@ -1,10 +1,16 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from limits import RateLimitItemPerMinute
+from limits.storage import MemoryStorage
+from limits.strategies import FixedWindowRateLimiter
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
+from slowapi.util import get_remote_address
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.config import settings
 from app.database import connect, disconnect, ensure_indexes
@@ -44,7 +50,67 @@ async def lifespan(app: FastAPI):
     disconnect()
 
 
-app = FastAPI(title="BodyX API", version="0.1.0", lifespan=lifespan)
+# No third-party API consumers exist for this mobile-app backend — the
+# interactive docs just hand an unauthenticated caller a full map of every
+# route/schema for free. Disabled outright rather than gated behind a
+# debug flag, since nothing in this codebase has ever relied on them.
+app = FastAPI(
+    title="BodyX API",
+    version="0.1.0",
+    lifespan=lifespan,
+    docs_url=None,
+    redoc_url=None,
+    openapi_url=None,
+)
+
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """No reverse proxy/CDN fronts this app in its own deployment (bare
+    uvicorn — see docker-compose.yml) — these headers have to come from the
+    app itself or nothing ever sets them. Matters most for the admin panel,
+    a real cookie-authenticated browser UI with ban/delete/role-change
+    actions, not just the JSON API. Only frame-ancestors is set (not a full
+    CSP) so this can't accidentally break the admin UI's own inline
+    scripts/styles, which no other directive here restricts."""
+
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["Content-Security-Policy"] = "frame-ancestors 'none'"
+        response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains"
+        return response
+
+
+# slowapi's route-based limiting can't see anything mounted as a Starlette
+# `Mount` (see app/rate_limit.py's docstring for why) — Starlette-Admin's
+# own /admin/login is exactly that, so the @limiter.limit(...) decorators on
+# the consumer /auth/login never apply to it despite checking a password
+# against the very same users collection (app/admin/auth.py). This is a
+# second, independent limiter using the same underlying `limits` library
+# slowapi wraps, applied by matching the path directly instead of by route
+# object, since that's the one thing a Mount can't hide from.
+_admin_login_limit_storage = MemoryStorage()
+_admin_login_limiter = FixedWindowRateLimiter(_admin_login_limit_storage)
+_admin_login_rate_limit = RateLimitItemPerMinute(5)
+
+
+class AdminLoginRateLimitMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        if request.url.path == "/admin/login" and request.method == "POST":
+            key = get_remote_address(request)
+            if limiter.enabled and not _admin_login_limiter.hit(
+                _admin_login_rate_limit, key
+            ):
+                return JSONResponse(
+                    {"detail": "Too many login attempts, try again shortly"},
+                    status_code=429,
+                )
+        return await call_next(request)
+
+
+app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(AdminLoginRateLimitMiddleware)
 
 # Rate limiting for the brute-forceable auth endpoints (login, register,
 # password reset, OAuth) — see app/rate_limit.py and the @limiter.limit(...)

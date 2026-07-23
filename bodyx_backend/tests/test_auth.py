@@ -146,6 +146,33 @@ async def test_reset_password_full_round_trip(client, registered_user):
     assert new_login.status_code == 200
 
 
+async def test_reset_password_invalidates_the_old_token(client, registered_user):
+    # A JWT issued before a password reset must stop working after it —
+    # otherwise a stolen token survives the one thing a user can do about
+    # a compromise. See token_version in app/security.py.
+    old_headers = {"Authorization": f"Bearer {registered_user['token']}"}
+    still_good = await client.get("/api/v1/users/me", headers=old_headers)
+    assert still_good.status_code == 200
+
+    forgot_resp = await client.post(
+        "/api/v1/auth/forgot-password", json={"email": "alex@bodyx.dev"}
+    )
+    code = forgot_resp.json()["devCode"]
+    reset_resp = await client.post(
+        "/api/v1/auth/reset-password",
+        json={"email": "alex@bodyx.dev", "code": code, "newPassword": "newpass123"},
+    )
+    assert reset_resp.status_code == 200
+    new_token = reset_resp.json()["accessToken"]
+
+    now_rejected = await client.get("/api/v1/users/me", headers=old_headers)
+    assert now_rejected.status_code == 401
+
+    new_headers = {"Authorization": f"Bearer {new_token}"}
+    still_works = await client.get("/api/v1/users/me", headers=new_headers)
+    assert still_works.status_code == 200
+
+
 async def test_reset_password_wrong_code_400(client, registered_user):
     await client.post("/api/v1/auth/forgot-password", json={"email": "alex@bodyx.dev"})
     resp = await client.post(
@@ -362,6 +389,36 @@ async def test_delete_me_removes_account_and_data(client, registered_user, auth_
     # The token must no longer authenticate anything — the account is gone.
     resp = await client.get("/api/v1/users/me", headers=auth_headers)
     assert resp.status_code == 401
+
+
+async def test_password_over_72_bytes_is_rejected_not_truncated(client):
+    # bcrypt only looks at the first 72 bytes — without an explicit reject,
+    # passlib would silently hash just that prefix (see app/security.py).
+    long_password = "a1" * 60  # 120 bytes, all past bcrypt's limit ignored
+    resp = await client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": "longpw@bodyx.dev",
+            "username": "longpw",
+            "password": long_password,
+        },
+    )
+    assert resp.status_code == 422
+    assert "72 bytes" in resp.json()["detail"]
+
+
+async def test_interactive_docs_are_disabled(client):
+    for path in ("/docs", "/redoc", "/openapi.json"):
+        resp = await client.get(path)
+        assert resp.status_code == 404, path
+
+
+async def test_security_headers_present_on_every_response(client):
+    resp = await client.get("/api/v1/health")
+    assert resp.headers["x-frame-options"] == "DENY"
+    assert resp.headers["x-content-type-options"] == "nosniff"
+    assert resp.headers["content-security-policy"] == "frame-ancestors 'none'"
+    assert "max-age" in resp.headers["strict-transport-security"]
 
 
 async def test_delete_me_requires_token_401(client):

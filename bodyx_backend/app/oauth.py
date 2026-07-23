@@ -17,6 +17,23 @@ class OAuthVerificationError(Exception):
     pass
 
 
+def _is_email_verified(claims: dict) -> bool:
+    """`email_verified` is what Google's own docs say callers must check
+    before treating the token's email as trustworthy/permanent — without
+    it, a provider-issued token asserting an email the holder doesn't
+    actually control could get bound to a new account here. Apple's SDKs
+    are known to send this as the *string* "true"/"false" rather than a
+    real JSON boolean, so this can't just do `bool(claims.get(...))`.
+    Missing entirely (some flows omit it) is treated as verified — this
+    only rejects an *explicit* false, not silence."""
+    verified = claims.get("email_verified")
+    if verified is None:
+        return True
+    if isinstance(verified, str):
+        return verified.lower() == "true"
+    return bool(verified)
+
+
 def verify_google_id_token(token: str) -> dict:
     if not settings.google_oauth_configured:
         raise HTTPException(
@@ -42,6 +59,8 @@ def verify_google_id_token(token: str) -> dict:
     email = claims.get("email")
     if not email:
         raise OAuthVerificationError("Google token did not include an email")
+    if not _is_email_verified(claims):
+        raise OAuthVerificationError("Google token's email is not verified")
     return {"email": email}
 
 
@@ -66,4 +85,6 @@ def verify_apple_identity_token(token: str) -> dict:
     email = claims.get("email")
     if not email:
         raise OAuthVerificationError("Apple token did not include an email")
+    if not _is_email_verified(claims):
+        raise OAuthVerificationError("Apple token's email is not verified")
     return {"email": email}
