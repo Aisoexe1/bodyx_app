@@ -295,18 +295,16 @@ class DragonPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     canvas.save();
     canvas.scale(size.width / 100, size.height / 100);
-
-    // Aura stays in the unscaled 100×100 space, NOT under traits.scale —
-    // scaled up (1.25 at the top stage) the old full-canvas aura disks
-    // spilled past the canvas on every side, which reads fine inside the
-    // app (CustomPaint doesn't clip) but renders as a hard-edged SQUARE
-    // in the widget PNG snapshot, where the canvas boundary is real.
-    _paintAura(canvas);
-
     canvas.translate(50, 52);
     canvas.scale(traits.scale);
     canvas.translate(-50, -52);
 
+    // The aura (and at the top stages, the body itself) intentionally
+    // overflows the 100×100 logical box — inside the app CustomPaint
+    // doesn't clip, so it reads as a glow bleeding past the avatar. Any
+    // consumer with a REAL edge (the widget PNG snapshot) must add its own
+    // padding around the painter instead — see renderDragonPng.
+    _paintAura(canvas);
     _paintGroundShadow(canvas);
 
     canvas.save();
@@ -452,28 +450,31 @@ class DragonPainter extends CustomPainter {
           Color(0xFF6BC8FF),
           Color(0xFFB06BFF),
         ];
-        // Soft gradient rings instead of blurred filled disks — the disks
-        // (radius 50 + blur 10) tinted the entire canvas edge-to-edge, so
-        // the aura showed up as a hard SQUARE in the Home Screen widget's
-        // PNG snapshot. Each ring fades to transparent by its own radius,
-        // all of which fit inside the canvas.
-        for (var i = 0; i < colors.length; i++) {
-          final radius = 48.0 - i * 2.2;
-          canvas.drawCircle(
-            const Offset(50, 48),
-            radius,
-            Paint()
-              ..shader = RadialGradient(
-                colors: [
-                  colors[i].withOpacity(0),
-                  colors[i].withOpacity(0.22 * _auraPulse),
-                  colors[i].withOpacity(0),
-                ],
-                stops: const [0.55, 0.8, 1.0],
-              ).createShader(Rect.fromCircle(
-                  center: const Offset(50, 48), radius: radius)),
-          );
-        }
+        // One wide multi-stop rainbow halo instead of the original blurred
+        // filled disks (those tinted the whole canvas edge-to-edge and
+        // clipped to a hard SQUARE in the Home Screen widget's PNG
+        // snapshot). Bands span most of the radius so they stay visible
+        // around the scaled-up body drawn on top, and the gradient reaches
+        // fully transparent by radius 48 — inside the canvas, so the
+        // bitmap edge never cuts it.
+        canvas.drawCircle(
+          const Offset(50, 48),
+          48,
+          Paint()
+            ..shader = RadialGradient(
+              colors: [
+                colors[5].withOpacity(0.42 * _auraPulse),
+                colors[4].withOpacity(0.42 * _auraPulse),
+                colors[3].withOpacity(0.38 * _auraPulse),
+                colors[2].withOpacity(0.35 * _auraPulse),
+                colors[1].withOpacity(0.32 * _auraPulse),
+                colors[0].withOpacity(0.26 * _auraPulse),
+                colors[0].withOpacity(0),
+              ],
+              stops: const [0.0, 0.30, 0.45, 0.60, 0.72, 0.84, 1.0],
+            ).createShader(
+                Rect.fromCircle(center: const Offset(50, 48), radius: 48)),
+        );
         return;
     }
   }
