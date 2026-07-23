@@ -516,13 +516,26 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     _persistUser();
     _reconcilePetXp(restoredUser.petXp);
 
+    // Weight/measurements and announcements are independent server reads —
+    // run them concurrently rather than one after another. This used to be
+    // 3 sequential round trips, which is most of why a manual Dashboard
+    // refresh felt slow: nothing here actually depends on anything else.
+    await Future.wait([
+      _pullWeightAndMeasurements(),
+      _pullAnnouncementsForSessionRestore(),
+    ]);
+  }
+
+  Future<void> _pullWeightAndMeasurements() async {
     try {
-      final serverWeight = await _weightRepository.list();
+      final weightFuture = _weightRepository.list();
+      final measurementsFuture = _measurementRepository.getAll();
+      final serverWeight = await weightFuture;
+      final serverMeasurements = await measurementsFuture;
       if (serverWeight.isNotEmpty) {
         weightHistory = serverWeight;
         _persistWeight();
       }
-      final serverMeasurements = await _measurementRepository.getAll();
       if (serverMeasurements.isNotEmpty) {
         bodyMeasurements = serverMeasurements;
         _persistMeasurements();
@@ -531,13 +544,28 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       debugPrint(
           'Failed to pull weight/measurements during session restore: $e');
     }
+  }
 
+  Future<void> _pullAnnouncementsForSessionRestore() async {
     try {
       _announcements = await _announcementRepository.listActive();
       notifyListeners();
     } catch (e) {
       debugPrint('Failed to fetch announcements during session restore: $e');
     }
+  }
+
+  /// Pull-to-refresh on the Dashboard — re-pulls everything shown there that
+  /// can go stale on its own (server's copy of the profile/petXp/weight/
+  /// measurements/announcements, plus real Health data if sync is enabled).
+  /// Reuses [_restoreServerSession] rather than duplicating its fetches;
+  /// both legs already swallow their own errors, so a flaky network never
+  /// leaves the indicator spinning or throws past this call.
+  Future<void> refreshDashboard() async {
+    await Future.wait([
+      _restoreServerSession(),
+      syncHealthData(),
+    ]);
   }
 
   void _persistUser() {
@@ -1874,15 +1902,22 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   Future<void> syncHealthData() async {
     if (!healthSyncEnabled) return;
     try {
-      final updated = <DailyStats>[];
-      for (final day in dailyStats) {
-        final snapshot =
-            await HealthService.instance.fetchDailySnapshot(day.date);
-        updated.add(_mergeHealthSnapshot(day, snapshot));
-      }
-      dailyStats = updated;
+      // Each day's snapshot and the weight history are independent reads —
+      // fire all of them at once instead of one day at a time. With the
+      // usual 14-day window this used to be 15 sequential platform-channel
+      // round trips; that's most of why a manual refresh felt sluggish.
+      final days = dailyStats;
+      final snapshotsFuture = Future.wait(days
+          .map((day) => HealthService.instance.fetchDailySnapshot(day.date)));
+      final weightFuture = HealthService.instance.fetchWeightHistory();
 
-      final weightSamples = await HealthService.instance.fetchWeightHistory();
+      final snapshots = await snapshotsFuture;
+      dailyStats = [
+        for (var i = 0; i < days.length; i++)
+          _mergeHealthSnapshot(days[i], snapshots[i]),
+      ];
+
+      final weightSamples = await weightFuture;
       if (weightSamples.isNotEmpty) {
         final carriedBodyFat =
             weightHistory.isNotEmpty ? weightHistory.last.bodyFatPct : 0.0;
@@ -1986,16 +2021,16 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     if (newlyUnlocked.isNotEmpty) {
       final l10n = lookupAppLocalizations(_effectiveLocale);
       for (final def in newlyUnlocked) {
-        _notifyBestEffort(() => NotificationService.instance
-            .showAchievementUnlocked(
-              _effectiveLocale,
-              l10n.notificationAchievementUnlockedTitle,
-              l10n.notificationAchievementUnlockedBody(
-                achievementTitleFor(l10n, def.id),
-                achievementDescriptionFor(l10n, def.id),
-              ),
-              id: def.id.hashCode & 0x7fffffff,
-            ));
+        _notifyBestEffort(
+            () => NotificationService.instance.showAchievementUnlocked(
+                  _effectiveLocale,
+                  l10n.notificationAchievementUnlockedTitle,
+                  l10n.notificationAchievementUnlockedBody(
+                    achievementTitleFor(l10n, def.id),
+                    achievementDescriptionFor(l10n, def.id),
+                  ),
+                  id: def.id.hashCode & 0x7fffffff,
+                ));
       }
     }
     if (petXpBonus > 0) {

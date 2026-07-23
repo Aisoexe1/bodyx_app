@@ -107,8 +107,16 @@ class FakeAuthRepository implements AuthRepository {
   Future<UserProfile> completeAppleSignUp(String identityToken, String username) async =>
       UserProfile(email: 'apple-user@bodyx.app', username: username);
 
+  /// Number of times [restoreSession] has been called — lets tests assert a
+  /// manual refresh (e.g. Dashboard pull-to-refresh) actually re-hit the
+  /// server rather than just checking the UI didn't crash.
+  int restoreSessionCallCount = 0;
+
   @override
-  Future<UserProfile?> restoreSession() async => restoredSession;
+  Future<UserProfile?> restoreSession() async {
+    restoreSessionCallCount++;
+    return restoredSession;
+  }
 
   @override
   Future<void> signOut() async {}

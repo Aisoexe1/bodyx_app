@@ -26,90 +26,96 @@ class DashboardScreen extends StatelessWidget {
 
     return SafeArea(
       bottom: false,
-      child: CustomScrollView(
-        slivers: [
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(
-                AppSpacing.lg, AppSpacing.md, AppSpacing.lg, 140),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                _GreetingRow(
-                    name: user?.username ??
-                        AppLocalizations.of(context)!.dashboardAthlete),
-                for (final announcement in state.activeAnnouncements) ...[
-                  const SizedBox(height: 14),
-                  _AnnouncementBanner(
-                    announcement: announcement,
-                    onDismiss: () => context
-                        .read<AppState>()
-                        .dismissAnnouncement(announcement.id),
-                  ),
-                ],
-                const SizedBox(height: 14),
-                PetCard(state: state),
-                const SizedBox(height: 24),
-                _DailyOverviewCard(state: state, stats: stats),
-                const SizedBox(height: 20),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _MiniStatCard(
-                        icon: Icons.water_drop_rounded,
-                        color: AppColors.info,
-                        label:
-                            AppLocalizations.of(context)!.dashboardWaterLabel,
-                        value: CountUpText(
-                          value: stats.waterMl,
-                          formatter: (v) => '${(v / 1000).toStringAsFixed(1)}L',
-                          style: _MiniStatCard.valueStyle,
-                        ),
-                        statusDot: state.selectedDateIndex == -1
-                            ? statusColor(state.todayWaterStatus.level)
-                            : null,
-                        onTap: () => showModalBottomSheet(
-                          context: context,
-                          isScrollControlled: true,
-                          backgroundColor: Colors.transparent,
-                          builder: (_) => const WaterLogSheet(),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _MiniStatCard(
-                        icon: Icons.restaurant_rounded,
-                        color: AppColors.warning,
-                        label: AppLocalizations.of(context)!
-                            .dashboardCaloriesEatenLabel,
-                        value: CountUpText(
-                          value: state.todayCaloriesEaten,
-                          formatter: (v) => '$v kcal',
-                          style: _MiniStatCard.valueStyle,
-                        ),
-                        statusDot: state.selectedDateIndex == -1
-                            ? statusColor(state.calorieSurplusStatus.level)
-                            : null,
-                        onTap: () => showModalBottomSheet(
-                          context: context,
-                          isScrollControlled: true,
-                          backgroundColor: Colors.transparent,
-                          builder: (_) => const LogMealSheet(),
-                        ),
-                      ),
+      child: RefreshIndicator(
+        onRefresh: () => context.read<AppState>().refreshDashboard(),
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg, AppSpacing.md, AppSpacing.lg, 140),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  _GreetingRow(
+                      name: user?.username ??
+                          AppLocalizations.of(context)!.dashboardAthlete),
+                  for (final announcement in state.activeAnnouncements) ...[
+                    const SizedBox(height: 14),
+                    _AnnouncementBanner(
+                      announcement: announcement,
+                      onDismiss: () => context
+                          .read<AppState>()
+                          .dismissAnnouncement(announcement.id),
                     ),
                   ],
-                ),
-                const SizedBox(height: 24),
-                SectionHeader(
-                    title: AppLocalizations.of(context)!.dashboardLastBodyScan),
-                const SizedBox(height: 12),
-                _LastBodyScanCard(state: state),
-                const SizedBox(height: 24),
-                _TodayShortcuts(state: state),
-              ]),
+                  const SizedBox(height: 14),
+                  PetCard(state: state),
+                  const SizedBox(height: 24),
+                  _DailyOverviewCard(state: state, stats: stats),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _MiniStatCard(
+                          icon: Icons.water_drop_rounded,
+                          color: AppColors.info,
+                          label:
+                              AppLocalizations.of(context)!.dashboardWaterLabel,
+                          value: CountUpText(
+                            value: stats.waterMl,
+                            formatter: (v) =>
+                                '${(v / 1000).toStringAsFixed(1)}L',
+                            style: _MiniStatCard.valueStyle,
+                          ),
+                          statusDot: state.selectedDateIndex == -1
+                              ? statusColor(state.todayWaterStatus.level)
+                              : null,
+                          onTap: () => showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            backgroundColor: Colors.transparent,
+                            builder: (_) => const WaterLogSheet(),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _MiniStatCard(
+                          icon: Icons.restaurant_rounded,
+                          color: AppColors.warning,
+                          label: AppLocalizations.of(context)!
+                              .dashboardCaloriesEatenLabel,
+                          value: CountUpText(
+                            value: state.todayCaloriesEaten,
+                            formatter: (v) => '$v kcal',
+                            style: _MiniStatCard.valueStyle,
+                          ),
+                          statusDot: state.selectedDateIndex == -1
+                              ? statusColor(state.calorieSurplusStatus.level)
+                              : null,
+                          onTap: () => showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            backgroundColor: Colors.transparent,
+                            builder: (_) => const LogMealSheet(),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  SectionHeader(
+                      title:
+                          AppLocalizations.of(context)!.dashboardLastBodyScan),
+                  const SizedBox(height: 12),
+                  _LastBodyScanCard(state: state),
+                  const SizedBox(height: 24),
+                  _TodayShortcuts(state: state),
+                ]),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
