@@ -183,7 +183,8 @@ const Map<PetStage, DragonTraits> kDragonTraits = {
 /// a small looping idle animation (bob, blink, wing flutter, flame flicker,
 /// tail swish, aura pulse) — set [animate] to false for a still frame.
 class DragonAvatar extends StatefulWidget {
-  const DragonAvatar({super.key, required this.stage, this.size = 96, this.animate = true});
+  const DragonAvatar(
+      {super.key, required this.stage, this.size = 96, this.animate = true});
 
   final PetStage stage;
   final double size;
@@ -193,13 +194,15 @@ class DragonAvatar extends StatefulWidget {
   State<DragonAvatar> createState() => _DragonAvatarState();
 }
 
-class _DragonAvatarState extends State<DragonAvatar> with SingleTickerProviderStateMixin {
+class _DragonAvatarState extends State<DragonAvatar>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: const Duration(seconds: 4));
+    _controller =
+        AnimationController(vsync: this, duration: const Duration(seconds: 4));
     if (widget.animate) _controller.repeat();
   }
 
@@ -229,7 +232,8 @@ class _DragonAvatarState extends State<DragonAvatar> with SingleTickerProviderSt
         width: widget.size,
         height: widget.size,
         child: CustomPaint(
-          painter: DragonPainter(kDragonTraits[widget.stage]!, _controller.value),
+          painter:
+              DragonPainter(kDragonTraits[widget.stage]!, _controller.value),
         ),
       ),
     );
@@ -291,11 +295,18 @@ class DragonPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     canvas.save();
     canvas.scale(size.width / 100, size.height / 100);
+
+    // Aura stays in the unscaled 100×100 space, NOT under traits.scale —
+    // scaled up (1.25 at the top stage) the old full-canvas aura disks
+    // spilled past the canvas on every side, which reads fine inside the
+    // app (CustomPaint doesn't clip) but renders as a hard-edged SQUARE
+    // in the widget PNG snapshot, where the canvas boundary is real.
+    _paintAura(canvas);
+
     canvas.translate(50, 52);
     canvas.scale(traits.scale);
     canvas.translate(-50, -52);
 
-    _paintAura(canvas);
     _paintGroundShadow(canvas);
 
     canvas.save();
@@ -347,12 +358,15 @@ class DragonPainter extends CustomPainter {
     return math.max(pulseAt(0.2), pulseAt(0.7));
   }
 
+  // Radius 48, not 52 — the gradient must reach fully transparent while
+  // still inside the 100×100 canvas (nearest edge is 48 away from the
+  // center), or the leftover tint gets sliced flat at the snapshot border.
   void _glow(Canvas canvas, Color color) {
     final paint = Paint()
       ..shader = RadialGradient(
         colors: [color.withOpacity(0.35 * _auraPulse), color.withOpacity(0)],
-      ).createShader(Rect.fromCircle(center: const Offset(50, 48), radius: 52));
-    canvas.drawCircle(const Offset(50, 48), 52, paint);
+      ).createShader(Rect.fromCircle(center: const Offset(50, 48), radius: 48));
+    canvas.drawCircle(const Offset(50, 48), 48, paint);
   }
 
   void _paintAura(Canvas canvas) {
@@ -406,9 +420,15 @@ class DragonPainter extends CustomPainter {
           ..color = Colors.white.withOpacity(0.9)
           ..strokeWidth = 1.2
           ..style = PaintingStyle.stroke;
-        for (final c in const [Offset(10, 24), Offset(90, 20), Offset(88, 56)]) {
-          canvas.drawLine(c.translate(-2.5, 0), c.translate(2.5, 0), sparklePaint);
-          canvas.drawLine(c.translate(0, -2.5), c.translate(0, 2.5), sparklePaint);
+        for (final c in const [
+          Offset(10, 24),
+          Offset(90, 20),
+          Offset(88, 56)
+        ]) {
+          canvas.drawLine(
+              c.translate(-2.5, 0), c.translate(2.5, 0), sparklePaint);
+          canvas.drawLine(
+              c.translate(0, -2.5), c.translate(0, 2.5), sparklePaint);
         }
         return;
       case DragonAura.starrySky:
@@ -432,13 +452,26 @@ class DragonPainter extends CustomPainter {
           Color(0xFF6BC8FF),
           Color(0xFFB06BFF),
         ];
+        // Soft gradient rings instead of blurred filled disks — the disks
+        // (radius 50 + blur 10) tinted the entire canvas edge-to-edge, so
+        // the aura showed up as a hard SQUARE in the Home Screen widget's
+        // PNG snapshot. Each ring fades to transparent by its own radius,
+        // all of which fit inside the canvas.
         for (var i = 0; i < colors.length; i++) {
+          final radius = 48.0 - i * 2.2;
           canvas.drawCircle(
             const Offset(50, 48),
-            50 - i * 2.2,
+            radius,
             Paint()
-              ..color = colors[i].withOpacity(0.2)
-              ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10),
+              ..shader = RadialGradient(
+                colors: [
+                  colors[i].withOpacity(0),
+                  colors[i].withOpacity(0.22 * _auraPulse),
+                  colors[i].withOpacity(0),
+                ],
+                stops: const [0.55, 0.8, 1.0],
+              ).createShader(Rect.fromCircle(
+                  center: const Offset(50, 48), radius: radius)),
           );
         }
         return;
@@ -479,8 +512,8 @@ class DragonPainter extends CustomPainter {
       canvas.save();
       canvas.translate(c.dx, c.dy);
       canvas.rotate(rand.nextDouble() * math.pi);
-      canvas.drawOval(
-          Rect.fromCenter(center: Offset.zero, width: w, height: h), specklePaint);
+      canvas.drawOval(Rect.fromCenter(center: Offset.zero, width: w, height: h),
+          specklePaint);
       canvas.restore();
     }
 
@@ -498,8 +531,16 @@ class DragonPainter extends CustomPainter {
         ..lineTo(44, 66)
         ..lineTo(51, 80);
       canvas.drawPath(mainCrack, crackPaint);
-      canvas.drawPath(Path()..moveTo(45, 34)..lineTo(55, 32), crackPaint);
-      canvas.drawPath(Path()..moveTo(50, 56)..lineTo(59, 52), crackPaint);
+      canvas.drawPath(
+          Path()
+            ..moveTo(45, 34)
+            ..lineTo(55, 32),
+          crackPaint);
+      canvas.drawPath(
+          Path()
+            ..moveTo(50, 56)
+            ..lineTo(59, 52),
+          crackPaint);
       // the light leaking through the cracks pulses, like something inside
       // is stirring.
       final glowPulse = 0.7 + 0.3 * math.sin(t * 2 * math.pi * 1.5);
@@ -546,7 +587,8 @@ class DragonPainter extends CustomPainter {
         ..close(),
       Paint()..color = Color.lerp(traits.bodyColor, Colors.black, 0.2)!,
     );
-    final spike = Paint()..color = Color.lerp(traits.hornColor, traits.bodyColor, 0.3)!;
+    final spike = Paint()
+      ..color = Color.lerp(traits.hornColor, traits.bodyColor, 0.3)!;
     for (final c in const [Offset(78, 80), Offset(86, 72)]) {
       canvas.drawPath(
         Path()
@@ -599,7 +641,8 @@ class DragonPainter extends CustomPainter {
     canvas.drawPath(path, _shaded(traits.bodyColor, path.getBounds()));
     canvas.drawPath(path, _ink);
 
-    final bellyRect = Rect.fromCenter(center: const Offset(50, 76), width: 27, height: 30);
+    final bellyRect =
+        Rect.fromCenter(center: const Offset(50, 76), width: 27, height: 30);
     canvas.drawOval(bellyRect, _shaded(traits.bellyColor, bellyRect));
     canvas.drawOval(
       bellyRect,
@@ -613,10 +656,18 @@ class DragonPainter extends CustomPainter {
       ..color = Colors.black.withOpacity(0.12)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 0.8;
-    canvas.drawArc(Rect.fromCenter(center: const Offset(50, 68), width: 20, height: 12),
-        math.pi * 1.05, math.pi * 0.9, false, plate);
-    canvas.drawArc(Rect.fromCenter(center: const Offset(50, 80), width: 24, height: 14),
-        math.pi * 1.05, math.pi * 0.9, false, plate);
+    canvas.drawArc(
+        Rect.fromCenter(center: const Offset(50, 68), width: 20, height: 12),
+        math.pi * 1.05,
+        math.pi * 0.9,
+        false,
+        plate);
+    canvas.drawArc(
+        Rect.fromCenter(center: const Offset(50, 80), width: 24, height: 14),
+        math.pi * 1.05,
+        math.pi * 0.9,
+        false,
+        plate);
   }
 
   void _paintArms(Canvas canvas) {
@@ -697,10 +748,11 @@ class DragonPainter extends CustomPainter {
     canvas.drawPath(headPath, _shaded(traits.bodyColor, headPath.getBounds()));
     canvas.drawPath(headPath, _ink);
 
-    final ridgeColor = Color.lerp(traits.bodyColor, Colors.black, 0.22)!.withOpacity(0.5);
+    final ridgeColor =
+        Color.lerp(traits.bodyColor, Colors.black, 0.22)!.withOpacity(0.5);
     for (final c in const [Offset(38, 13), Offset(50, 10), Offset(62, 13)]) {
-      canvas.drawOval(
-          Rect.fromCenter(center: c, width: 7, height: 5), Paint()..color = ridgeColor);
+      canvas.drawOval(Rect.fromCenter(center: c, width: 7, height: 5),
+          Paint()..color = ridgeColor);
     }
 
     final scaleStroke = Paint()
@@ -715,11 +767,12 @@ class DragonPainter extends CustomPainter {
       Offset(66, 50),
       Offset(74, 42),
     ]) {
-      canvas.drawArc(Rect.fromCenter(center: c, width: 10, height: 8), math.pi * 1.1,
-          math.pi * 0.8, false, scaleStroke);
+      canvas.drawArc(Rect.fromCenter(center: c, width: 10, height: 8),
+          math.pi * 1.1, math.pi * 0.8, false, scaleStroke);
     }
 
-    final earPaint = _shaded(traits.bodyColor, const Rect.fromLTWH(76, 6, 14, 26));
+    final earPaint =
+        _shaded(traits.bodyColor, const Rect.fromLTWH(76, 6, 14, 26));
     final earPath = Path()
       ..moveTo(76, 24)
       ..lineTo(90, 4)
@@ -734,7 +787,8 @@ class DragonPainter extends CustomPainter {
     canvas.drawPath(earPath, _ink);
     canvas.restore();
 
-    final snoutRect = Rect.fromCenter(center: const Offset(50, 56), width: 28, height: 20);
+    final snoutRect =
+        Rect.fromCenter(center: const Offset(50, 56), width: 28, height: 20);
     canvas.drawOval(snoutRect, _shaded(traits.bellyColor, snoutRect));
     canvas.drawOval(snoutRect, _ink);
 
@@ -742,12 +796,20 @@ class DragonPainter extends CustomPainter {
       ..color = Colors.black.withOpacity(0.15)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 0.9;
-    canvas.drawArc(Rect.fromCenter(center: const Offset(50, 52), width: 20, height: 12),
-        math.pi * 1.05, math.pi * 0.9, false, scute);
+    canvas.drawArc(
+        Rect.fromCenter(center: const Offset(50, 52), width: 20, height: 12),
+        math.pi * 1.05,
+        math.pi * 0.9,
+        false,
+        scute);
 
     final nostril = Paint()..color = Colors.black.withOpacity(0.55);
-    canvas.drawOval(Rect.fromCenter(center: const Offset(45, 54), width: 3, height: 4), nostril);
-    canvas.drawOval(Rect.fromCenter(center: const Offset(55, 54), width: 3, height: 4), nostril);
+    canvas.drawOval(
+        Rect.fromCenter(center: const Offset(45, 54), width: 3, height: 4),
+        nostril);
+    canvas.drawOval(
+        Rect.fromCenter(center: const Offset(55, 54), width: 3, height: 4),
+        nostril);
 
     canvas.drawArc(
       Rect.fromCenter(center: const Offset(50, 61), width: 19, height: 10),
@@ -760,8 +822,20 @@ class DragonPainter extends CustomPainter {
         ..strokeWidth = 1.1,
     );
     final fang = Paint()..color = Colors.white.withOpacity(0.95);
-    canvas.drawPath(Path()..moveTo(44, 65)..lineTo(45.3, 69.2)..lineTo(46.8, 65)..close(), fang);
-    canvas.drawPath(Path()..moveTo(56, 65)..lineTo(54.7, 69.2)..lineTo(53.2, 65)..close(), fang);
+    canvas.drawPath(
+        Path()
+          ..moveTo(44, 65)
+          ..lineTo(45.3, 69.2)
+          ..lineTo(46.8, 65)
+          ..close(),
+        fang);
+    canvas.drawPath(
+        Path()
+          ..moveTo(56, 65)
+          ..lineTo(54.7, 69.2)
+          ..lineTo(53.2, 65)
+          ..close(),
+        fang);
 
     // Big, glossy chibi eyes — the dominant feature of the face.
     _paintEye(canvas, const Offset(36, 38));
@@ -770,7 +844,8 @@ class DragonPainter extends CustomPainter {
 
   void _paintEye(Canvas canvas, Offset center) {
     canvas.drawArc(
-      Rect.fromCenter(center: center + const Offset(0, -11), width: 18, height: 9),
+      Rect.fromCenter(
+          center: center + const Offset(0, -11), width: 18, height: 9),
       math.pi,
       math.pi,
       false,
@@ -784,7 +859,11 @@ class DragonPainter extends CustomPainter {
     final eyeRect = Rect.fromCenter(center: center, width: 19, height: 23);
     canvas.drawOval(eyeRect, Paint()..color = Colors.white);
     canvas.drawOval(
-        eyeRect, Paint()..color = Colors.black.withOpacity(0.1)..style = PaintingStyle.stroke..strokeWidth = 0.6);
+        eyeRect,
+        Paint()
+          ..color = Colors.black.withOpacity(0.1)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 0.6);
 
     // large glossy iris, ring-shaded toward the horn/accent color.
     canvas.drawCircle(center + const Offset(0, 2), 7.4,
@@ -797,15 +876,16 @@ class DragonPainter extends CustomPainter {
         ..style = PaintingStyle.stroke
         ..strokeWidth = 0.7,
     );
-    canvas.drawCircle(
-        center + const Offset(0, 3), 4.0, Paint()..color = const Color(0xFF1A1A1A));
+    canvas.drawCircle(center + const Offset(0, 3), 4.0,
+        Paint()..color = const Color(0xFF1A1A1A));
     // two glossy highlight dots for a wet, cartoon-render sparkle.
-    canvas.drawCircle(
-        center + const Offset(-2.6, -2.0), 2.4, Paint()..color = Colors.white.withOpacity(0.95));
-    canvas.drawCircle(
-        center + const Offset(1.6, 1.6), 1.1, Paint()..color = Colors.white.withOpacity(0.7));
+    canvas.drawCircle(center + const Offset(-2.6, -2.0), 2.4,
+        Paint()..color = Colors.white.withOpacity(0.95));
+    canvas.drawCircle(center + const Offset(1.6, 1.6), 1.1,
+        Paint()..color = Colors.white.withOpacity(0.7));
     canvas.drawArc(
-      Rect.fromCenter(center: center + const Offset(0, 1), width: 19, height: 23),
+      Rect.fromCenter(
+          center: center + const Offset(0, 1), width: 19, height: 23),
       math.pi * 0.1,
       math.pi * 0.8,
       false,
@@ -890,13 +970,14 @@ class DragonPainter extends CustomPainter {
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1,
     );
-    canvas.drawCircle(const Offset(50, cy - 8), 2, Paint()..color = const Color(0xFFE23B5E));
+    canvas.drawCircle(
+        const Offset(50, cy - 8), 2, Paint()..color = const Color(0xFFE23B5E));
     canvas.drawCircle(const Offset(50 - base * 0.5, cy - 7), 1.4,
         Paint()..color = const Color(0xFF3E7BD9));
     canvas.drawCircle(const Offset(50 + base * 0.5, cy - 7), 1.4,
         Paint()..color = const Color(0xFF3E7BD9));
-    canvas.drawCircle(
-        const Offset(49.3, cy - 8.7), 0.6, Paint()..color = Colors.white.withOpacity(0.8));
+    canvas.drawCircle(const Offset(49.3, cy - 8.7), 0.6,
+        Paint()..color = Colors.white.withOpacity(0.8));
   }
 
   void _paintFlame(Canvas canvas) {
