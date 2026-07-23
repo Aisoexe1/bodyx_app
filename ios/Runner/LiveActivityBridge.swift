@@ -102,9 +102,9 @@ final class LiveActivityBridge: NSObject {
     }
 }
 
-/// Receives today's dashboard numbers from Dart and drops them into the
-/// shared App Group store, then asks WidgetKit to redraw — this is how the
-/// Home Screen "daily overview" widget gets real data despite running in a
+/// Receives today's dashboard numbers (and the pet) from Dart and drops
+/// them into the shared App Group store, then asks WidgetKit to redraw —
+/// this is how the Home Screen widgets get real data despite running in a
 /// separate process with no Flutter engine.
 final class WidgetOverviewBridge: NSObject {
     static let shared = WidgetOverviewBridge()
@@ -113,24 +113,46 @@ final class WidgetOverviewBridge: NSObject {
         let channel = FlutterMethodChannel(
             name: "bodyx/widget_overview", binaryMessenger: registrar.messenger())
         channel.setMethodCallHandler { call, result in
-            guard call.method == "save",
-                  let args = call.arguments as? [String: Any]
-            else {
+            guard let args = call.arguments as? [String: Any] else {
                 result(FlutterMethodNotImplemented)
                 return
             }
-            BodyXDailyOverviewData(
-                steps: args["steps"] as? Int ?? 0,
-                stepGoal: args["stepGoal"] as? Int ?? 10000,
-                calories: args["calories"] as? Int ?? 0,
-                calorieGoal: args["calorieGoal"] as? Int ?? 2200,
-                sleepMinutes: args["sleepMinutes"] as? Int ?? 0,
-                sleepGoalMinutes: args["sleepGoalMinutes"] as? Int ?? 480,
-                waterMl: args["waterMl"] as? Int ?? 0,
-                waterGoalMl: args["waterGoalMl"] as? Int ?? 2500
-            ).save()
-            WidgetCenter.shared.reloadAllTimelines()
-            result(nil)
+            switch call.method {
+            case "save":
+                BodyXDailyOverviewData(
+                    steps: args["steps"] as? Int ?? 0,
+                    stepGoal: args["stepGoal"] as? Int ?? 10000,
+                    calories: args["calories"] as? Int ?? 0,
+                    calorieGoal: args["calorieGoal"] as? Int ?? 2200,
+                    sleepMinutes: args["sleepMinutes"] as? Int ?? 0,
+                    sleepGoalMinutes: args["sleepGoalMinutes"] as? Int ?? 480,
+                    waterMl: args["waterMl"] as? Int ?? 0,
+                    waterGoalMl: args["waterGoalMl"] as? Int ?? 2500
+                ).save()
+                WidgetCenter.shared.reloadAllTimelines()
+                result(nil)
+
+            case "savePet":
+                // The dragon image travels as a real file in the shared App
+                // Group container rather than through UserDefaults — 15
+                // stages of custom-painted PNG data is too large to treat
+                // as a small preference value.
+                if let imageData = (args["petImagePng"] as? FlutterStandardTypedData)?.data,
+                   let imageURL = BodyXPetWidgetData.imageURL {
+                    try? imageData.write(to: imageURL, options: .atomic)
+                }
+                BodyXPetWidgetData(
+                    level: args["level"] as? Int ?? 1,
+                    stageLabel: args["stageLabel"] as? String ?? "",
+                    xpIntoLevel: args["xpIntoLevel"] as? Int ?? 0,
+                    xpGoal: args["xpGoal"] as? Int ?? 100
+                ).save()
+                WidgetCenter.shared.reloadTimelines(ofKind: "BodyXPetWidget")
+                result(nil)
+
+            default:
+                result(FlutterMethodNotImplemented)
+            }
         }
     }
 }

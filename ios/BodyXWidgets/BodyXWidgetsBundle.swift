@@ -12,6 +12,7 @@ import SwiftUI
 struct BodyXWidgetsBundle: WidgetBundle {
     var body: some Widget {
         BodyXWidgets()
+        BodyXPetWidget()
         BodyXWidgetsLiveActivity()
     }
 }

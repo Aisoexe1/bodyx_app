@@ -266,6 +266,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       unawaited(_persistence.saveTodayAwardedPetGoals(_petAwardedToday));
       _syncPetXpToServer();
       _notifyPetLevelUpIfNeeded(stageBefore);
+      _pushPetWidget();
       notifyListeners();
     }
   }
@@ -323,6 +324,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     unawaited(_persistence.savePetXp(petXp));
     _syncPetXpToServer();
     _notifyPetLevelUpIfNeeded(stageBefore);
+    _pushPetWidget();
     notifyListeners();
   }
 
@@ -489,6 +491,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     // before it ever rendered anything.
     unawaited(_restoreServerSession());
     _pushWidgetOverview();
+    _pushPetWidget();
     // Best-effort and non-blocking, like every other native sync in this
     // method — a Live Activity stop signal should never hold up the splash
     // screen while the app waits on a platform-channel round trip.
@@ -499,6 +502,21 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   /// mutation that changes what the dashboard's Daily overview card shows.
   void _pushWidgetOverview() =>
       unawaited(WidgetOverviewService.instance.push(dailyStats.last));
+
+  /// Mirrors the pet into its own Home Screen widget — call after any
+  /// mutation that changes [petXp]. `stageLabel` is pre-localized here
+  /// (rather than in the native widget, which has no Flutter l10n of its
+  /// own) so the widget reads in whatever language the app is set to.
+  void _pushPetWidget() {
+    final l10n = lookupAppLocalizations(_effectiveLocale);
+    unawaited(WidgetOverviewService.instance.pushPet(
+      petStage,
+      petLevel,
+      petStageName(l10n, petStage),
+      petXpIntoLevel,
+      100,
+    ));
+  }
 
   /// Best-effort: if a JWT is still stored, re-validate it against the
   /// server and refresh the profile/weight/measurements from there. Any
@@ -676,6 +694,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     if (serverPetXp > petXp) {
       petXp = serverPetXp;
       unawaited(_persistence.savePetXp(petXp));
+      _pushPetWidget();
     } else if (petXp > serverPetXp) {
       _syncPetXpToServer();
     }
@@ -2039,6 +2058,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       unawaited(_persistence.savePetXp(petXp));
       _syncPetXpToServer();
       _notifyPetLevelUpIfNeeded(stageBefore);
+      _pushPetWidget();
     }
     _persistAchievements();
   }

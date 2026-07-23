@@ -10,6 +10,7 @@
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
 		1978E28EA513448916D7B2AE /* BodyXTimerAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CCFFC26357463CFA7FA62AC /* BodyXTimerAttributes.swift */; };
 		1F283BABAEBEBBAE4727CC02 /* BodyXDailyOverviewData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04EFD1B60749176A83DA7F7A /* BodyXDailyOverviewData.swift */; };
+		EE40D0C17142816CCF4B1314 /* BodyXPetWidgetData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 358B0391555B0BC04E3EE0E7 /* BodyXPetWidgetData.swift */; };
 		21BE66AC300A2D630070A296 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 21BE66AB300A2D630070A296 /* WidgetKit.framework */; };
 		21BE66AE300A2D630070A296 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 21BE66AD300A2D630070A296 /* SwiftUI.framework */; };
 		21BE66BF300A2D640070A296 /* BodyXWidgetsExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 21BE66AA300A2D630070A296 /* BodyXWidgetsExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -70,6 +71,7 @@
 /* Begin PBXFileReference section */
 		00025FEE1FD2C066148CC807 /* Pods-RunnerTests.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.profile.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.profile.xcconfig"; sourceTree = "<group>"; };
 		04EFD1B60749176A83DA7F7A /* BodyXDailyOverviewData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ../BodyXWidgets/BodyXDailyOverviewData.swift; sourceTree = "<group>"; };
+		358B0391555B0BC04E3EE0E7 /* BodyXPetWidgetData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ../BodyXWidgets/BodyXPetWidgetData.swift; sourceTree = "<group>"; };
 		0EF437EC6CA67F8359E8C7E7 /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GeneratedPluginRegistrant.h; sourceTree = "<group>"; };
 		1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GeneratedPluginRegistrant.m; sourceTree = "<group>"; };
@@ -236,6 +238,7 @@
 				74858FAE1ED2DC5600515810 /* AppDelegate.swift */,
 				9CCFFC26357463CFA7FA62AC /* BodyXTimerAttributes.swift */,
 				04EFD1B60749176A83DA7F7A /* BodyXDailyOverviewData.swift */,
+				358B0391555B0BC04E3EE0E7 /* BodyXPetWidgetData.swift */,
 				7CE7F3BE152CA39F58444E9E /* LiveActivityBridge.swift */,
 				74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */,
 			);
@@ -505,6 +508,7 @@
 				74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */,
 				1978E28EA513448916D7B2AE /* BodyXTimerAttributes.swift in Sources */,
 				1F283BABAEBEBBAE4727CC02 /* BodyXDailyOverviewData.swift in Sources */,
+				EE40D0C17142816CCF4B1314 /* BodyXPetWidgetData.swift in Sources */,
 				52527D6FDE52EE6B9C223D95 /* LiveActivityBridge.swift in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
 			);
