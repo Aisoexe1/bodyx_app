@@ -6,6 +6,7 @@ from mongomock_motor import AsyncMongoMockClient
 import app.database as database_module
 from app.config import settings
 from app.main import app
+from app.rate_limit import limiter
 
 
 @pytest.fixture(autouse=True)
@@ -14,6 +15,18 @@ def _force_dev_mode_email(monkeypatch):
     developer happens to have in their local .env — force dev-mode (no real
     send, code echoed back) so forgot-password tests stay deterministic."""
     monkeypatch.setattr(settings, "brevo_api_key", None)
+
+
+@pytest.fixture(autouse=True)
+def _disable_rate_limiting():
+    """Every auth test hits the same ASGITransport test-client "IP", and
+    fixtures like registered_user call /register once per test — without
+    this, the suite would start tripping the real rate limits (see
+    app/rate_limit.py) well before getting through all the tests that
+    legitimately need a fresh account. Rate limiting itself is verified
+    separately in test_rate_limiting.py, which re-enables it for just that
+    one test."""
+    limiter.enabled = False
 
 
 @pytest_asyncio.fixture
