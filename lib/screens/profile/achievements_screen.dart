@@ -7,6 +7,7 @@ import '../../state/app_state.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/glow_card.dart';
+import '../../widgets/pet/pet_card.dart';
 
 /// Rank summary + the full 20-entry achievement catalog, grouped by family,
 /// locked entries dimmed with a progress readout, unlocked ones showing the
@@ -65,6 +66,15 @@ class AchievementsScreen extends StatelessWidget {
                   _RankSummaryCard(
                     rank: state.rank,
                     points: state.achievementPoints,
+                  ),
+                  const SizedBox(height: 16),
+                  PetCard(state: state),
+                  const SizedBox(height: 6),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: Text(l10n.achievementsPetHint,
+                        style: const TextStyle(
+                            color: AppColors.textMuted, fontSize: 11.5)),
                   ),
                   const SizedBox(height: 24),
                   for (final family in AchievementFamily.values) ...[

@@ -15,6 +15,7 @@ starlette-admin==0.14.1
 mongoengine==0.29.1
 itsdangerous==2.2.0
 python-dotenv==1.0.1
+slowapi==0.1.10
 
 # dev/test
 pytest==8.3.4

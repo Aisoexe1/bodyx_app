@@ -7,8 +7,13 @@ import '../models/achievements.dart';
 /// stable [AchievementDef.id] — same split as [statusLabel] in
 /// `health_insights_labels.dart` ([AchievementDef] itself has no
 /// [BuildContext]).
-String achievementTitle(BuildContext context, String id) {
-  final l10n = AppLocalizations.of(context)!;
+String achievementTitle(BuildContext context, String id) =>
+    achievementTitleFor(AppLocalizations.of(context)!, id);
+
+/// Same lookup as [achievementTitle], but from an already-resolved
+/// [AppLocalizations] instead of a [BuildContext] — for callers with no
+/// widget tree (e.g. `NotificationService`, `AppState`).
+String achievementTitleFor(AppLocalizations l10n, String id) {
   switch (id) {
     case 'streak_bronze':
       return l10n.achievementStreakBronzeTitle;
@@ -55,8 +60,11 @@ String achievementTitle(BuildContext context, String id) {
   }
 }
 
-String achievementDescription(BuildContext context, String id) {
-  final l10n = AppLocalizations.of(context)!;
+String achievementDescription(BuildContext context, String id) =>
+    achievementDescriptionFor(AppLocalizations.of(context)!, id);
+
+/// See [achievementTitleFor].
+String achievementDescriptionFor(AppLocalizations l10n, String id) {
   switch (id) {
     case 'streak_bronze':
       return l10n.achievementStreakBronzeDesc;

@@ -16,6 +16,19 @@ from app.admin.models import (
 )
 
 _VALID_ROLES = ("user", "admin", "superadmin")
+_ROLE_RANK = {"user": 0, "admin": 1, "superadmin": 2}
+
+
+def _assert_may_act_on_target(request: Request, target_role: str) -> None:
+    """`is_row_action_allowed` below only checks whether the *acting* admin
+    has the ban_users/delete_users permission — it never sees which row is
+    being acted on. Without this, a plain "admin" (who does have
+    ban_users/delete_users) could ban or permanently delete a superadmin
+    (or another admin) account, since nothing compared the target's role to
+    the actor's. Only a superadmin may act on an admin-or-higher account."""
+    acting_role = request.state.user.get("role")
+    if _ROLE_RANK.get(target_role, 0) >= _ROLE_RANK["admin"] and acting_role != "superadmin":
+        raise ActionFailed("Only a superadmin can act on an admin or superadmin account")
 
 
 class UserAdminView(ModelView):
@@ -30,6 +43,7 @@ class UserAdminView(ModelView):
         "height_cm",
         "weight_kg",
         "age",
+        "pet_xp",
         "created_at",
     ]
     exclude_fields_from_create = ["role"]
@@ -65,6 +79,7 @@ class UserAdminView(ModelView):
         user = AdminUserDoc.objects(id=pk).first()
         if user is None:
             raise ActionFailed("User not found")
+        _assert_may_act_on_target(request, user.role)
         user.is_banned = not user.is_banned
         user.save()
         return f"User is now {'banned' if user.is_banned else 'unbanned'}"
@@ -112,6 +127,7 @@ class UserAdminView(ModelView):
         user = AdminUserDoc.objects(id=pk).first()
         if user is None:
             raise ActionFailed("User not found")
+        _assert_may_act_on_target(request, user.role)
         AdminWeightEntryDoc.objects(user_id=user.id).delete()
         AdminMeasurementDoc.objects(user_id=user.id).delete()
         user.delete()

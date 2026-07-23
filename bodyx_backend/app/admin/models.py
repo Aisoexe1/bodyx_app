@@ -23,6 +23,7 @@ class AdminUserDoc(me.Document):
     activity_level = me.StringField()
     units_metric = me.BooleanField(default=True)
     avatar_seed = me.IntField(default=0)
+    pet_xp = me.IntField(default=0)
     role = me.StringField(choices=["user", "admin", "superadmin"], default="user")
     is_banned = me.BooleanField(default=False)
     auth_provider = me.StringField(choices=["local", "google", "apple"], default="local")

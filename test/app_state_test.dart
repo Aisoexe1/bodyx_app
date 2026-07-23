@@ -674,6 +674,256 @@ void main() {
     });
   });
 
+  group('pet', () {
+    test('starts as an egg at level 1 with no XP', () async {
+      final state = newTestAppState();
+      await state.hydrate();
+
+      expect(state.petXp, 0);
+      expect(state.petLevel, 1);
+      expect(state.petStage, PetStage.ancientEgg);
+    });
+
+    test('hitting the water goal awards XP exactly once', () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      await state.signIn('pet-water@bodyx.app', 'pw');
+
+      final goalMl = state.dailyStats.last.waterGoalMl;
+      state.logWater(goalMl);
+
+      // 10 for the daily goal, +10 more from unlocking 'hydration_bronze'
+      // (this account's very first water goal ever) — achievements and the
+      // pet share one XP pool, see _checkAchievements.
+      expect(state.petXp, 20);
+      expect(state.isPetGoalAwardedToday('water'), true);
+      expect(state.unlockedAchievementIds, contains('hydration_bronze'));
+
+      // Logging more water after the goal is already met must not re-award.
+      state.logWater(100);
+      expect(state.petXp, 20);
+    });
+
+    test('finishing today\'s workout awards workout XP', () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      await state.signIn('pet-workout@bodyx.app', 'pw');
+
+      state.addExercise('Bench Press', 2, 8);
+      expect(state.todayPetGoals['workout'], false);
+
+      state.toggleWorkoutSet(0);
+      expect(state.petXp, 0, reason: 'only half the sets are done so far');
+
+      state.toggleWorkoutSet(1);
+      expect(state.todayPetGoals['workout'], true);
+      // 15 for the daily goal, +10 more from unlocking 'workout_bronze'
+      // (this account's first ever completed workout).
+      expect(state.petXp, 25);
+      expect(state.unlockedAchievementIds, contains('workout_bronze'));
+    });
+
+    test('a perfect day (every present goal met) adds a bonus on top',
+        () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      await state.signIn('pet-perfect@bodyx.app', 'pw');
+
+      // No workout/mobility logged today, so only water/steps/sleep count
+      // toward "every present goal" — hit them all via the water goal plus
+      // directly bumping today's stats for steps/sleep.
+      final today = state.dailyStats.last;
+      state.dailyStats[state.dailyStats.length - 1] = DailyStats(
+        date: today.date,
+        steps: today.stepGoal,
+        stepGoal: today.stepGoal,
+        calories: today.calories,
+        calorieGoal: today.calorieGoal,
+        sleepMinutes: today.sleepGoalMinutes,
+        sleepGoalMinutes: today.sleepGoalMinutes,
+        waterMl: today.waterMl,
+        waterGoalMl: today.waterGoalMl,
+        lightSleepMinutes: today.lightSleepMinutes,
+        deepSleepMinutes: today.deepSleepMinutes,
+        remSleepMinutes: today.remSleepMinutes,
+        awakeMinutes: today.awakeMinutes,
+      );
+      state.logWater(today.waterGoalMl);
+
+      // water(10) + steps(10) + sleep(10) + perfect-day bonus(25) + this
+      // account's first-ever 'hydration_bronze' unlock (10) paid into the
+      // same pet XP pool.
+      expect(state.petXp, 65);
+    });
+
+    test('level and stage derive from accumulated XP', () async {
+      // Tests the level/stage formula directly (goals only pay out once per
+      // day each, so driving level-2+ through real goal completion would
+      // need simulating several real calendar days). One stage per level,
+      // capped at PetStage.legendaryDragon (index 14, level 15+).
+      final state = newTestAppState();
+      await state.hydrate();
+
+      state.petXp = 45;
+      expect(state.petLevel, 1);
+      expect(state.petStage, PetStage.ancientEgg);
+
+      state.petXp = 250;
+      expect(state.petLevel, 3);
+      expect(state.petStage, PetStage.babyDragon);
+
+      state.petXp = 550;
+      expect(state.petLevel, 6);
+      expect(state.petStage, PetStage.youngDragon);
+
+      state.petXp = 1100;
+      expect(state.petLevel, 12);
+      expect(state.petStage, PetStage.starDragon);
+
+      state.petXp = 1400;
+      expect(state.petLevel, 15);
+      expect(state.petStage, PetStage.legendaryDragon);
+
+      // Stage caps at legendary — it doesn't run off the end of the enum.
+      state.petXp = 5000;
+      expect(state.petLevel, 51);
+      expect(state.petStage, PetStage.legendaryDragon);
+    });
+
+    test('pet XP and today\'s awarded goals survive a restart', () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      // rememberMe: true — unlockedAchievementIds only rehydrates once
+      // onboardingDone is set (see hydrate()'s _hasSession gate); petXp
+      // itself loads unconditionally either way.
+      await state.signIn('pet-restart@bodyx.app', 'pw', rememberMe: true);
+
+      state.logWater(state.dailyStats.last.waterGoalMl);
+      // 10 for the goal + 10 from this account's first-ever
+      // 'hydration_bronze' unlock.
+      expect(state.petXp, 20);
+
+      final restarted = newTestAppState();
+      await restarted.hydrate();
+
+      expect(restarted.petXp, 20);
+      expect(restarted.isPetGoalAwardedToday('water'), true);
+      expect(restarted.unlockedAchievementIds, contains('hydration_bronze'));
+
+      // Re-logging water on the "same day" must not re-award the XP.
+      restarted.logWater(50);
+      expect(restarted.petXp, 20);
+    });
+
+    test('adminBoostPet grants a level with no goals for an admin account',
+        () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      await state.signIn('pet-admin@bodyx.app', 'pw');
+      state.user!.role = 'admin';
+
+      expect(state.isAdminAccount, true);
+      expect(state.todayPetGoals.values.any((met) => met), false,
+          reason: 'no goals were actually completed');
+
+      state.adminBoostPet();
+      expect(state.petXp, 100);
+      expect(state.petLevel, 2);
+
+      state.adminBoostPet();
+      expect(state.petXp, 200);
+    });
+
+    test('adminBoostPet is a no-op for a regular account', () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      await state.signIn('pet-regular@bodyx.app', 'pw');
+
+      expect(state.isAdminAccount, false);
+
+      state.adminBoostPet();
+      expect(state.petXp, 0);
+    });
+
+    test('superadmin also counts as an admin account', () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      await state.signIn('pet-superadmin@bodyx.app', 'pw');
+      state.user!.role = 'superadmin';
+
+      expect(state.isAdminAccount, true);
+    });
+
+    test('unlocking an achievement pays its rank points into pet XP too',
+        () async {
+      final state = newTestAppState();
+      await state.hydrate();
+      await state.signIn('pet-achievements@bodyx.app', 'pw');
+
+      expect(state.petXp, 0);
+      expect(state.unlockedAchievementIds, isEmpty);
+
+      // Logging the first meal ever unlocks 'nutrition_bronze' (threshold
+      // 1, worth 10 rank points) — that same 10 should land in petXp.
+      state.logMeal(const MealEntry(
+        name: 'Chicken bowl',
+        time: '12:30',
+        kcal: 600,
+        proteinG: 45,
+        carbsG: 50,
+        fatG: 15,
+        icon: Icons.lunch_dining_rounded,
+      ));
+
+      expect(state.unlockedAchievementIds, contains('nutrition_bronze'));
+      expect(state.petXp, 10);
+
+      // A second meal doesn't unlock anything new (next tier needs 25) —
+      // no further pet XP from achievements this time.
+      state.logMeal(const MealEntry(
+        name: 'Oatmeal',
+        time: '08:00',
+        kcal: 300,
+        proteinG: 10,
+        carbsG: 50,
+        fatG: 5,
+        icon: Icons.breakfast_dining_rounded,
+      ));
+      expect(state.petXp, 10);
+    });
+
+    test('signing in adopts the server\'s pet XP when it is higher',
+        () async {
+      final authRepo = FakeAuthRepository()..nextLoginPetXp = 200;
+      final state = newTestAppState(authRepository: authRepo);
+      await state.hydrate();
+      // As if this device had already played a bit offline before ever
+      // signing in.
+      state.petXp = 50;
+
+      await state.signIn('pet-sync-a@bodyx.app', 'pw');
+
+      expect(state.petXp, 200);
+    });
+
+    test(
+        'signing in pushes this device\'s higher pet XP up to the server '
+        'instead of regressing', () async {
+      final authRepo = FakeAuthRepository()..nextLoginPetXp = 10;
+      final profileRepo = FakeProfileRepository();
+      final state = newTestAppState(
+          authRepository: authRepo, profileRepository: profileRepo);
+      await state.hydrate();
+      // This device is way ahead of whatever the server last saw.
+      state.petXp = 300;
+
+      await state.signIn('pet-sync-b@bodyx.app', 'pw');
+
+      expect(state.petXp, 300, reason: 'must never regress toward the server');
+      expect(profileRepo.updateCalls.any((u) => u['petXp'] == 300), true);
+    });
+  });
+
   group('progress photos', () {
     test('addProgressPhoto prepends, keeps newest-first order, and persists',
         () async {
@@ -966,6 +1216,8 @@ void main() {
         goal: 'Improve endurance',
         activityLevel: 'Very active',
         unitsMetric: false,
+        role: 'admin',
+        petXp: 340,
       );
 
       final restored = UserProfile.fromJson(user.toJson());
@@ -979,6 +1231,8 @@ void main() {
       expect(restored.goal, user.goal);
       expect(restored.activityLevel, user.activityLevel);
       expect(restored.unitsMetric, user.unitsMetric);
+      expect(restored.role, user.role);
+      expect(restored.petXp, user.petXp);
     });
 
     test('BodyMeasurement.deltaFromFirst is 0 for empty history', () {

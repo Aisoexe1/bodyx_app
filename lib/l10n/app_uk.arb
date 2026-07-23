@@ -717,6 +717,22 @@
   "notificationWorkoutReminderBody": "Перегляньте план і починайте — у вас все вийде.",
   "notificationHydrationReminderTitle": "Перевірка гідратації",
   "notificationHydrationReminderBody": "Ви вже виконали норму води на сьогодні?",
+  "notificationAchievementUnlockedTitle": "Досягнення розблоковано 🏆",
+  "notificationAchievementUnlockedBody": "{title} — {description}",
+  "@notificationAchievementUnlockedBody": {
+    "placeholders": {
+      "title": {},
+      "description": {}
+    }
+  },
+  "notificationPetLevelUpTitle": "Ваш дракон підвищив рівень! 🐲",
+  "notificationPetLevelUpBody": "Тепер це {stage} — {description}",
+  "@notificationPetLevelUpBody": {
+    "placeholders": {
+      "stage": {},
+      "description": {}
+    }
+  },
   "mobilityChecklistAddAnotherActivity": "+ Додати ще активність",
   "mobilityChecklistCompleteBanner": "Мобільність виконана 🧘",
   "mobilityChecklistEmptyTitle": "Активностей з мобільності ще немає",
@@ -753,6 +769,59 @@
       "minutes": {}
     }
   },
+  "petCardTitle": "Улюбленець",
+  "petLevelShort": "Рів. {level}",
+  "@petLevelShort": {
+    "placeholders": {
+      "level": {}
+    }
+  },
+  "petXpProgress": "{xp} / 100 XP",
+  "@petXpProgress": {
+    "placeholders": {
+      "xp": {}
+    }
+  },
+  "petScreenTitle": "Ваш улюбленець",
+  "petTodayGoalsTitle": "Сьогоднішні цілі",
+  "petStageAncientEggName": "Стародавнє яйце",
+  "petStageAncientEggDesc": "Ви тільки починаєте шлях.",
+  "petStageCrackedEggName": "Тріснуте яйце",
+  "petStageCrackedEggDesc": "Видно перші тріщини.",
+  "petStageBabyDragonName": "Дракончик",
+  "petStageBabyDragonDesc": "Маленький, ще не вміє літати.",
+  "petStageCuriousDragonName": "Допитливий дракон",
+  "petStageCuriousDragonDesc": "Починає досліджувати світ.",
+  "petStageFireBreathingHatchlingName": "Вогнедишне малятко",
+  "petStageFireBreathingHatchlingDesc": "Вчиться випускати маленькі язики полум'я.",
+  "petStageYoungDragonName": "Юний дракон",
+  "petStageYoungDragonDesc": "Виростають перші великі крила.",
+  "petStageWarriorDragonName": "Дракон-воїн",
+  "petStageWarriorDragonDesc": "З'являються невеликі роги та броня.",
+  "petStageTemperedDragonName": "Загартований дракон",
+  "petStageTemperedDragonDesc": "Луска стає міцнішою.",
+  "petStageMagmaDragonName": "Магмовий дракон",
+  "petStageMagmaDragonDesc": "Від тіла йде жар.",
+  "petStageStormDragonName": "Грозовий дракон",
+  "petStageStormDragonDesc": "Навколо з'являються блискавки.",
+  "petStageCrystalDragonName": "Кристалевий дракон",
+  "petStageCrystalDragonDesc": "Луска починає світитися.",
+  "petStageStarDragonName": "Зоряний дракон",
+  "petStageStarDragonDesc": "Крила немов нічне небо.",
+  "petStageRoyalDragonName": "Королівський дракон",
+  "petStageRoyalDragonDesc": "Золоті роги, корона, величний вигляд.",
+  "petStageAncientDragonName": "Стародавній дракон",
+  "petStageAncientDragonDesc": "Величезний, мудрий, вік — тисяча років.",
+  "petStageLegendaryDragonName": "Легендарний дракон",
+  "petStageLegendaryDragonDesc": "Максимальна форма.",
+  "petGoalWater": "Виконати ціль по воді",
+  "petGoalSteps": "Виконати ціль по крокам",
+  "petGoalSleep": "Виконати ціль по сну",
+  "petGoalWorkout": "Завершити сьогоднішнє тренування",
+  "petGoalMobility": "Завершити сьогоднішню розтяжку",
+  "petNoGoalsYet": "Залогуйте щось сьогодні, щоб почати отримувати досвід",
+  "petAdminSectionTitle": "Інструменти адміністратора",
+  "petAdminBoostButton": "Прокачати улюбленця (+1 рівень, без цілей)",
   "rankBronze": "Бронза",
   "rankSilver": "Срібло",
   "rankGold": "Золото",
@@ -833,6 +902,7 @@
   "achievementsFamilyMobility": "Розтяжка",
   "achievementsFamilyHydration": "Гідратація",
   "achievementsFamilyNutrition": "Харчування",
+  "achievementsPetHint": "Розблоковані досягнення теж прокачують улюбленця — спільний пул досвіду.",
   "injuryPartHead": "Голова",
   "injuryPartNeck": "Шия",
   "injuryPartChest": "Груди",

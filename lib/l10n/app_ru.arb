@@ -717,6 +717,22 @@
   "notificationWorkoutReminderBody": "Загляните в план и приступайте — у вас всё получится.",
   "notificationHydrationReminderTitle": "Проверка гидратации",
   "notificationHydrationReminderBody": "Вы уже выполнили норму воды на сегодня?",
+  "notificationAchievementUnlockedTitle": "Достижение разблокировано 🏆",
+  "notificationAchievementUnlockedBody": "{title} — {description}",
+  "@notificationAchievementUnlockedBody": {
+    "placeholders": {
+      "title": {},
+      "description": {}
+    }
+  },
+  "notificationPetLevelUpTitle": "Ваш дракон повысил уровень! 🐲",
+  "notificationPetLevelUpBody": "Теперь это {stage} — {description}",
+  "@notificationPetLevelUpBody": {
+    "placeholders": {
+      "stage": {},
+      "description": {}
+    }
+  },
   "mobilityChecklistAddAnotherActivity": "+ Добавить ещё активность",
   "mobilityChecklistCompleteBanner": "Мобильность выполнена 🧘",
   "mobilityChecklistEmptyTitle": "Активностей по мобильности пока нет",
@@ -753,6 +769,59 @@
       "minutes": {}
     }
   },
+  "petCardTitle": "Питомец",
+  "petLevelShort": "Ур. {level}",
+  "@petLevelShort": {
+    "placeholders": {
+      "level": {}
+    }
+  },
+  "petXpProgress": "{xp} / 100 XP",
+  "@petXpProgress": {
+    "placeholders": {
+      "xp": {}
+    }
+  },
+  "petScreenTitle": "Ваш питомец",
+  "petTodayGoalsTitle": "Сегодняшние цели",
+  "petStageAncientEggName": "Древнее яйцо",
+  "petStageAncientEggDesc": "Пользователь только начинает путь.",
+  "petStageCrackedEggName": "Треснувшее яйцо",
+  "petStageCrackedEggDesc": "Видны первые трещины.",
+  "petStageBabyDragonName": "Дракончик",
+  "petStageBabyDragonDesc": "Маленький, не умеет летать.",
+  "petStageCuriousDragonName": "Любопытный дракон",
+  "petStageCuriousDragonDesc": "Начинает исследовать мир.",
+  "petStageFireBreathingHatchlingName": "Огнедышащий малыш",
+  "petStageFireBreathingHatchlingDesc": "Учится выпускать маленькие языки пламени.",
+  "petStageYoungDragonName": "Юный дракон",
+  "petStageYoungDragonDesc": "Вырастают первые большие крылья.",
+  "petStageWarriorDragonName": "Воин-дракон",
+  "petStageWarriorDragonDesc": "Появляются небольшие рога и броня.",
+  "petStageTemperedDragonName": "Закалённый дракон",
+  "petStageTemperedDragonDesc": "Чешуя становится прочнее.",
+  "petStageMagmaDragonName": "Магмовый дракон",
+  "petStageMagmaDragonDesc": "От тела исходит жар.",
+  "petStageStormDragonName": "Грозовой дракон",
+  "petStageStormDragonDesc": "Вокруг появляются молнии.",
+  "petStageCrystalDragonName": "Кристальный дракон",
+  "petStageCrystalDragonDesc": "Чешуя начинает светиться.",
+  "petStageStarDragonName": "Звёздный дракон",
+  "petStageStarDragonDesc": "Крылья словно ночное небо.",
+  "petStageRoyalDragonName": "Королевский дракон",
+  "petStageRoyalDragonDesc": "Золотые рога, корона, величественный вид.",
+  "petStageAncientDragonName": "Древний дракон",
+  "petStageAncientDragonDesc": "Огромный, мудрый, возраст тысячи лет.",
+  "petStageLegendaryDragonName": "Легендарный дракон",
+  "petStageLegendaryDragonDesc": "Максимальная форма.",
+  "petGoalWater": "Выполнить цель по воде",
+  "petGoalSteps": "Выполнить цель по шагам",
+  "petGoalSleep": "Выполнить цель по сну",
+  "petGoalWorkout": "Закончить сегодняшнюю тренировку",
+  "petGoalMobility": "Закончить сегодняшнюю растяжку",
+  "petNoGoalsYet": "Залогируйте что-нибудь сегодня, чтобы начать получать опыт",
+  "petAdminSectionTitle": "Инструменты администратора",
+  "petAdminBoostButton": "Прокачать питомца (+1 уровень, без целей)",
   "rankBronze": "Бронза",
   "rankSilver": "Серебро",
   "rankGold": "Золото",
@@ -833,6 +902,7 @@
   "achievementsFamilyMobility": "Растяжка",
   "achievementsFamilyHydration": "Гидратация",
   "achievementsFamilyNutrition": "Питание",
+  "achievementsPetHint": "Разблокированные достижения тоже прокачивают питомца — общий пул опыта.",
   "injuryPartHead": "Голова",
   "injuryPartNeck": "Шея",
   "injuryPartChest": "Грудь",

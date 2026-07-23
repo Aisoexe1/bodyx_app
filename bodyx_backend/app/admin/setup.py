@@ -42,7 +42,29 @@ def build_admin() -> Admin:
     admin = Admin(
         title="BodyX Admin",
         auth_provider=AdminAuthProvider(),
-        middlewares=[Middleware(SessionMiddleware, secret_key=settings.session_secret)],
+        middlewares=[
+            Middleware(
+                SessionMiddleware,
+                secret_key=settings.session_secret,
+                # Starlette's defaults (https_only=False, same_site="lax")
+                # would let this session cookie — the sole credential
+                # gating ban/delete/role-change — ride over a plain HTTP
+                # connection and be attached to more cross-site contexts
+                # than this admin-only, same-origin cookie needs. Browsers
+                # treat 127.0.0.1/localhost as a secure context, so
+                # https_only=True doesn't break local dev over plain http.
+                https_only=True,
+                same_site="strict",
+                # There's no server-side session store logout can actually
+                # delete from (request.session.clear() only erases the
+                # browser's own copy) — Starlette's 14-day default max_age
+                # would let a copied/leaked cookie outlive that for two
+                # weeks regardless. A shorter TTL isn't real revocation,
+                # but it bounds the same class of exposure the JWT
+                # token_version fix (app/security.py) closes properly.
+                max_age=60 * 60 * 12,
+            )
+        ],
         templates_dir=_TEMPLATES_DIR,
         index_view=AnalyticsDashboard(),
     )

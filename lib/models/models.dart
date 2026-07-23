@@ -55,6 +55,8 @@ class UserProfile {
     this.activityLevel = 'Moderately active',
     this.unitsMetric = true,
     this.avatarSeed = 0,
+    this.role = 'user',
+    this.petXp = 0,
   });
 
   final String email;
@@ -67,6 +69,18 @@ class UserProfile {
   String activityLevel;
   bool unitsMetric;
   int avatarSeed;
+
+  /// Backend account role — `"user"`, `"admin"`, or `"superadmin"`. The same
+  /// role that gates the Starlette-Admin panel; on the app side it's only
+  /// used for admin-only affordances like [AppState.isAdminAccount].
+  String role;
+
+  /// The server's last-known copy of [AppState.petXp] — carried through
+  /// login/session-restore purely so [AppState] can reconcile it against
+  /// its own live value (whichever is higher wins, see
+  /// [AppState._reconcilePetXp]). Not the source of truth on its own; once
+  /// reconciled, the app reads/writes [AppState.petXp] exclusively.
+  int petXp;
 
   double get bmi => weightKg / ((heightCm / 100) * (heightCm / 100));
 
@@ -81,6 +95,8 @@ class UserProfile {
         'activityLevel': activityLevel,
         'unitsMetric': unitsMetric,
         'avatarSeed': avatarSeed,
+        'role': role,
+        'petXp': petXp,
       };
 
   factory UserProfile.fromJson(Map<String, dynamic> json) => UserProfile(
@@ -94,6 +110,8 @@ class UserProfile {
         activityLevel: json['activityLevel'] as String,
         unitsMetric: json['unitsMetric'] as bool,
         avatarSeed: json['avatarSeed'] as int,
+        role: json['role'] as String? ?? 'user',
+        petXp: json['petXp'] as int? ?? 0,
       );
 }
 
@@ -496,6 +514,29 @@ class Announcement {
         message: json['message'] as String,
         createdAt: DateTime.parse(json['createdAt'] as String),
       );
+}
+
+/// Growth stage of the pet — a purely visual milestone derived from
+/// [AppState.petLevel], not stored on its own. One stage per level, capped at
+/// [PetStage.legendaryDragon] — see [kDragonTraits] in `dragon_avatar.dart`
+/// for how each stage is actually drawn (a custom-painted dragon, not a
+/// sticker/emoji).
+enum PetStage {
+  ancientEgg,
+  crackedEgg,
+  babyDragon,
+  curiousDragon,
+  fireBreathingHatchling,
+  youngDragon,
+  warriorDragon,
+  temperedDragon,
+  magmaDragon,
+  stormDragon,
+  crystalDragon,
+  starDragon,
+  royalDragon,
+  ancientDragon,
+  legendaryDragon,
 }
 
 /// Lifetime achievement/rank progress — a single persisted blob (like

@@ -16,6 +16,7 @@ class NotificationService {
   static const _workoutReminderId = 1001;
   static const _hydrationReminderId = 1002;
   static const _activityDoneId = 1003;
+  static const _petLevelUpId = 1004;
 
   final _plugin = FlutterLocalNotificationsPlugin();
   bool _initialized = false;
@@ -133,7 +134,27 @@ class NotificationService {
   /// countdown finishes, so the "done" moment is audible even with the
   /// phone locked or the app in the background.
   Future<void> showActivityCompleted(
-      Locale locale, String title, String body) async {
+          Locale locale, String title, String body) =>
+      _showCelebratory(locale, _activityDoneId, title, body);
+
+  /// Fires immediately with sound — an achievement newly unlocked. Each
+  /// achievement gets its own stable [id] (derived from its catalog id) so
+  /// two unlocking in the same check don't clobber each other's banner.
+  Future<void> showAchievementUnlocked(
+          Locale locale, String title, String body,
+          {required int id}) =>
+      _showCelebratory(locale, id, title, body);
+
+  /// Fires immediately with sound — the pet crossed into a new [PetStage].
+  Future<void> showPetLevelUp(Locale locale, String title, String body) =>
+      _showCelebratory(locale, _petLevelUpId, title, body);
+
+  /// Shared by every "something just happened, tell the user even if
+  /// they're not looking at the app" notification (activity timers,
+  /// achievement unlocks, pet level-ups) — same channel/importance/sound
+  /// setup, just a different id + content per call site.
+  Future<void> _showCelebratory(
+      Locale locale, int id, String title, String body) async {
     await init();
     // Best-effort: if permission (incl. sound) was never granted — the user
     // never touched a Notifications toggle — request it now rather than
@@ -141,11 +162,11 @@ class NotificationService {
     try {
       await requestPermission();
     } catch (e) {
-      debugPrint('Activity-completed permission request failed: $e');
+      debugPrint('Celebratory-notification permission request failed: $e');
     }
     final l10n = lookupAppLocalizations(locale);
     await _plugin.show(
-      _activityDoneId,
+      id,
       title,
       body,
       NotificationDetails(

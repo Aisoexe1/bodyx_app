@@ -717,6 +717,22 @@
   "notificationWorkoutReminderBody": "Check your plan and get moving — you've got this.",
   "notificationHydrationReminderTitle": "Hydration check",
   "notificationHydrationReminderBody": "Have you hit your water goal today?",
+  "notificationAchievementUnlockedTitle": "Achievement unlocked 🏆",
+  "notificationAchievementUnlockedBody": "{title} — {description}",
+  "@notificationAchievementUnlockedBody": {
+    "placeholders": {
+      "title": {},
+      "description": {}
+    }
+  },
+  "notificationPetLevelUpTitle": "Your dragon leveled up! 🐲",
+  "notificationPetLevelUpBody": "Now a {stage} — {description}",
+  "@notificationPetLevelUpBody": {
+    "placeholders": {
+      "stage": {},
+      "description": {}
+    }
+  },
   "mobilityChecklistAddAnotherActivity": "+ Add another activity",
   "mobilityChecklistCompleteBanner": "Mobility complete 🧘",
   "mobilityChecklistEmptyTitle": "No mobility activities yet",
@@ -753,6 +769,59 @@
       "minutes": {}
     }
   },
+  "petCardTitle": "Your pet",
+  "petLevelShort": "Lv. {level}",
+  "@petLevelShort": {
+    "placeholders": {
+      "level": {}
+    }
+  },
+  "petXpProgress": "{xp} / 100 XP",
+  "@petXpProgress": {
+    "placeholders": {
+      "xp": {}
+    }
+  },
+  "petScreenTitle": "Your pet",
+  "petTodayGoalsTitle": "Today's goals",
+  "petStageAncientEggName": "Ancient Egg",
+  "petStageAncientEggDesc": "You're just beginning the journey.",
+  "petStageCrackedEggName": "Cracked Egg",
+  "petStageCrackedEggDesc": "The first cracks are showing.",
+  "petStageBabyDragonName": "Baby Dragon",
+  "petStageBabyDragonDesc": "Small, and can't fly yet.",
+  "petStageCuriousDragonName": "Curious Dragon",
+  "petStageCuriousDragonDesc": "Starting to explore the world.",
+  "petStageFireBreathingHatchlingName": "Fire-Breathing Hatchling",
+  "petStageFireBreathingHatchlingDesc": "Learning to breathe tiny flames.",
+  "petStageYoungDragonName": "Young Dragon",
+  "petStageYoungDragonDesc": "Its first big wings are growing in.",
+  "petStageWarriorDragonName": "Warrior Dragon",
+  "petStageWarriorDragonDesc": "Small horns and armor appear.",
+  "petStageTemperedDragonName": "Tempered Dragon",
+  "petStageTemperedDragonDesc": "Its scales are toughening up.",
+  "petStageMagmaDragonName": "Magma Dragon",
+  "petStageMagmaDragonDesc": "Heat radiates from its body.",
+  "petStageStormDragonName": "Storm Dragon",
+  "petStageStormDragonDesc": "Lightning crackles around it.",
+  "petStageCrystalDragonName": "Crystal Dragon",
+  "petStageCrystalDragonDesc": "Its scales start to glow.",
+  "petStageStarDragonName": "Star Dragon",
+  "petStageStarDragonDesc": "Its wings look like the night sky.",
+  "petStageRoyalDragonName": "Royal Dragon",
+  "petStageRoyalDragonDesc": "Golden horns, a crown, a majestic look.",
+  "petStageAncientDragonName": "Ancient Dragon",
+  "petStageAncientDragonDesc": "Huge, wise, a thousand years old.",
+  "petStageLegendaryDragonName": "Legendary Dragon",
+  "petStageLegendaryDragonDesc": "Maximum form.",
+  "petGoalWater": "Hit your water goal",
+  "petGoalSteps": "Hit your step goal",
+  "petGoalSleep": "Hit your sleep goal",
+  "petGoalWorkout": "Finish today's workout",
+  "petGoalMobility": "Finish today's mobility",
+  "petNoGoalsYet": "Log something today to start earning XP",
+  "petAdminSectionTitle": "Admin tools",
+  "petAdminBoostButton": "Boost pet (+1 level, no goals required)",
   "rankBronze": "Bronze",
   "rankSilver": "Silver",
   "rankGold": "Gold",
@@ -833,6 +902,7 @@
   "achievementsFamilyMobility": "Mobility",
   "achievementsFamilyHydration": "Hydration",
   "achievementsFamilyNutrition": "Nutrition",
+  "achievementsPetHint": "Unlocking achievements levels up your pet too — one shared XP pool.",
   "injuryPartHead": "Head",
   "injuryPartNeck": "Neck",
   "injuryPartChest": "Chest",

@@ -98,6 +98,13 @@ class UserUpdate(CamelModel):
     activity_level: Optional[str] = None
     units_metric: Optional[bool] = None
     avatar_seed: Optional[int] = None
+    # The dragon pet's accumulated XP (see bodyx_app's AppState.petXp) — the
+    # client computes and owns this value entirely (goal completion,
+    # achievement bonuses, the admin-only boost), same trust model as
+    # weight_kg/avatar_seed. The backend just stores whatever it's told so
+    # progress survives a reinstall/new device instead of living only in
+    # SharedPreferences.
+    pet_xp: Optional[int] = Field(default=None, ge=0)
 
 
 class UserPublic(CamelModel):
@@ -114,6 +121,7 @@ class UserPublic(CamelModel):
     avatar_seed: int
     role: str
     is_banned: bool
+    pet_xp: int = 0
     created_at: datetime
     updated_at: datetime
 

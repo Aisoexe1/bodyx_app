@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../data/mock_data.dart';
 import '../l10n/gen/app_localizations.dart';
+import '../logic/achievement_labels.dart';
 import '../logic/health_insights.dart';
+import '../logic/pet_labels.dart';
 import '../models/achievements.dart';
 import '../models/injury.dart';
 import '../models/models.dart';
@@ -120,6 +122,8 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     _mobilityCountdownTimer = null;
     activeMobilityCountdownIndex = null;
     _mobilityCountdownEndsAt = null;
+    _petAwardedToday.clear();
+    unawaited(_persistence.saveTodayAwardedPetGoals(_petAwardedToday));
     unawaited(LiveActivityService.instance.end('workout'));
     unawaited(LiveActivityService.instance.end('mobility'));
     unawaited(_persistence.saveTodayWaterLog(todayWaterLog));
@@ -187,6 +191,141 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     notifyListeners();
   }
 
+  // ---- Pet (tamagotchi-style progress) --------------------------------------
+  // Grows from real goal completion, not fake activity — see the "honest
+  // empty state" philosophy at the top of this class. XP is awarded once per
+  // goal per day the first time it's met; [_petAwardedToday] tracks which
+  // goals already paid out today (day-scoped like the water log/meals) so
+  // toggling a set on and off can't be farmed for XP.
+  int petXp = 0;
+  final Set<String> _petAwardedToday = {};
+
+  static const _petXpWater = 10;
+  static const _petXpSteps = 10;
+  static const _petXpSleep = 10;
+  static const _petXpWorkout = 15;
+  static const _petXpMobility = 10;
+  static const _petXpPerfectDay = 25;
+
+  int get petLevel => 1 + petXp ~/ 100;
+  int get petXpIntoLevel => petXp % 100;
+  double get petLevelProgress => petXpIntoLevel / 100;
+
+  /// One stage per level — level 1 is the freshly laid egg, level 15+ caps
+  /// out at [PetStage.legendaryDragon].
+  PetStage get petStage =>
+      PetStage.values[(petLevel - 1).clamp(0, PetStage.values.length - 1)];
+
+  /// Which of today's goals are currently met — exposed for the pet screen's
+  /// checklist. A goal only appears once it has real content today (e.g. no
+  /// workout logged yet means there's nothing to "complete"), matching how
+  /// [todayWorkoutSets]/[todayMobilityActivities] have no fixed template.
+  Map<String, bool> get todayPetGoals {
+    final stats = dailyStats.last;
+    return {
+      'water': stats.waterProgress >= 1.0,
+      'steps': stats.stepProgress >= 1.0,
+      'sleep': stats.sleepProgress >= 1.0,
+      if (todayWorkoutSets.isNotEmpty)
+        'workout': todayWorkoutSets.every((s) => s.done),
+      if (todayMobilityActivities.isNotEmpty)
+        'mobility': todayMobilityActivities.every((a) => a.done),
+    };
+  }
+
+  bool isPetGoalAwardedToday(String key) => _petAwardedToday.contains(key);
+
+  void _evaluatePetGoals() {
+    const xpFor = {
+      'water': _petXpWater,
+      'steps': _petXpSteps,
+      'sleep': _petXpSleep,
+      'workout': _petXpWorkout,
+      'mobility': _petXpMobility,
+    };
+
+    final goalsMetNow = todayPetGoals;
+    var gained = 0;
+    goalsMetNow.forEach((key, met) {
+      if (met && !_petAwardedToday.contains(key)) {
+        _petAwardedToday.add(key);
+        gained += xpFor[key]!;
+      }
+    });
+
+    if (goalsMetNow.values.every((met) => met) &&
+        !_petAwardedToday.contains('perfect')) {
+      _petAwardedToday.add('perfect');
+      gained += _petXpPerfectDay;
+    }
+
+    if (gained > 0) {
+      final stageBefore = petStage;
+      petXp += gained;
+      unawaited(_persistence.savePetXp(petXp));
+      unawaited(_persistence.saveTodayAwardedPetGoals(_petAwardedToday));
+      _syncPetXpToServer();
+      _notifyPetLevelUpIfNeeded(stageBefore);
+      notifyListeners();
+    }
+  }
+
+  /// Best-effort local notification — mirrors [_syncHydrationReminder]'s
+  /// swallow-on-failure policy (no platform channel in tests, no OS
+  /// permission granted yet) so a notification failure never breaks real
+  /// app logic like XP/achievement bookkeeping.
+  void _notifyBestEffort(Future<void> Function() send) {
+    unawaited(() async {
+      try {
+        await send();
+      } catch (e) {
+        debugPrint('Notification failed: $e');
+      }
+    }());
+  }
+
+  /// Fires a "your dragon leveled up" notification whenever XP just added
+  /// crossed into a new [PetStage] — called after every place [petXp] can
+  /// increase (goal completion, admin boost, achievement bonus). Compares
+  /// stage rather than raw [petLevel]: past [PetStage.legendaryDragon] the
+  /// level keeps climbing but the stage is capped, so there's nothing new
+  /// to announce.
+  void _notifyPetLevelUpIfNeeded(PetStage stageBefore) {
+    if (petStage == stageBefore) return;
+    final l10n = lookupAppLocalizations(_effectiveLocale);
+    _notifyBestEffort(() => NotificationService.instance.showPetLevelUp(
+          _effectiveLocale,
+          l10n.notificationPetLevelUpTitle,
+          l10n.notificationPetLevelUpBody(
+            petStageName(l10n, petStage),
+            petStageDescription(l10n, petStage),
+          ),
+        ));
+  }
+
+  /// True for accounts with elevated backend privileges (`role` is
+  /// `"admin"`/`"superadmin"` — the same role that gates the
+  /// Starlette-Admin panel), so admin/QA accounts can be told apart from
+  /// regular users on the client.
+  bool get isAdminAccount =>
+      user?.role == 'admin' || user?.role == 'superadmin';
+
+  static const _petXpAdminBoost = 100;
+
+  /// Admin-only shortcut: grants exactly one level of XP with no goal
+  /// requirement, for poking at the pet feature without playing the app for
+  /// real. Guarded here (not just hidden in the UI) so it can't be invoked
+  /// to bypass real progression on a non-admin account.
+  void adminBoostPet() {
+    if (!isAdminAccount) return;
+    final stageBefore = petStage;
+    petXp += _petXpAdminBoost;
+    unawaited(_persistence.savePetXp(petXp));
+    _syncPetXpToServer();
+    _notifyPetLevelUpIfNeeded(stageBefore);
+    notifyListeners();
+  }
+
   // ---- Support tickets -----------------------------------------------------
   // Always fetched live from the server (no local persistence/offline cache)
   // — a support thread is only ever meaningful in sync with the admin side.
@@ -215,6 +354,11 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     _dismissedAnnouncementIds
       ..clear()
       ..addAll(savedDismissedIds);
+
+    petXp = await _persistence.petXp;
+    _petAwardedToday
+      ..clear()
+      ..addAll(await _persistence.loadTodayAwardedPetGoals());
 
     // A previous account deletion whose server call failed leaves this flag
     // (written after the local wipe, so it's the only thing that survives).
@@ -331,6 +475,12 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       todayMobilityActivities = savedMobility;
     }
 
+    // Catches goals already met from persisted state (e.g. water logged
+    // right before closing the app yesterday... though that would have
+    // already been awarded then; mainly here so a fresh cold-start with an
+    // already-met goal doesn't wait for the next toggle to award XP).
+    _evaluatePetGoals();
+
     // Best-effort, matching this method's own doc comment ("never blocks
     // or degrades it") — it wasn't actually non-blocking before: awaiting
     // an up-to-8s network round trip here held up runApp() itself, so an
@@ -364,14 +514,28 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     _hasSession = true;
     unawaited(_persistence.setOnboardingDone(true));
     _persistUser();
+    _reconcilePetXp(restoredUser.petXp);
 
+    // Weight/measurements and announcements are independent server reads —
+    // run them concurrently rather than one after another. This used to be
+    // 3 sequential round trips, which is most of why a manual Dashboard
+    // refresh felt slow: nothing here actually depends on anything else.
+    await Future.wait([
+      _pullWeightAndMeasurements(),
+      _pullAnnouncementsForSessionRestore(),
+    ]);
+  }
+
+  Future<void> _pullWeightAndMeasurements() async {
     try {
-      final serverWeight = await _weightRepository.list();
+      final weightFuture = _weightRepository.list();
+      final measurementsFuture = _measurementRepository.getAll();
+      final serverWeight = await weightFuture;
+      final serverMeasurements = await measurementsFuture;
       if (serverWeight.isNotEmpty) {
         weightHistory = serverWeight;
         _persistWeight();
       }
-      final serverMeasurements = await _measurementRepository.getAll();
       if (serverMeasurements.isNotEmpty) {
         bodyMeasurements = serverMeasurements;
         _persistMeasurements();
@@ -380,13 +544,28 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       debugPrint(
           'Failed to pull weight/measurements during session restore: $e');
     }
+  }
 
+  Future<void> _pullAnnouncementsForSessionRestore() async {
     try {
       _announcements = await _announcementRepository.listActive();
       notifyListeners();
     } catch (e) {
       debugPrint('Failed to fetch announcements during session restore: $e');
     }
+  }
+
+  /// Pull-to-refresh on the Dashboard — re-pulls everything shown there that
+  /// can go stale on its own (server's copy of the profile/petXp/weight/
+  /// measurements/announcements, plus real Health data if sync is enabled).
+  /// Reuses [_restoreServerSession] rather than duplicating its fetches;
+  /// both legs already swallow their own errors, so a flaky network never
+  /// leaves the indicator spinning or throws past this call.
+  Future<void> refreshDashboard() async {
+    await Future.wait([
+      _restoreServerSession(),
+      syncHealthData(),
+    ]);
   }
 
   void _persistUser() {
@@ -471,6 +650,34 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       });
     } catch (e) {
       debugPrint('User sync failed: $e');
+    }
+  }
+
+  /// Pushes the current [petXp] up to the server — called after every
+  /// mutation (goal completion, achievement bonus, admin boost) alongside
+  /// the existing local [PersistenceService.savePetXp], same "local always
+  /// works, server sync best-effort" pattern as the rest of this class.
+  void _syncPetXpToServer() => unawaited(_pushPetXpToServer());
+
+  Future<void> _pushPetXpToServer() async {
+    if (!_hasSession) return;
+    try {
+      await _profileRepository.updateMe({'petXp': petXp});
+    } catch (e) {
+      debugPrint('Pet XP sync failed: $e');
+    }
+  }
+
+  /// Reconciles the server's last-known pet XP (fetched on login/session
+  /// restore) against this device's own value — whichever is higher wins,
+  /// so neither a fresh install nor a long-offline device ever regresses
+  /// the pet, and the loser catches up rather than silently diverging.
+  void _reconcilePetXp(int serverPetXp) {
+    if (serverPetXp > petXp) {
+      petXp = serverPetXp;
+      unawaited(_persistence.savePetXp(petXp));
+    } else if (petXp > serverPetXp) {
+      _syncPetXpToServer();
     }
   }
 
@@ -629,6 +836,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     } else {
       unawaited(_authRepository.signOut());
     }
+    _reconcilePetXp(user!.petXp);
     notifyListeners();
   }
 
@@ -654,6 +862,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     _hasSession = true;
     _persistUser();
     unawaited(_persistence.setOnboardingDone(true));
+    _reconcilePetXp(user!.petXp);
     notifyListeners();
   }
 
@@ -679,6 +888,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     _hasSession = true;
     _persistUser();
     unawaited(_persistence.setOnboardingDone(true));
+    _reconcilePetXp(user!.petXp);
     notifyListeners();
   }
 
@@ -708,6 +918,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       _hasSession = true;
       _persistUser();
       unawaited(_persistence.setOnboardingDone(true));
+      _reconcilePetXp(user!.petXp);
       notifyListeners();
       return;
     }
@@ -751,6 +962,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     unawaited(_persistence.setOnboardingDone(true));
     _syncUserToServer();
     _syncMeasurementsToServer();
+    _reconcilePetXp(user!.petXp);
     notifyListeners();
   }
 
@@ -898,6 +1110,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       set.rpe = null;
     }
     _persistWorkoutSets();
+    _evaluatePetGoals();
     notifyListeners();
   }
 
@@ -918,6 +1131,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   void setWorkoutSetRpe(int index, int rpe) {
     todayWorkoutSets[index].rpe = rpe;
     _persistWorkoutSets();
+    _evaluatePetGoals();
     notifyListeners();
   }
 
@@ -1093,11 +1307,11 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     _recordMobilityCompletion();
     _persistMobilityActivities();
     final l10n = lookupAppLocalizations(_effectiveLocale);
-    unawaited(NotificationService.instance.showActivityCompleted(
-      _effectiveLocale,
-      l10n.mobilityActivityCompletedTitle,
-      l10n.mobilityActivityCompletedBody(activity.name),
-    ));
+    _notifyBestEffort(() => NotificationService.instance.showActivityCompleted(
+          _effectiveLocale,
+          l10n.mobilityActivityCompletedTitle,
+          l10n.mobilityActivityCompletedBody(activity.name),
+        ));
     notifyListeners();
   }
 
@@ -1136,6 +1350,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       _recordMobilityCompletion();
     }
     _persistMobilityActivities();
+    _evaluatePetGoals();
     notifyListeners();
   }
 
@@ -1264,6 +1479,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     todayWaterLog = [...todayWaterLog, WaterLogEntry(DateTime.now(), ml)];
     _applyTodayWaterTotal();
     unawaited(_persistence.saveTodayWaterLog(todayWaterLog));
+    _evaluatePetGoals();
     notifyListeners();
   }
 
@@ -1274,6 +1490,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     todayWaterLog = todayWaterLog.where((e) => e != entry).toList();
     _applyTodayWaterTotal();
     unawaited(_persistence.saveTodayWaterLog(todayWaterLog));
+    _evaluatePetGoals();
     notifyListeners();
   }
 
@@ -1685,15 +1902,22 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   Future<void> syncHealthData() async {
     if (!healthSyncEnabled) return;
     try {
-      final updated = <DailyStats>[];
-      for (final day in dailyStats) {
-        final snapshot =
-            await HealthService.instance.fetchDailySnapshot(day.date);
-        updated.add(_mergeHealthSnapshot(day, snapshot));
-      }
-      dailyStats = updated;
+      // Each day's snapshot and the weight history are independent reads —
+      // fire all of them at once instead of one day at a time. With the
+      // usual 14-day window this used to be 15 sequential platform-channel
+      // round trips; that's most of why a manual refresh felt sluggish.
+      final days = dailyStats;
+      final snapshotsFuture = Future.wait(days
+          .map((day) => HealthService.instance.fetchDailySnapshot(day.date)));
+      final weightFuture = HealthService.instance.fetchWeightHistory();
 
-      final weightSamples = await HealthService.instance.fetchWeightHistory();
+      final snapshots = await snapshotsFuture;
+      dailyStats = [
+        for (var i = 0; i < days.length; i++)
+          _mergeHealthSnapshot(days[i], snapshots[i]),
+      ];
+
+      final weightSamples = await weightFuture;
       if (weightSamples.isNotEmpty) {
         final carriedBodyFat =
             weightHistory.isNotEmpty ? weightHistory.last.bodyFatPct : 0.0;
@@ -1707,6 +1931,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       }
 
       _pushWidgetOverview();
+      _evaluatePetGoals();
       notifyListeners();
     } catch (e) {
       debugPrint('Health sync failed: $e');
@@ -1774,15 +1999,47 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       AchievementFamily.nutrition: totalMealsLogged,
     };
     var unlockedNew = false;
+    // Achievements and the pet share one XP currency: unlocking one pays
+    // out its rank points (10/25/75/200) straight into petXp, on top of
+    // whatever the day's real goals already earned — so a rare lifetime
+    // milestone moves the dragon noticeably more than a daily goal does,
+    // and there's a single number ([petXp]) behind both progression
+    // systems instead of two disconnected meters.
+    var petXpBonus = 0;
+    final newlyUnlocked = <AchievementDef>[];
     for (final def in kAchievementCatalog) {
       if (unlockedAchievementIds.contains(def.id)) continue;
       if (counters[def.family]! >= def.threshold) {
         unlockedAchievementIds.add(def.id);
         achievementUnlockedAt[def.id] = DateTime.now();
         unlockedNew = true;
+        petXpBonus += pointsForTier(def.tier);
+        newlyUnlocked.add(def);
       }
     }
     if (unlockedNew) HapticFeedback.mediumImpact();
+    if (newlyUnlocked.isNotEmpty) {
+      final l10n = lookupAppLocalizations(_effectiveLocale);
+      for (final def in newlyUnlocked) {
+        _notifyBestEffort(
+            () => NotificationService.instance.showAchievementUnlocked(
+                  _effectiveLocale,
+                  l10n.notificationAchievementUnlockedTitle,
+                  l10n.notificationAchievementUnlockedBody(
+                    achievementTitleFor(l10n, def.id),
+                    achievementDescriptionFor(l10n, def.id),
+                  ),
+                  id: def.id.hashCode & 0x7fffffff,
+                ));
+      }
+    }
+    if (petXpBonus > 0) {
+      final stageBefore = petStage;
+      petXp += petXpBonus;
+      unawaited(_persistence.savePetXp(petXp));
+      _syncPetXpToServer();
+      _notifyPetLevelUpIfNeeded(stageBefore);
+    }
     _persistAchievements();
   }
 
