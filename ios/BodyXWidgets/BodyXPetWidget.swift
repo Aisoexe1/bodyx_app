@@ -77,11 +77,14 @@ private struct SmallPetView: View {
     let image: UIImage
 
     var body: some View {
-        VStack(spacing: 6) {
+        VStack(spacing: 4) {
+            // A fixed size, not maxHeight: .infinity — letting the image
+            // greedily fill the VStack's height left almost nothing for
+            // the level text and XP bar below it to render into.
             Image(uiImage: image)
                 .resizable()
                 .aspectRatio(contentMode: .fit)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .frame(width: 64, height: 64)
             Text("Lv. \(data.level)")
                 .font(.caption.weight(.bold))
                 .foregroundStyle(bxBright)
@@ -131,7 +134,11 @@ private struct XpBar: View {
                     .frame(width: max(4, geo.size.width * progress))
             }
         }
-        .frame(height: 6)
+        // GeometryReader has no intrinsic size of its own — without an
+        // explicit maxWidth it can collapse to whatever sliver its parent
+        // happens to leave it, which is how the small widget ended up with
+        // both capsules squeezed down to the same tiny "always full" nub.
+        .frame(maxWidth: .infinity, minHeight: 6, maxHeight: 6)
     }
 }
 
